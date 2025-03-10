@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lille - Info Trafic</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styles communs */
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-logo {
+            height: 40px;
+        }
+
+        .city-name {
+            color: #0066FF;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .last-update {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-row {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .disruptions {
+            flex: 1;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 400px;
+            max-width: 500px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+
+        /* Style de la scrollbar pour les navigateurs WebKit (Chrome, Safari) */
+        .disruptions::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .disruptions::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .disruptions::-webkit-scrollbar-thumb {
+            background: #0066FF;
+            border-radius: 4px;
+        }
+
+        .disruptions::-webkit-scrollbar-thumb:hover {
+            background: #0052cc;
+        }
+
+        /* Style de la scrollbar pour Firefox */
+        .disruptions {
+            scrollbar-width: thin;
+            scrollbar-color: #0066FF #f1f1f1;
+        }
+
+        .trains::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .trains::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .trains::-webkit-scrollbar-thumb {
+            background: #0066FF;
+            border-radius: 4px;
+        }
+
+        .trains::-webkit-scrollbar-thumb:hover {
+            background: #0052cc;
+        }
+
+        .trains {
+            scrollbar-width: thin;
+            scrollbar-color: #0066FF #f1f1f1;
+        }
+
+        .transport-section {
+            margin-bottom: 2rem;
+        }
+
+        .transport-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .map-container {
+            flex: 2;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: 700px;
+        }
+
+        #leaflet-map {
+            width: 100%;
+            height: 700px;
+        }
+
+        .transport-lines {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            max-height: calc(100% - 100px);
+            overflow-y: auto;
+        }
+
+        .line-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0066FF;
+            color: white;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .line-badge.expanded {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border-radius: 12px;
+            padding: 1rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .line-badge .line-name {
+            font-weight: 600;
+        }
+
+        .line-badge .disruption-message {
+            display: none;
+            font-weight: normal;
+            font-size: 0.95rem;
+            line-height: 1;
+            white-space: pre-line;
+            margin-top: -3.5rem;
+            width: 100%;
+        }
+
+        .line-badge.expanded .disruption-message {
+            display: block;
+        }
+
+        .line-badge:hover {
+            opacity: 0.9;
+        }
+
+        .no-disruption {
+            color: #666;
+            font-style: italic;
+            margin: 1rem;
+        }
+
+        .disruption-separator {
+            width: 100%;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.3);
+            margin: 0.25rem 0;
+        }
+
+        .disruption-alert {
+            margin: 0.5rem -1;
+        }
+
+        .disruption-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .disruption-date {
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .disruptions-title {
+            color: #0066FF;
+            font-size: 1.2rem;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #0066FF;
+        }
+
+        .source {
+            color: #0066FF;
+            font-weight: 500;
+            margin: 0.5rem 0 2rem 0;
+        }
+
+        .trains {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            overflow-y: auto;
+        }
+
+        .stations-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .station {
+            flex: 1;
+            min-width: 300px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .station-name {
+            font-size: 1.2rem;
+            color: #0066FF;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .station-schedules {
+            display: flex;
+            gap: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .schedule-column {
+            flex: 1;
+        }
+
+        .schedule-title {
+            color: #0066FF;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .schedule-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .train-time {
+            font-size: 2rem;
+            color: #0066FF;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .train-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .train-destination {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .train-details {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .train-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .train-item:last-child {
+            border-bottom: none;
+        }
+
+        .train-info {
+            flex: 1;
+        }
+
+        .train-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .train-time {
+            color: #666;
+            font-size: 1.5rem;
+        }
+
+        .train-destination {
+            color: #0066FF;
+            font-weight: 500;
+        }
+
+        .station-section {
+            margin-bottom: 2rem;
+        }
+
+        .station-section h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .departures-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .departures-table th,
+        .departures-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .departures-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .departures-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .no-departures {
+            text-align: center;
+            color: #666;
+            padding: 1rem;
+        }
+
+        .error-message {
+            text-align: center;
+            color: #dc3545;
+            padding: 1rem;
+            background-color: #f8d7da;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+    </style>
+    <script>
+        let map;  // Variable globale pour la carte
+        let trafficLayer; // Couche pour le trafic
+
+        // Fonction pour initialiser la carte
+        function initMap() {
+            if (map) {
+                map.remove();
+            }
+
+            map = L.map('leaflet-map').setView([50.6333, 3.0667], 12);
+            
+            // Ajouter la couche de base blanche
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Ajouter la couche de trafic TomTom
+            trafficLayer = L.tileLayer('https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?tileSize=256&key=PVt4NaZSKKtziZi9DaqNAUzN4flNJnSo', {
+                minZoom: 10,
+                maxZoom: 18,
+                opacity: 0.75
+            }).addTo(map);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <a href="/">
+            <img src="assets/images/logo.svg" alt="Info Trafic Logo" class="header-logo">
+        </a>
+        <div class="last-update">Dernière mise à jour : --:--</div>
+        <div class="city-name">Lille</div>
+    </header>
+
+    <div class="container">
+        <div class="content-row">
+            <div class="disruptions">
+                <h2 class="disruptions-title">Perturbations en cours sur le réseau</h2>
+                <div class="source">Source : Mobilille</div>
+
+                <!-- Section des perturbations -->
+                <div class="transport-container">
+                    
+                    <!-- Métro -->
+                    <div class="transport-section">
+                        <h3 class="transport-title">Métro</h3>
+                        <div id="metro-disruptions"></div>
+                    </div>
+                    
+                    <!-- Tramway -->
+                    <div class="transport-section">
+                        <h3 class="transport-title">Tramway</h3>
+                        <div id="tram-disruptions"></div>
+                    </div>
+                    
+                    <!-- Bus -->
+                    <div class="transport-section">
+                        <h3 class="transport-title">Bus</h3>
+                        <div id="bus-disruptions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="map-container">
+                <div id="leaflet-map"></div>
+            </section>
+        </div>
+
+        <section class="trains">
+            <h2 class="disruptions-title">Prochains trains</h2>
+            <div class="source">Source : SNCF</div>
+            <div id="next-trains" class="stations-container"></div>
+        </section>
+    </div>
+
+    <script>
+        function formatText(text) {
+            return text
+                .replace(/&#233;/g, 'é')
+                .replace(/&#160;/g, '')
+                .replace(/&#224;/g, 'à')
+                .replace(/&#232;/g, 'è')
+                .replace(/&#234;/g, 'ê')
+                .replace(/&#238;/g, 'î')
+                .replace(/&#239;/g, 'ï')
+                .replace(/&#244;/g, 'ô')
+                .replace(/&#249;/g, 'ù')
+                .replace(/&#8217;/g, "'")
+                .replace(/&quot;/g, '"')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/<p>/g, '')
+                .replace(/<\/p>/g, '\n\n')
+                .replace(/<br\s*\/?>/g, '\n')
+                .replace(/\n\s+/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/<b><u>/g, '')
+                .replace(/<\/u><\/b>/g, '')
+                .replace(/<b>/g, '')
+                .replace(/<\/b>/g, '')
+                .trim();
+        }
+
+        async function fetchDisruptions() {
+            try {
+                const response = await fetch('/api/lille/disruptions');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    Object.entries({
+                        'metro-disruptions': data.data.metro,
+                        'tram-disruptions': data.data.tramway,
+                        'bus-disruptions': data.data.bus
+                    }).forEach(([containerId, disruptions]) => {
+                        const container = document.getElementById(containerId);
+                        if (container) {
+                            container.innerHTML = '';
+                            
+                            if (!disruptions || disruptions.length === 0) {
+                                container.innerHTML = '<div class="no-disruption">Aucune perturbation</div>';
+                            } else {
+                                const linesDiv = document.createElement('div');
+                                linesDiv.className = 'transport-lines';
+                                
+                                // Regrouper les perturbations par ligne
+                                const groupedDisruptions = {};
+                                disruptions.forEach(disruption => {
+                                    if (!groupedDisruptions[disruption.line]) {
+                                        groupedDisruptions[disruption.line] = [];
+                                    }
+                                    groupedDisruptions[disruption.line].push(...disruption.alerts);
+                                });
+                                
+                                // Créer un badge pour chaque ligne
+                                Object.entries(groupedDisruptions).forEach(([line, alerts]) => {
+                                    const badge = document.createElement('div');
+                                    badge.className = 'line-badge';
+                                    
+                                    const lineType = containerId === 'metro-disruptions' ? 'M' : 
+                                                   containerId === 'tram-disruptions' ? 'T' : 'Bus';
+                                    
+                                    const alertsHtml = alerts.map((alert, index) => `
+                                        ${index > 0 ? '<div class="disruption-separator"></div>' : ''}
+                                        <div class="disruption-alert">
+                                            <div class="disruption-title">Information</div>
+                                            ${formatText(alert.description)}
+                                            <div class="disruption-date">
+                                                ${alert.start_date ? `Du ${alert.start_date} au ${alert.end_date}` : ''}
+                                                <br>Mis à jour le ${alert.update_time}
+                                            </div>
+                                        </div>
+                                    `).join('');
+                                    
+                                    badge.innerHTML = `
+                                        <span class="line-name">${lineType} ${line}</span>
+                                        <div class="disruption-message">
+                                            ${alertsHtml}
+                                        </div>
+                                    `;
+                                    
+                                    badge.addEventListener('click', function() {
+                                        const wasExpanded = this.classList.contains('expanded');
+                                        
+                                        // Réduire tous les badges
+                                        document.querySelectorAll('.line-badge').forEach(b => {
+                                            b.classList.remove('expanded');
+                                        });
+                                        
+                                        // Si le badge n'était pas déjà étendu, l’étendre
+                                        if (!wasExpanded) {
+                                            this.classList.add('expanded');
+                                        }
+                                    });
+                                    
+                                    linesDiv.appendChild(badge);
+                                });
+                                
+                                container.appendChild(linesDiv);
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur lors de la récupération des perturbations:', error);
+            }
+        }
+
+        async function fetchNextTrains() {
+            try {
+                const response = await fetch('/api/lille/trains');
+                const data = await response.json();
+                
+                const nextTrainsContainer = document.getElementById('next-trains');
+                let html = '';
+                
+                for (const [station, schedules] of Object.entries(data)) {
+                    html += `
+                        <div class="station">
+                            <div class="station-name">${station}</div>
+                            <div class="station-schedules">
+                                <div class="schedule-column">
+                                    <div class="schedule-title">Arrivées</div>
+                                    ${schedules.arrivals.length === 0 
+                                        ? '<div class="schedule-box"><div class="train-info"><div class="train-destination">Aucune arrivée prévue</div></div></div>'
+                                        : schedules.arrivals.slice(0, 3).map(arrival => `
+                                            <div class="schedule-box">
+                                                <div class="train-time">${arrival.time}</div>
+                                                <div class="train-info">
+                                                    <div class="train-destination">${arrival.direction}</div>
+                                                    <div class="train-details">${arrival.type} ${arrival.train_number}</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                </div>
+                                <div class="schedule-column">
+                                    <div class="schedule-title">Départs</div>
+                                    ${schedules.departures.length === 0 
+                                        ? '<div class="schedule-box"><div class="train-info"><div class="train-destination">Aucun départ prévu</div></div></div>'
+                                        : schedules.departures.slice(0, 3).map(departure => `
+                                            <div class="schedule-box">
+                                                <div class="train-time">${departure.time}</div>
+                                                <div class="train-info">
+                                                    <div class="train-destination">${departure.direction}</div>
+                                                    <div class="train-details">${departure.type} ${departure.train_number}</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                nextTrainsContainer.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error fetching train schedules:', error);
+                const nextTrainsContainer = document.getElementById('next-trains');
+                nextTrainsContainer.innerHTML = '<div class="error-message">Une erreur est survenue lors de la récupération des horaires des trains</div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            fetchDisruptions();
+            fetchNextTrains();
+            setInterval(fetchDisruptions, 5 * 60 * 1000);
+
+            // Mise à jour de la date
+            const now = new Date();
+            const formattedDate = now.toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(',', '');
+            
+            document.querySelector('.last-update').textContent = `Dernière mise à jour : ${formattedDate}`;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paris - ICI Info Trafic</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #ffffff;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-logo {
+            height: 40px;
+        }
+
+        .city-name {
+            color: #0066FF;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .last-update {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            display: flex;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .disruptions {
+            flex: 1;
+            background: #f8f8f8;
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+
+        .disruptions-title {
+            color: #0066FF;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #0066FF;
+        }
+
+        .source {
+            color: #0066FF;
+            margin: 1rem 0;
+        }
+
+        .transport-section {
+            margin: 1.5rem 0;
+        }
+
+        .transport-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .transport-lines {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .line-badge {
+            background: #0066FF;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .line-badge.expanded {
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .line-badge .line-name {
+            font-weight: 600;
+        }
+
+        .line-badge .disruption-message {
+            display: none;
+            font-weight: normal;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-line;
+            margin-top: 0.75rem;
+        }
+
+        .line-badge.expanded .disruption-message {
+            display: block;
+        }
+
+        .line-badge:hover {
+            opacity: 0.9;
+        }
+
+        .disruption-container {
+            margin-bottom: 0.2rem;
+        }
+
+        .severity-high {
+            background: #ff4444;
+        }
+
+        .severity-medium {
+            background: #ffbb33;
+        }
+
+        .severity-low {
+            background: #0066FF;
+        }
+
+        .map-container {
+            flex: 2;
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .map-content {
+            background: white;
+            border-radius: 8px;
+            height: calc(100vh - 150px);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 75%;
+            height: 100%;
+            border: 0;
+            transform: scale(1.4);
+            transform-origin: 0 0;
+        }
+    </style>
+    <script>
+        // Fonction pour formater le texte
+        function formatText(text) {
+            return text
+                .replace(/&#233;/g, 'é')
+                .replace(/&#160;/g, '')
+                .replace(/&#224;/g, 'à')
+                .replace(/&#232;/g, 'è')
+                .replace(/&#234;/g, 'ê')
+                .replace(/&#238;/g, 'î')
+                .replace(/&#239;/g, 'ï')
+                .replace(/&#244;/g, 'ô')
+                .replace(/&#249;/g, 'ù')
+                .replace(/&#8217;/g, "'")
+                .replace(/&quot;/g, '"')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/<p>/g, '')
+                .replace(/<\/p>/g, '\n\n')
+                .replace(/<br\s*\/?>/g, '\n')
+                .replace(/\n\s+/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/<b><u>/g, '')
+                .replace(/<\/u><\/b>/g, '')
+                .replace(/<b>/g, '')
+                .replace(/<\/b>/g, '')
+                .trim();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mise à jour de la date
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
+            document.querySelector('.last-update').textContent = `Dernière mise à jour : ${formattedDate}`;
+
+            // Fonction pour récupérer les perturbations
+            async function fetchDisruptions() {
+                try {
+                    const response = await fetch('/api/transport-disruptions');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        // Nettoyer les sections existantes
+                        document.querySelectorAll('.transport-section').forEach(section => {
+                            const title = section.querySelector('.transport-title').textContent;
+                            const existingLines = section.querySelector('.transport-lines');
+                            if (existingLines) {
+                                existingLines.remove();
+                            }
+                            const linesDiv = document.createElement('div');
+                            linesDiv.className = 'transport-lines';
+                            section.appendChild(linesDiv);
+                        });
+
+                        // Grouper les perturbations par catégorie
+                        const groupedDisruptions = data.data.reduce((acc, curr) => {
+                            if (!acc[curr.category]) {
+                                acc[curr.category] = [];
+                            }
+                            acc[curr.category].push(curr);
+                            return acc;
+                        }, {});
+
+                        // Mettre à jour l'affichage pour chaque catégorie
+                        for (const [category, disruptions] of Object.entries(groupedDisruptions)) {
+                            const section = Array.from(document.querySelectorAll('.transport-section'))
+                                .find(s => s.querySelector('.transport-title').textContent === category);
+
+                            if (section) {
+                                const linesDiv = section.querySelector('.transport-lines');
+                                
+                                if (disruptions.length === 0) {
+                                    section.textContent = 'Aucune perturbation';
+                                } else {
+                                    disruptions.forEach(d => {
+                                        const container = document.createElement('div');
+                                        container.className = 'disruption-container';
+                                        
+                                        const lineDiv = document.createElement('div');
+                                        lineDiv.className = `line-badge ${getSeverityClass(d.severity)}`;
+                                        
+                                        const lineName = document.createElement('div');
+                                        lineName.className = 'line-name';
+                                        lineName.textContent = d.line;
+                                        
+                                        const messageDiv = document.createElement('div');
+                                        messageDiv.className = 'disruption-message';
+                                        
+                                        // Formatage du message avec des sauts de ligne appropriés
+                                        const formattedMessage = formatText(d.message)
+                                            .split('\n')
+                                            .map(line => line.trim())
+                                            .filter(line => line.length > 0)
+                                            .join('\n');
+                                        
+                                        messageDiv.textContent = formattedMessage;
+                                        
+                                        // Ajouter l'événement de clic
+                                        lineDiv.addEventListener('click', () => {
+                                            lineDiv.classList.toggle('expanded');
+                                        });
+                                        
+                                        lineDiv.appendChild(lineName);
+                                        lineDiv.appendChild(messageDiv);
+                                        container.appendChild(lineDiv);
+                                        linesDiv.appendChild(container);
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la récupération des perturbations:', error);
+                }
+            }
+
+            // Fonction pour déterminer la classe de sévérité
+            function getSeverityClass(severity) {
+                severity = severity.toLowerCase();
+                if (severity.includes('high') || severity.includes('forte')) return 'severity-high';
+                if (severity.includes('medium') || severity.includes('moyenne')) return 'severity-medium';
+                return 'severity-low';
+            }
+
+            // Charger les perturbations
+            fetchDisruptions();
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html">
+            <img src="assets/images/logo.svg" alt="ICI Info Trafic" class="header-logo">
+        </a>
+        <div class="last-update">Dernière mise à jour : </div>
+        <div class="city-name">Paris</div>
+    </header>
+
+    <main class="main-content">
+        <section class="disruptions">
+            <h2 class="disruptions-title">Perturbations en cours sur le réseau</h2>
+            <div class="source">Source : RATP</div>
+
+            <div class="transport-section">
+                <h3 class="transport-title">RER</h3>
+            </div>
+
+            <div class="transport-section">
+                <h3 class="transport-title">Métro</h3>
+            </div>
+
+            <div class="transport-section">
+                <h3 class="transport-title">Transilien</h3>
+            </div>
+
+            <div class="transport-section">
+                <h3 class="transport-title">Tramway</h3>
+            </div>
+        </section>
+
+        <section class="map-container">
+            <div class="map-content">
+                <iframe src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" id="sytadin-frame" scrolling="no"></iframe>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
