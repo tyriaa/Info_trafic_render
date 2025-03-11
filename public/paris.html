@@ -296,6 +296,12 @@
             box-shadow: 0 0 0 1px #FF4444;
             display: inline-block;
         }
+
+        .no-disruption {
+            font-style: italic;
+            color: #666;
+            padding: 10px;
+        }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
@@ -355,7 +361,10 @@
                     if (data.status === 'success') {
                         // Nettoyer les sections existantes
                         document.querySelectorAll('.transport-section').forEach(section => {
-                            const title = section.querySelector('.transport-title').textContent;
+                            const titleElement = section.querySelector('.transport-title');
+                            if (!titleElement) return;  // Ignorer les sections sans titre
+                            
+                            const title = titleElement.textContent;
                             const existingLines = section.querySelector('.transport-lines');
                             if (existingLines) {
                                 existingLines.remove();
@@ -375,52 +384,55 @@
                         }, {});
 
                         // Mettre à jour l'affichage pour chaque catégorie
-                        for (const [category, disruptions] of Object.entries(groupedDisruptions)) {
-                            const section = Array.from(document.querySelectorAll('.transport-section'))
-                                .find(s => s.querySelector('.transport-title').textContent === category);
+                        document.querySelectorAll('.transport-section').forEach(section => {
+                            const titleElement = section.querySelector('.transport-title');
+                            if (!titleElement) return;  // Ignorer les sections sans titre
+                            
+                            const title = titleElement.textContent;
+                            const linesDiv = section.querySelector('.transport-lines');
+                            const disruptions = groupedDisruptions[title] || [];
 
-                            if (section) {
-                                const linesDiv = section.querySelector('.transport-lines');
-                                
-                                if (disruptions.length === 0) {
-                                    section.textContent = 'Aucune perturbation';
-                                } else {
-                                    disruptions.forEach(d => {
-                                        const container = document.createElement('div');
-                                        container.className = 'disruption-container';
-                                        
-                                        const lineDiv = document.createElement('div');
-                                        lineDiv.className = `line-badge ${getSeverityClass(d.severity)}`;
-                                        
-                                        const lineName = document.createElement('div');
-                                        lineName.className = 'line-name';
-                                        lineName.textContent = d.line;
-                                        
-                                        const messageDiv = document.createElement('div');
-                                        messageDiv.className = 'disruption-message';
-                                        
-                                        // Formatage du message avec des sauts de ligne appropriés
-                                        const formattedMessage = formatText(d.message)
-                                            .split('\n')
-                                            .map(line => line.trim())
-                                            .filter(line => line.length > 0)
-                                            .join('\n');
-                                        
-                                        messageDiv.textContent = formattedMessage;
-                                        
-                                        // Ajouter l'événement de clic
-                                        lineDiv.addEventListener('click', () => {
-                                            lineDiv.classList.toggle('expanded');
-                                        });
-                                        
-                                        lineDiv.appendChild(lineName);
-                                        lineDiv.appendChild(messageDiv);
-                                        container.appendChild(lineDiv);
-                                        linesDiv.appendChild(container);
+                            if (disruptions.length === 0) {
+                                const noDisruption = document.createElement('div');
+                                noDisruption.className = 'no-disruption';
+                                noDisruption.textContent = 'Aucune perturbation';
+                                linesDiv.appendChild(noDisruption);
+                            } else {
+                                disruptions.forEach(d => {
+                                    const container = document.createElement('div');
+                                    container.className = 'disruption-container';
+                                    
+                                    const lineDiv = document.createElement('div');
+                                    lineDiv.className = `line-badge ${getSeverityClass(d.severity)}`;
+                                    
+                                    const lineName = document.createElement('div');
+                                    lineName.className = 'line-name';
+                                    lineName.textContent = d.line;
+                                    
+                                    const messageDiv = document.createElement('div');
+                                    messageDiv.className = 'disruption-message';
+                                    
+                                    // Formatage du message avec des sauts de ligne appropriés
+                                    const formattedMessage = formatText(d.message)
+                                        .split('\n')
+                                        .map(line => line.trim())
+                                        .filter(line => line.length > 0)
+                                        .join('\n');
+                                    
+                                    messageDiv.textContent = formattedMessage;
+                                    
+                                    // Ajouter l'événement de clic
+                                    lineDiv.addEventListener('click', () => {
+                                        lineDiv.classList.toggle('expanded');
                                     });
-                                }
+                                    
+                                    lineDiv.appendChild(lineName);
+                                    lineDiv.appendChild(messageDiv);
+                                    container.appendChild(lineDiv);
+                                    linesDiv.appendChild(container);
+                                });
                             }
-                        }
+                        });
                     }
                 } catch (error) {
                     console.error('Erreur lors de la récupération des perturbations:', error);
@@ -456,22 +468,27 @@
 
             <div class="transport-section">
                 <h3 class="transport-title">RER</h3>
+                <div class="transport-lines"></div>
             </div>
 
             <div class="transport-section">
                 <h3 class="transport-title">Métro</h3>
+                <div class="transport-lines"></div>
             </div>
 
             <div class="transport-section">
                 <h3 class="transport-title">Transilien</h3>
+                <div class="transport-lines"></div>
             </div>
 
             <div class="transport-section">
                 <h3 class="transport-title">Tramway</h3>
+                <div class="transport-lines"></div>
             </div>
 
-            <div class="transport-section">
-                <h3 class="transport-title">Velib - Stations indisponibles</h3>
+            <div class="velib-section">
+                <h2 class="disruptions-title">Stations Vélib indisponibles</h2>
+                <div class="source">Source : Vélib Métropole</div>
                 <div id="velib-list" class="perturbation-list"></div>
             </div>
         </section>
@@ -598,7 +615,10 @@
             container.innerHTML = '';
 
             if (!stations || stations.length === 0) {
-                container.innerHTML = '<p class="no-perturbation">Aucune station indisponible</p>';
+                const noDisruption = document.createElement('div');
+                noDisruption.className = 'no-disruption';
+                noDisruption.textContent = 'Aucune station indisponible';
+                container.appendChild(noDisruption);
                 return;
             }
 
