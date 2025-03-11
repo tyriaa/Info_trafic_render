@@ -7,21 +7,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
             font-family: 'Outfit', sans-serif;
+            display: flex;
+            min-height: 100vh;
         }
 
-        body {
+        .left-panel {
+            flex: 1;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            padding: 2rem;
-            background-color: #ffffff;
+            justify-content: center;
         }
 
         .logo {
@@ -32,70 +35,227 @@
         .title {
             font-size: 6rem;
             color: #0066FF;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             text-align: center;
             font-weight: 400;
         }
 
-        .cities-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3rem;
-            max-width: 1200px;
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .city-card {
-            position: relative;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            cursor: pointer;
-        }
-
-        .city-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .city-image {
+        #map {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
+            height: 100%;
+            background-color: #f5f5f5;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid #eee;
         }
 
-        .city-name {
-            padding: 1rem;
-            text-align: center;
+        /* Styles de base pour les popups */
+        .custom-popup {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: inherit;
+            min-width: 200px;
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Styles spécifiques pour chaque région */
+        .popup-nord {
+            padding: 20px;
+            gap: 15px;
+        }
+        
+        .popup-nord .region-logo {
+            height: 50px;
+            margin-left: 25px; 
+        }
+
+        .popup-nord .region-link {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-left: 50px;
+        }
+
+        .popup-paris {
+            padding: 20px;
+            gap: 15px;
+        }
+
+        .popup-paris .region-logo {
+            height: 150px;
+            width: auto;
+            margin-left: 65px; 
+        }
+
+        .popup-paris .region-link {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-left: 75px;
+        }
+
+        .popup-provence {
+            padding: 22px;
+            gap: 18px;
+        }
+
+        .popup-provence .region-logo {
+            height: 70px;
+            margin-left: 10px;
+            background-color: white;
+        }
+
+        .popup-provence .region-link {
+            font-size: 1.25em;
+            margin-left: 30px;
+        }
+
+        /* Styles communs pour les éléments des popups */
+        .region-logo {
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .region-link {
             color: #0066FF;
-            font-size: 1.2rem;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: 500;
         }
 
-        .city-name::after {
-            content: "-->";
-            margin-left: 5px;
+        .region-link::after {
+            content: '-->';
+            margin-left: 8px;
+        }
+
+        /* Personnalisation du marqueur Leaflet */
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+        }
+
+        .leaflet-popup-tip-container {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <img src="assets/images/logo.png" alt="ICI Info Trafic" class="logo">
-    <h1 class="title">Info Trafic</h1>
-    
-    <div class="cities-grid">
-        <a href="paris.html" class="city-card">
-            <img src="assets/images/paris.jpg" alt="Paris" class="city-image">
-            <div class="city-name">Paris</div>
-        </a>
-        
-        <a href="marseille.html" class="city-card">
-            <img src="assets/images/marseille.jpeg" alt="Marseille" class="city-image">
-            <div class="city-name">Marseille</div>
-        </a>
-        
-        <a href="lille.html" class="city-card">
-            <img src="assets/images/lille.jpg" alt="Lille" class="city-image">
-            <div class="city-name">Lille</div>
-        </a>
+    <div class="left-panel">
+        <img src="assets/images/logo.png" alt="ICI Info Trafic" class="logo">
+        <h1 class="title">Info Trafic</h1>
     </div>
+    <div class="right-panel">
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // Initialisation de la carte
+        const map = L.map('map', {
+            center: [46.603354, 1.888334], // Centre de la France
+            zoom: 6,
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false
+        });
+
+        // Ajout du fond de carte gris clair
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: ''
+        }).addTo(map);
+
+        // Définition des emplacements
+        const locations = [
+            {
+                name: 'Nord',
+                coords: [50.6292, 3.0573],
+                logo: 'assets/images/lille2.png',
+                link: 'lille.html',
+                popupClass: 'popup-nord'
+            },
+            {
+                name: 'Paris',
+                coords: [48.8566, 2.3522],
+                logo: 'assets/images/paris2.jpg',
+                link: 'paris.html',
+                popupClass: 'popup-paris'
+            },
+            {
+                name: 'Provence',
+                coords: [43.2965, 5.3698],
+                logo: 'assets/images/marseille2.png',
+                link: 'marseille.html',
+                popupClass: 'popup-provence'
+            }
+        ];
+
+        // Création des marqueurs personnalisés
+        locations.forEach(location => {
+            // Création du marqueur avec une icône personnalisée
+            const marker = L.marker(location.coords, {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C7.58 0 4 3.58 4 8c0 5.5 8 13 8 13s8-7.5 8-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" fill="#333"/></svg>',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
+                })
+            }).addTo(map);
+
+            // Création du contenu de la popup avec classe spécifique
+            const popupContent = `
+                <a href="${location.link}" class="custom-popup ${location.popupClass}">
+                    <div class="logo-container">
+                        <img src="${location.logo}" alt="${location.name}" class="region-logo">
+                    </div>
+                    <span class="region-link">${location.name}</span>
+                </a>
+            `;
+
+            // Ajout de la popup au marqueur
+            const popup = L.popup({
+                closeButton: false,
+                className: 'custom-popup-container'
+            }).setContent(popupContent);
+
+            // Événements de survol
+            marker.on('mouseover', function() {
+                this.openPopup();
+            });
+
+            marker.bindPopup(popup);
+        });
+    </script>
 </body>
 </html>

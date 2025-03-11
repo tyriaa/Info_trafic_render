@@ -48,13 +48,14 @@ class SNCFScraper {
                 const lineCode = schedule.display_informations.code;
                 const lineType = schedule.display_informations.commercial_mode;
                 const trainNumber = schedule.display_informations.headsign;
+                const finalDestination = schedule.route?.direction?.name || direction;
 
                 // Convert time from "YYYYMMDDTHHmmss" to "HH:mm"
                 const time = scheduleTime.substring(9, 11) + ':' + scheduleTime.substring(11, 13);
 
                 return {
                     time,
-                    direction: type === 'arrivals' ? lineCode : direction,
+                    direction: type === 'arrivals' ? `${lineCode} → ${finalDestination}` : direction,
                     type: lineType,
                     train_number: trainNumber
                 };

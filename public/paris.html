@@ -166,6 +166,61 @@
             transform: scale(1.4);
             transform-origin: 0 0;
         }
+
+        .velib-bubble {
+            background-color: #0047FF;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: fit-content;
+        }
+
+        .velib-bubble.expanded {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .velib-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .velib-count {
+            font-weight: 600;
+        }
+
+        .velib-stations {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .velib-bubble.expanded .velib-stations {
+            display: block;
+        }
+
+        .velib-station {
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .velib-station-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .velib-station-postal {
+            font-weight: 600;
+        }
     </style>
     <script>
         // Fonction pour formater le texte
@@ -335,6 +390,11 @@
             <div class="transport-section">
                 <h3 class="transport-title">Tramway</h3>
             </div>
+
+            <div class="transport-section">
+                <h3 class="transport-title">Velib - Stations indisponibles</h3>
+                <div id="velib-list" class="perturbation-list"></div>
+            </div>
         </section>
 
         <section class="map-container">
@@ -343,5 +403,82 @@
             </div>
         </section>
     </main>
+
+    <script>
+        async function fetchData() {
+            try {
+                const velibResponse = await fetch('/api/velib/unavailable');
+
+                const velibData = await velibResponse.json();
+
+                displayVelibStations('velib-list', velibData);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données:', error);
+            }
+        }
+
+        function displayVelibStations(elementId, stations) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (!stations || stations.length === 0) {
+                container.innerHTML = '<p class="no-perturbation">Aucune station indisponible</p>';
+                return;
+            }
+
+            const bubble = document.createElement('div');
+            bubble.className = 'velib-bubble';
+
+            const header = document.createElement('div');
+            header.className = 'velib-header';
+
+            const count = document.createElement('div');
+            count.className = 'velib-count';
+            count.textContent = stations.length;
+
+            header.appendChild(count);
+            bubble.appendChild(header);
+
+            const stationsList = document.createElement('div');
+            stationsList.className = 'velib-stations';
+
+            stations.forEach(station => {
+                const stationElement = document.createElement('div');
+                stationElement.className = 'velib-station';
+
+                const nameContainer = document.createElement('div');
+                nameContainer.className = 'velib-station-name';
+                
+                const name = document.createElement('span');
+                name.textContent = station.name;
+                
+                const postal = document.createElement('span');
+                postal.className = 'velib-station-postal';
+                postal.textContent = station.postalCode || '';
+
+                nameContainer.appendChild(name);
+                nameContainer.appendChild(postal);
+                stationElement.appendChild(nameContainer);
+
+                stationsList.appendChild(stationElement);
+            });
+
+            bubble.appendChild(stationsList);
+
+            bubble.addEventListener('click', () => {
+                bubble.classList.toggle('expanded');
+            });
+
+            container.appendChild(bubble);
+        }
+
+        // Charger les données au démarrage
+        document.addEventListener('DOMContentLoaded', fetchData);
+        
+        // Rafraîchir les données toutes les 5 minutes
+        setInterval(fetchData, 300000);
+    </script>
 </body>
 </html>

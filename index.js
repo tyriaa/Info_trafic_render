@@ -60,6 +60,32 @@ function normalizeLineName(lineName) {
     return lineName;
 }
 
+// Fonction pour récupérer le code postal à partir des coordonnées
+async function getPostalCode(lat, lon) {
+    try {
+        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
+            params: {
+                format: 'json',
+                lat: lat,
+                lon: lon,
+                zoom: 18
+            },
+            headers: {
+                'User-Agent': 'Windsurf-Project/1.0'
+            }
+        });
+        
+        // Attendre 1 seconde pour respecter les limites de l'API
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const address = response.data.address;
+        return address.postcode || '';
+    } catch (error) {
+        console.error('Erreur lors de la récupération du code postal:', error);
+        return '';
+    }
+}
+
 // Route pour récupérer les perturbations
 app.get('/api/transport-disruptions', async (req, res) => {
     try {
@@ -193,6 +219,45 @@ app.get('/api/marseille/ferries', async (req, res) => {
     } catch (error) {
         console.error('Erreur lors de la récupération des ferries:', error);
         res.status(500).json({ error: 'Erreur lors de la récupération des ferries' });
+    }
+});
+
+app.get('/api/velib/unavailable', async (req, res) => {
+    try {
+        const [statusResponse, infoResponse] = await Promise.all([
+            axios.get('https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_status.json'),
+            axios.get('https://velib-metropole-opendata.smovengo.cloud/opendata/Velib_Metropole/station_information.json')
+        ]);
+
+        const stationInfoMap = {};
+        for (const station of infoResponse.data.data.stations) {
+            stationInfoMap[station.station_id] = {
+                name: station.name,
+                lat: station.lat,
+                lon: station.lon
+            };
+        }
+
+        const unavailableStations = statusResponse.data.data.stations
+            .filter(station => station.is_installed === 0);
+
+        const stationsWithPostalCodes = await Promise.all(
+            unavailableStations.map(async station => {
+                const info = stationInfoMap[station.station_id];
+                if (!info) return null;
+
+                const postalCode = await getPostalCode(info.lat, info.lon);
+                return {
+                    name: info.name,
+                    postalCode: postalCode
+                };
+            })
+        );
+
+        res.json(stationsWithPostalCodes.filter(station => station !== null));
+    } catch (error) {
+        console.error('Erreur lors de la récupération des stations Vélib:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
