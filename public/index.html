@@ -19,7 +19,7 @@
         }
 
         .left-panel {
-            flex: 1;
+            flex: 0.3;
             padding: 40px;
             display: flex;
             flex-direction: column;
@@ -28,12 +28,11 @@
         }
 
         .logo {
-            width: 500px;
-            margin-bottom: 1rem;
+            width: 300px;
         }
 
         .title {
-            font-size: 6rem;
+            font-size: 5rem;
             color: #0066FF;
             margin-bottom: 2rem;
             text-align: center;
@@ -41,7 +40,7 @@
         }
 
         .right-panel {
-            flex: 1;
+            flex: 0.7;
             padding: 40px;
             display: flex;
             align-items: center;
@@ -184,8 +183,8 @@
         const map = L.map('map', {
             center: [46.603354, 1.888334], // Centre de la France
             zoom: 6,
-            zoomControl: false,
-            dragging: false,
+            zoomControl: true,
+            dragging: true,
             scrollWheelZoom: false,
             doubleClickZoom: false
         });
