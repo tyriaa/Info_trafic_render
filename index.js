@@ -230,31 +230,23 @@ app.get('/api/velib/unavailable', async (req, res) => {
         ]);
 
         const stationInfoMap = {};
-        for (const station of infoResponse.data.data.stations) {
+        infoResponse.data.data.stations.forEach(station => {
             stationInfoMap[station.station_id] = {
-                name: station.name,
-                lat: station.lat,
-                lon: station.lon
+                name: station.name
             };
-        }
+        });
 
         const unavailableStations = statusResponse.data.data.stations
-            .filter(station => station.is_installed === 0);
-
-        const stationsWithPostalCodes = await Promise.all(
-            unavailableStations.map(async station => {
+            .filter(station => station.is_installed === 0)
+            .map(station => {
                 const info = stationInfoMap[station.station_id];
-                if (!info) return null;
-
-                const postalCode = await getPostalCode(info.lat, info.lon);
-                return {
-                    name: info.name,
-                    postalCode: postalCode
-                };
+                return info ? {
+                    name: info.name
+                } : null;
             })
-        );
+            .filter(station => station !== null);
 
-        res.json(stationsWithPostalCodes.filter(station => station !== null));
+        res.json(unavailableStations);
     } catch (error) {
         console.error('Erreur lors de la récupération des stations Vélib:', error);
         res.status(500).json({ error: 'Erreur serveur' });
