@@ -263,6 +263,39 @@
         .velib-station-postal {
             font-weight: 600;
         }
+
+        .custom-station-marker {
+            background-color: #FF4444;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #FF4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px #FF4444;
+            display: inline-block;
+        }
     </style>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
@@ -446,7 +479,12 @@
         <section class="map-container">
             <div class="map-content">
                 <button class="map-toggle" onclick="toggleMap()">Voir Sytadin</button>
-                <div id="leaflet-map" class="active"></div>
+                <div id="leaflet-map" class="active">
+                    <div class="map-legend">
+                        <span class="legend-dot"></span>
+                        <span>Stations Vélib indisponibles</span>
+                    </div>
+                </div>
                 <iframe id="sytadin-frame" src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" scrolling="no"></iframe>
             </div>
         </section>
@@ -455,6 +493,7 @@
     <script>
         let map;  // Variable globale pour la carte
         let trafficLayer; // Couche pour le trafic
+        let markers = []; // Pour stocker les marqueurs des stations
 
         // Fonction pour basculer entre les cartes
         function toggleMap() {
@@ -495,25 +534,65 @@
             }).addTo(map);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            fetchData(); // Garder l'appel à fetchData pour les autres fonctionnalités
-        });
+        // Fonction pour mettre à jour les marqueurs des stations
+        function updateStationMarkers(stations) {
+            // Supprimer les anciens marqueurs
+            markers.forEach(marker => marker.remove());
+            markers = [];
+
+            // Créer l'icône personnalisée pour les stations
+            const stationIcon = L.divIcon({
+                className: 'custom-station-marker',
+                html: '<div style="background-color: #FF4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+
+            // Ajouter les nouveaux marqueurs
+            stations.forEach(station => {
+                const marker = L.marker([station.lat, station.lon], {
+                    icon: stationIcon
+                });
+                
+                marker.bindPopup(`
+                    <div style="padding: 10px;">
+                        <strong>${station.name}</strong><br>
+                        Station indisponible
+                    </div>
+                `, {
+                    closeButton: false
+                });
+
+                marker.on('mouseover', function() {
+                    this.openPopup();
+                });
+
+                marker.on('mouseout', function() {
+                    this.closePopup();
+                });
+
+                marker.addTo(map);
+                markers.push(marker);
+            });
+        }
 
         async function fetchData() {
             try {
                 const velibResponse = await fetch('/api/velib/unavailable');
-
                 const velibData = await velibResponse.json();
-
-                displayVelibStations('velib-list', velibData);
+                
+                // Mettre à jour les marqueurs sur la carte
+                updateStationMarkers(velibData);
+                
+                // Mettre à jour la bulle d'information
+                updateVelibBubble(velibData);
             } catch (error) {
                 console.error('Erreur lors de la récupération des données:', error);
             }
         }
 
-        function displayVelibStations(elementId, stations) {
-            const container = document.getElementById(elementId);
+        function updateVelibBubble(stations) {
+            const container = document.getElementById('velib-list');
             if (!container) return;
 
             container.innerHTML = '';
@@ -568,6 +647,11 @@
 
             container.appendChild(bubble);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            fetchData(); // Garder l'appel à fetchData pour les autres fonctionnalités
+        });
 
         // Rafraîchir les données toutes les 5 minutes
         setInterval(fetchData, 300000);

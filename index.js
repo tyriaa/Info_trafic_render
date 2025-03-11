@@ -232,7 +232,9 @@ app.get('/api/velib/unavailable', async (req, res) => {
         const stationInfoMap = {};
         infoResponse.data.data.stations.forEach(station => {
             stationInfoMap[station.station_id] = {
-                name: station.name
+                name: station.name,
+                lat: station.lat,
+                lon: station.lon
             };
         });
 
@@ -241,7 +243,9 @@ app.get('/api/velib/unavailable', async (req, res) => {
             .map(station => {
                 const info = stationInfoMap[station.station_id];
                 return info ? {
-                    name: info.name
+                    name: info.name,
+                    lat: info.lat,
+                    lon: info.lon
                 } : null;
             })
             .filter(station => station !== null);
