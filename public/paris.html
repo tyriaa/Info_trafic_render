@@ -152,6 +152,51 @@
         }
 
         .map-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .map-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border: 2px solid #0066FF;
+            color: #0066FF;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .map-toggle:hover {
+            background: #0066FF;
+            color: white;
+        }
+
+        #leaflet-map, #sytadin-frame {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #sytadin-frame {
+            border: 0;
+            transform: scale(1.4);
+            transform-origin: 0 0;
+            margin-left: -200px;
+            position: relative;
+        }
+
+        .active {
+            display: block !important;
+        }
+
+        .map-content {
             background: white;
             border-radius: 8px;
             height: calc(100vh - 150px);
@@ -159,12 +204,9 @@
             overflow: hidden;
         }
 
-        iframe {
-            width: 75%;
+        #leaflet-map {
+            width: 100%;
             height: 100%;
-            border: 0;
-            transform: scale(1.4);
-            transform-origin: 0 0;
         }
 
         .velib-bubble {
@@ -222,6 +264,10 @@
             font-weight: 600;
         }
     </style>
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+        integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+        crossorigin=""/>
     <script>
         // Fonction pour formater le texte
         function formatText(text) {
@@ -399,12 +445,61 @@
 
         <section class="map-container">
             <div class="map-content">
-                <iframe src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" id="sytadin-frame" scrolling="no"></iframe>
+                <button class="map-toggle" onclick="toggleMap()">Voir Sytadin</button>
+                <div id="leaflet-map" class="active"></div>
+                <iframe id="sytadin-frame" src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" scrolling="no"></iframe>
             </div>
         </section>
     </main>
 
     <script>
+        let map;  // Variable globale pour la carte
+        let trafficLayer; // Couche pour le trafic
+
+        // Fonction pour basculer entre les cartes
+        function toggleMap() {
+            const leafletMap = document.getElementById('leaflet-map');
+            const sytadinFrame = document.getElementById('sytadin-frame');
+            const button = document.querySelector('.map-toggle');
+
+            if (leafletMap.classList.contains('active')) {
+                leafletMap.classList.remove('active');
+                sytadinFrame.classList.add('active');
+                button.textContent = 'Voir TomTom';
+            } else {
+                sytadinFrame.classList.remove('active');
+                leafletMap.classList.add('active');
+                button.textContent = 'Voir Sytadin';
+            }
+        }
+
+        // Fonction pour initialiser la carte
+        function initMap() {
+            if (map) {
+                map.remove();
+            }
+
+            map = L.map('leaflet-map').setView([48.8566, 2.3522], 12);
+            
+            // Ajouter la couche de base blanche
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Ajouter la couche de trafic TomTom
+            trafficLayer = L.tileLayer('https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?tileSize=256&key=PVt4NaZSKKtziZi9DaqNAUzN4flNJnSo', {
+                minZoom: 10,
+                maxZoom: 18,
+                opacity: 0.75
+            }).addTo(map);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            fetchData(); // Garder l'appel à fetchData pour les autres fonctionnalités
+        });
+
         async function fetchData() {
             try {
                 const velibResponse = await fetch('/api/velib/unavailable');
@@ -474,9 +569,6 @@
             container.appendChild(bubble);
         }
 
-        // Charger les données au démarrage
-        document.addEventListener('DOMContentLoaded', fetchData);
-        
         // Rafraîchir les données toutes les 5 minutes
         setInterval(fetchData, 300000);
     </script>
