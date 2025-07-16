@@ -129,6 +129,23 @@
             font-size: 1.25em;
             margin-left: 30px;
         }
+        
+        /* Style pour Rouen/Normandie */
+        .popup-normandie {
+            padding: 20px;
+            gap: 15px;
+        }
+        
+        .popup-normandie .region-logo {
+            height: 23px;
+            margin-left: 30px;
+        }
+        
+        .popup-normandie .region-link {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-left: 40px;
+        }
 
         /* Styles communs pour les éléments des popups */
         .region-logo {
@@ -216,6 +233,13 @@
                 logo: 'assets/images/marseille2.png',
                 link: 'marseille.html',
                 popupClass: 'popup-provence'
+            },
+            {
+                name: 'Normandie',
+                coords: [49.4431, 1.0993],
+                logo: 'assets/images/Ici_Normandie.svg',
+                link: 'normandie.html',
+                popupClass: 'popup-normandie'
             }
         ];
 

@@ -5,6 +5,7 @@ const cheerio = require('cheerio');
 require('dotenv').config();
 const PerturbationScraper = require('./scrapers/lille_scraper');
 const SNCFScraper = require('./scrapers/sncf_scraper');
+const NormandieRSSScraper = require('./scrapers/normandie_scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -164,6 +165,50 @@ app.get('/api/lille/trains', async (req, res) => {
     } catch (error) {
         console.error('Error fetching train schedules:', error);
         res.status(500).json({ error: 'Failed to fetch train schedules' });
+    }
+});
+
+// Endpoint pour les perturbations de Normandie (Rouen)
+app.get('/api/normandie/disruptions', async (req, res) => {
+    try {
+        const scraper = new NormandieRSSScraper();
+        const disruptions = await scraper.getPerturbations();
+        res.json({
+            status: 'success',
+            data: disruptions
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des perturbations de Normandie:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Erreur lors de la récupération des perturbations'
+        });
+    }
+});
+
+// Endpoint pour les horaires des trains à Rouen
+app.get('/api/normandie/trains', async (req, res) => {
+    try {
+        // Pour le moment, nous renvoyons des données factices
+        // À remplacer par une implémentation réelle plus tard
+        const mockData = {
+            'Gare de Rouen-Rive-Droite': {
+                arrivals: [
+                    { time: '11:42', direction: 'Paris Saint-Lazare', type: 'TER', train_number: '19123' },
+                    { time: '12:15', direction: 'Le Havre', type: 'Intercités', train_number: '3115' },
+                    { time: '12:45', direction: 'Amiens', type: 'TER', train_number: '18456' }
+                ],
+                departures: [
+                    { time: '11:55', direction: 'Dieppe', type: 'TER', train_number: '19220' },
+                    { time: '12:30', direction: 'Paris Saint-Lazare', type: 'Intercités', train_number: '3122' },
+                    { time: '13:05', direction: 'Caen', type: 'TER', train_number: '17845' }
+                ]
+            }
+        };
+        res.json(mockData);
+    } catch (error) {
+        console.error('Error fetching train schedules for Normandie:', error);
+        res.status(500).json({ error: 'Failed to fetch train schedules for Normandie' });
     }
 });
 
