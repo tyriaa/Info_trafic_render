@@ -7,7 +7,6 @@
     "start": "node index.js",
     "build": "echo 'No build step required'",
     "dev": "nodemon index.js",
-    "test": "echo \"No tests specified - skipping\""
   },
   "engines": {
     "node": ">=20.0.0",
