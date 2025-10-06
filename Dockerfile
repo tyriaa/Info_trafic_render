@@ -1,18 +1,23 @@
-FROM node:18-slim
+# Utiliser l'image officielle Node.js 18 (compatible Azure)
+FROM node:18
 
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copy package files
+# Copier les fichiers de dépendances
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Installer les dépendances
+RUN npm ci --only=production && npm cache clean --force
 
-# Copy the rest of the application
+# Copier le code source
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3000
+# Exposer le port (Azure utilise PORT dynamique)
+EXPOSE 8080
 
-# Command to run the application
+# Variables d'environnement pour Azure
+ENV NODE_ENV=production
+
+# Commande pour démarrer l'application
 CMD ["npm", "start"]

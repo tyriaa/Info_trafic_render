@@ -5,7 +5,8 @@ class SNCFScraper {
         this.apiKey = apiKey;
         this.stations = {
             'Lille Europe': 'stop_point:SNCF:87223263:Train',
-            'Lille Flandres': 'stop_point:SNCF:87286005:Train'
+            'Lille Flandres': 'stop_point:SNCF:87286005:Train',
+            'Gare de Rouen-Rive-Droite': 'stop_point:SNCF:87411017:Train' // Ajout de la gare de Rouen
         };
     }
 

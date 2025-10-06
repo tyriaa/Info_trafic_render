@@ -302,6 +302,52 @@
             color: #666;
             padding: 10px;
         }
+        
+        .flash-trafic {
+            background-color: #f8f8f8;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+            margin-left: 2rem;
+            margin-right: 2rem;
+
+        }
+        
+        .flash-trafic-title {
+            color: #0066FF;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .flash-trafic-content {
+            color: #000000 !important;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .flash-trafic-content p {
+            color: #000000 !important;
+        }
+        
+        /* Bouton pour générer le flash trafic manuellement */
+        .flash-generate-btn {
+            background: #0066FF;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .flash-generate-btn:hover {
+            background: #0053cc;
+        }
+        
     </style>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
@@ -447,8 +493,40 @@
                 return 'severity-low';
             }
 
+            // Fonction pour générer le flash trafic avec Claude
+            async function generateFlashTrafic() {
+                try {
+                    document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
+                    
+                    const response = await fetch('/api/generate-flash-traffic');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        document.getElementById('flash-trafic-content').innerHTML = 
+                            `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                    } else {
+                        throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la génération du flash trafic:', error);
+                    document.getElementById('flash-trafic-content').innerHTML = 
+                        '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier que votre clé API Claude est configurée.</p>';
+                }
+            }
+
             // Charger les perturbations
             fetchDisruptions();
+
+            // Ajouter le déclenchement manuel sur clic du bouton
+            const flashBtn = document.getElementById('generate-flash-btn');
+            if (flashBtn) {
+                flashBtn.addEventListener('click', generateFlashTrafic);
+            }
         });
     </script>
 </head>
@@ -461,7 +539,19 @@
         <div class="city-name">Paris</div>
     </header>
 
-    <main class="main-content">
+    <div class="flash-trafic">
+        <div class="flash-trafic-title">Flash trafic</div>
+        <div class="disruption-bubble">
+          <h3>Flash trafic</h3>
+          <button id="generate-flash-btn" class="flash-generate-btn">Générer le flash trafic</button>
+          <div id="flash-trafic-content">
+            <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
+          </div>
+        </div>
+    </div>
+    
+
+    <div class="main-content">
         <section class="disruptions">
             <h2 class="disruptions-title">Perturbations en cours sur le réseau</h2>
             <div class="source">Source : RATP</div>
@@ -498,8 +588,18 @@
                 <button class="map-toggle" onclick="toggleMap()">Voir Sytadin</button>
                 <div id="leaflet-map" class="active">
                     <div class="map-legend">
-                        <span class="legend-dot"></span>
-                        <span>Stations Vélib indisponibles</span>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <span class="legend-dot" style="background-color: #FF8C00;"></span>
+                            <span>Stations Vélib indisponibles</span>
+                        </div>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <span class="legend-dot" style="background-color: #FF0000; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></span>
+                            <span>Accidents TomTom</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="legend-dot" style="background-color: #FFA500; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></span>
+                            <span>Véhicules en panne</span>
+                        </div>
                     </div>
                 </div>
                 <iframe id="sytadin-frame" src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" scrolling="no"></iframe>
@@ -511,6 +611,7 @@
         let map;  // Variable globale pour la carte
         let trafficLayer; // Couche pour le trafic
         let markers = []; // Pour stocker les marqueurs des stations
+        let accidentMarkers = []; // Pour stocker les marqueurs d'accidents
 
         // Fonction pour basculer entre les cartes
         function toggleMap() {
@@ -560,7 +661,7 @@
             // Créer l'icône personnalisée pour les stations
             const stationIcon = L.divIcon({
                 className: 'custom-station-marker',
-                html: '<div style="background-color: #FF4444; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                html: '<div style="background-color: #FF8C00; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
                 iconSize: [16, 16],
                 iconAnchor: [8, 8]
             });
@@ -593,13 +694,88 @@
             });
         }
 
+        // Fonction pour mettre à jour les marqueurs d'accidents
+        function updateAccidentMarkers(accidents) {
+            // Supprimer les anciens marqueurs d'accidents
+            accidentMarkers.forEach(marker => marker.remove());
+            accidentMarkers = [];
+
+            // Ajouter les nouveaux marqueurs d'accidents
+            accidents.forEach(accident => {
+                if (accident.coordinates && accident.coordinates.length === 2) {
+                    // Déterminer le type d'incident basé sur la description
+                    const isBreakdown = accident.description && accident.description.toLowerCase().includes('panne');
+                    
+                    // Créer l'icône appropriée
+                    const icon = isBreakdown ? 
+                        L.divIcon({
+                            className: 'custom-breakdown-marker',
+                            html: '<div style="background-color: #FFA500; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="background-color: white; width: 8px; height: 2px; margin: 6px auto; margin-top: 7px;"></div></div>',
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        }) :
+                        L.divIcon({
+                            className: 'custom-accident-marker',
+                            html: '<div style="background-color: #FF0000; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="background-color: white; width: 6px; height: 6px; border-radius: 50%; margin: 2px auto; margin-top: 2px;"></div></div>',
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        });
+
+                    const marker = L.marker(accident.coordinates, {
+                        icon: icon
+                    });
+                    
+                    const roadInfo = accident.roadNumbers && accident.roadNumbers.length > 0 
+                        ? ` (${accident.roadNumbers.join(', ')})` 
+                        : '';
+                    
+                    const locationInfo = accident.from && accident.to 
+                        ? `<br><small>De ${accident.from} vers ${accident.to}</small>`
+                        : '';
+                    
+                    const delayInfo = accident.delay > 0 
+                        ? `<br><small>Retard: ${accident.delay} min</small>`
+                        : '';
+                    
+                    const incidentType = isBreakdown ? '🔧 Véhicule en panne' : '🚨 Accident';
+                    
+                    marker.bindPopup(`
+                        <div style="padding: 10px; min-width: 200px;">
+                            <strong>${incidentType}${roadInfo}</strong><br>
+                            ${accident.description}
+                            ${locationInfo}
+                            ${delayInfo}
+                        </div>
+                    `, {
+                        closeButton: true,
+                        maxWidth: 300
+                    });
+
+                    marker.on('mouseover', function() {
+                        this.openPopup();
+                    });
+
+                    marker.addTo(map);
+                    accidentMarkers.push(marker);
+                }
+            });
+        }
+
         async function fetchData() {
             try {
+                // Récupérer les données Vélib
                 const velibResponse = await fetch('/api/velib/unavailable');
                 const velibData = await velibResponse.json();
                 
+                // Récupérer les accidents TomTom
+                const accidentsResponse = await fetch('/api/tomtom/accidents/paris');
+                const accidentsData = await accidentsResponse.json();
+                
                 // Mettre à jour les marqueurs sur la carte
                 updateStationMarkers(velibData);
+                if (accidentsData.status === 'success') {
+                    updateAccidentMarkers(accidentsData.accidents);
+                }
                 
                 // Mettre à jour la bulle d'information
                 updateVelibBubble(velibData);
@@ -671,6 +847,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
             fetchData(); // Garder l'appel à fetchData pour les autres fonctionnalités
+            
+            // Fonction pour générer le flash trafic avec Claude
+            async function generateFlashTrafic() {
+                try {
+                    document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
+                    
+                    const response = await fetch('/api/generate-flash-traffic');
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        document.getElementById('flash-trafic-content').innerHTML = 
+                            `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                    } else {
+                        throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la génération du flash trafic:', error);
+                    document.getElementById('flash-trafic-content').innerHTML = 
+                        '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier que votre clé API Claude est configurée.</p>';
+                }
+            }
+
         });
 
         // Rafraîchir les données toutes les 5 minutes

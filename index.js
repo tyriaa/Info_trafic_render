@@ -10,6 +10,13 @@ const NormandieRSSScraper = require('./scrapers/normandie_scraper');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Initialisation des services IA et API externes
+const anthropicService = require('./utils/anthropicService');
+const tomTomService = require('./utils/tomTomService');
+
+// Configuration automatique via variables d'environnement (ANTHROPIC_API_KEY)
+// TomTom API configurée directement dans le service
+
 // Middleware pour parser le JSON
 app.use(express.json());
 
@@ -61,31 +68,7 @@ function normalizeLineName(lineName) {
     return lineName;
 }
 
-// Fonction pour récupérer le code postal à partir des coordonnées
-async function getPostalCode(lat, lon) {
-    try {
-        const response = await axios.get(`https://nominatim.openstreetmap.org/reverse`, {
-            params: {
-                format: 'json',
-                lat: lat,
-                lon: lon,
-                zoom: 18
-            },
-            headers: {
-                'User-Agent': 'Windsurf-Project/1.0'
-            }
-        });
-        
-        // Attendre 1 seconde pour respecter les limites de l'API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const address = response.data.address;
-        return address.postcode || '';
-    } catch (error) {
-        console.error('Erreur lors de la récupération du code postal:', error);
-        return '';
-    }
-}
+// Fonction getPostalCode() supprimée car non utilisée
 
 // Route pour récupérer les perturbations
 app.get('/api/transport-disruptions', async (req, res) => {
@@ -159,12 +142,27 @@ app.get('/api/lille/disruptions', async (req, res) => {
 // Route pour récupérer les départs des trains SNCF à Lille
 app.get('/api/lille/trains', async (req, res) => {
     try {
-        const sncfScraper = new SNCFScraper(SNCF_API_KEY);
-        const schedules = await sncfScraper.getSchedules();
-        res.json(schedules);
+        // Initialiser le scraper SNCF pour Lille si ce n'est pas déjà fait
+        if (!SNCF_API_KEY) {
+            throw new Error('SNCF API key not available');
+        }
+        
+        const lilleScraper = new SNCFScraper(SNCF_API_KEY);
+        const allSchedules = await lilleScraper.getSchedules();
+        
+        // Filtrer uniquement les gares de Lille
+        const lilleSchedules = {};
+        if (allSchedules['Lille Europe']) {
+            lilleSchedules['Lille Europe'] = allSchedules['Lille Europe'];
+        }
+        if (allSchedules['Lille Flandres']) {
+            lilleSchedules['Lille Flandres'] = allSchedules['Lille Flandres'];
+        }
+        
+        res.json(lilleSchedules);
     } catch (error) {
-        console.error('Error fetching train schedules:', error);
-        res.status(500).json({ error: 'Failed to fetch train schedules' });
+        console.error('Error fetching train schedules for Lille:', error);
+        res.status(500).json({ error: 'Failed to fetch train schedules for Lille' });
     }
 });
 
@@ -187,12 +185,32 @@ app.get('/api/normandie/disruptions', async (req, res) => {
 });
 
 // Endpoint pour les horaires des trains à Rouen
+
+// Initialisation du scraper avec l'API key pour Normandie
+let normandieScraper = null;
+try {
+    const sncfApiKey = process.env.SNCF_API_KEY || 'basic ' + Buffer.from(process.env.SNCF_API_USER + ':').toString('base64');
+    normandieScraper = new SNCFScraper(sncfApiKey);
+} catch (error) {
+    console.error('Failed to initialize SNCF scraper for Normandie:', error);
+}
+
 app.get('/api/normandie/trains', async (req, res) => {
     try {
-        // Pour le moment, nous renvoyons des données factices
-        // À remplacer par une implémentation réelle plus tard
-        const mockData = {
-            'Gare de Rouen-Rive-Droite': {
+        if (!normandieScraper) {
+            throw new Error('SNCF scraper for Normandie not initialized');
+        }
+        
+        // Récupération des horaires en temps réel via le scraper SNCF
+        const allSchedules = await normandieScraper.getSchedules();
+        
+        // Filtrer uniquement la gare de Rouen pour la page Normandie
+        const rouenSchedules = {};
+        if (allSchedules['Gare de Rouen-Rive-Droite']) {
+            rouenSchedules['Gare de Rouen-Rive-Droite'] = allSchedules['Gare de Rouen-Rive-Droite'];
+        } else {
+            console.warn('No schedules available for Rouen, using mock data');
+            rouenSchedules['Gare de Rouen-Rive-Droite'] = {
                 arrivals: [
                     { time: '11:42', direction: 'Paris Saint-Lazare', type: 'TER', train_number: '19123' },
                     { time: '12:15', direction: 'Le Havre', type: 'Intercités', train_number: '3115' },
@@ -203,9 +221,10 @@ app.get('/api/normandie/trains', async (req, res) => {
                     { time: '12:30', direction: 'Paris Saint-Lazare', type: 'Intercités', train_number: '3122' },
                     { time: '13:05', direction: 'Caen', type: 'TER', train_number: '17845' }
                 ]
-            }
-        };
-        res.json(mockData);
+            };
+        }
+        
+        res.json(rouenSchedules);
     } catch (error) {
         console.error('Error fetching train schedules for Normandie:', error);
         res.status(500).json({ error: 'Failed to fetch train schedules for Normandie' });
@@ -252,12 +271,12 @@ app.get('/api/marseille/ferries', async (req, res) => {
         });
         
         // Trier par date d'arrivée la plus proche
+        // Trier par date et ne garder que les 5 premiers
         ships_data.sort((a, b) => a.dateObj - b.dateObj);
         
-        // Ne garder que les 5 premiers
-        const limitedData = ships_data.slice(0, 5).map(ship => {
-            const { dateObj, ...shipData } = ship; // Enlever dateObj avant d'envoyer
-            return shipData;
+        // Ne garder que les 5 premiers et supprimer la propriété dateObj utilisée uniquement pour le tri
+        const limitedData = ships_data.slice(0, 5).map(({ dateObj, ...shipData }) => {
+            return shipData; // On retourne l'objet sans dateObj
         });
         
         res.json(limitedData);
@@ -300,6 +319,280 @@ app.get('/api/velib/unavailable', async (req, res) => {
         console.error('Erreur lors de la récupération des stations Vélib:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
+});
+
+// Routes de configuration/test supprimées car non utilisées
+
+// Route pour récupérer les incidents de trafic TomTom pour une ville
+app.get('/api/tomtom/incidents/:city', async (req, res) => {
+  const { city } = req.params;
+  const language = req.query.language || 'fr-FR';
+  
+  try {
+    const trafficData = await tomTomService.getTrafficIncidents(city, language);
+    res.json(trafficData);
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des incidents TomTom pour ${city}:`, error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération des incidents TomTom: ${error.message}`,
+      city: city
+    });
+  }
+});
+
+// Route pour récupérer un résumé des incidents de trafic pour toutes les villes
+app.get('/api/tomtom/incidents', async (req, res) => {
+  const language = req.query.language || 'fr-FR';
+  
+  try {
+    const allCitiesData = await tomTomService.getAllCitiesTrafficSummary(language);
+    res.json(allCitiesData);
+  } catch (error) {
+    console.error('Erreur lors de la récupération du résumé des incidents TomTom:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération du résumé des incidents TomTom: ${error.message}`
+    });
+  }
+});
+
+// Route pour récupérer uniquement les accidents TomTom pour Paris
+app.get('/api/tomtom/accidents/paris', async (req, res) => {
+  try {
+    const trafficData = await tomTomService.getTrafficIncidents('Paris', 'fr-FR');
+    const features = getFeatures(trafficData);
+    
+    // Filtrer uniquement les accidents et véhicules en panne (iconCategory === 1 ou 14)
+    const accidents = features
+      .filter(feature => {
+        const props = feature.properties || feature;
+        return isAccidentOrBreakdown(props);
+      })
+      .map(feature => {
+        const props = feature.properties || feature;
+        const geometry = feature.geometry;
+        
+        return {
+          id: props.id || Math.random().toString(36).substr(2, 9),
+          description: props.description || 'Accident signalé',
+          severity: props.severity || 'unknown',
+          delay: minutes(props.delay),
+          coordinates: geometry ? [geometry.coordinates[1], geometry.coordinates[0]] : null,
+          from: props.from || '',
+          to: props.to || '',
+          roadNumbers: props.roadNumbers || []
+        };
+      })
+      .filter(accident => accident.coordinates); // Garder seulement ceux avec coordonnées
+    
+    res.json({
+      status: 'success',
+      accidents: accidents,
+      count: accidents.length
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des accidents TomTom:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération des accidents TomTom: ${error.message}`
+    });
+  }
+});
+
+// Fonctions utilitaires pour le traitement des données TomTom (basées sur test.js)
+function getFeatures(root) {
+  if (Array.isArray(root?.features)) return root.features;
+  if (Array.isArray(root?.incidents)) return root.incidents;
+  if (Array.isArray(root)) return root;
+  if (root?.type === "Feature" && root?.properties) return [root];
+  return [];
+}
+
+function isAccidentOrBreakdown(props) {
+  if (!props) return false;
+  if (props.iconCategory === 1 || props.iconCategory === 14) return true;
+  return Array.isArray(props.events) && props.events.some(e => e.iconCategory === 1 || e.iconCategory === 14);
+}
+
+function minutes(delay) {
+  const v = Number(delay || 0);
+  return Math.max(0, Math.round(v / 60));
+}
+
+// Fonctions supprimées car non utilisées : labelType(), uniqKey()
+
+// Fonction extractTopIncidents() supprimée car remplacée par le filtrage du tomTomService
+
+// Fonction pour formater le texte (même logique que testratp.js)
+function formatText(text) {
+    return text
+        .replace(/&#233;/g, 'é')
+        .replace(/&#160;/g, '')
+        .replace(/&#224;/g, 'à')
+        .replace(/&#232;/g, 'è')
+        .replace(/&#234;/g, 'ê')
+        .replace(/&#238;/g, 'î')
+        .replace(/&#239;/g, 'ï')
+        .replace(/&#244;/g, 'ô')
+        .replace(/&#249;/g, 'ù')
+        .replace(/&#8217;/g, "'")
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/<p>/g, '')
+        .replace(/<\/p>/g, '\n\n')
+        .replace(/<br\s*\/?>/g, '\n')
+        .replace(/\n\s+/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/<b><u>/g, '')
+        .replace(/<\/u><\/b>/g, '')
+        .replace(/<b>/g, '')
+        .replace(/<\/b>/g, '')
+        .trim();
+}
+
+// Fonction pour normaliser le nom de la ligne (même logique que testratp.js)
+function normalizeLineNameForFlash(lineName) {
+    if (!lineName) return '';
+    
+    lineName = lineName
+        .replace(/Ratp métro/i, 'Métro')
+        .replace(/Transilien train transilien/i, 'Transilien')
+        .replace(/Batp bus/i, 'Bus');
+    
+    lineName = lineName.replace(/(RER|Transilien)\s+([a-z])/i, (match, type, letter) => {
+        return `${type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()} ${letter.toUpperCase()}`;
+    });
+    
+    return lineName;
+}
+
+// Route pour générer le flash trafic avec Claude (basée sur testClaude.js)
+app.get('/api/generate-flash-traffic', async (req, res) => {
+  try {
+    // 1. Récupérer les données TomTom pour Paris (déjà filtrées et priorisées)
+    const tomtomData = await tomTomService.getTrafficIncidents('Paris', 'fr-FR');
+    
+    // Les données sont déjà filtrées par le service amélioré
+    const processedTomTom = {
+      accidents: tomtomData.incidents.filter(i => i.iconCategory === 1),
+      vehicleBreakdowns: tomtomData.incidents.filter(i => i.iconCategory === 14),
+      majorTraffic: tomtomData.incidents.filter(i => i.iconCategory === 6 && i.delay.minutes >= 10),
+      roadClosures: tomtomData.incidents.filter(i => (i.iconCategory === 8 || i.iconCategory === 7)),
+      allIncidents: tomtomData.incidents
+    };
+
+    // 2. Récupérer les données RATP (même logique que testratp.js)
+    const allDisruptions = {};
+    const summaryData = [];
+    const seenLines = new Set();
+    const MAX_INCIDENTS_PER_CATEGORY = 10;
+    const MAX_SUMMARY_ITEMS = 20;
+    
+    for (const [category, apiValue] of Object.entries(CATEGORIES)) {
+        const disruptions = await fetchDisruptions(category, apiValue);
+        const activeDisruptions = disruptions
+            .filter(disruption => disruption.status === 'active')
+            .map(disruption => ({
+                id: disruption.id || '',
+                cause: disruption.cause || 'Inconnue',
+                severity: disruption.severity?.name || 'N/A',
+                message: disruption.messages?.[0]?.text || 'Pas de message',
+                impacted_lines: (disruption.impacted_objects || [])
+                    .filter(obj => obj.pt_object?.embedded_type === 'line')
+                    .map(obj => obj.pt_object?.name || 'Ligne inconnue')
+            }))
+            .filter(disruption => disruption.impacted_lines.length > 0)
+            .slice(0, MAX_INCIDENTS_PER_CATEGORY);
+        
+        allDisruptions[category] = activeDisruptions;
+    }
+
+    for (const [category, disruptions] of Object.entries(allDisruptions)) {
+        for (const d of disruptions) {
+            for (const line of d.impacted_lines) {
+                const normLine = normalizeLineNameForFlash(line);
+                if (!seenLines.has(normLine) && summaryData.length < MAX_SUMMARY_ITEMS) {
+                    summaryData.push({
+                        category,
+                        line: normLine,
+                        cause: d.cause,
+                        severity: d.severity,
+                        message: formatText(d.message)
+                            .split('\n')
+                            .map(line => line.trim())
+                            .filter(line => line.length > 0)
+                            .join('\n')
+                    });
+                    seenLines.add(normLine);
+                }
+            }
+        }
+    }
+
+    const ratpData = {
+        metadata: {
+            timestamp: new Date().toISOString(),
+            source: 'API Île-de-France Mobilités',
+            total_disruptions: summaryData.length
+        },
+        summary: summaryData,
+        detailed: allDisruptions
+    };
+
+    // 3. Générer le flash trafic avec Claude
+    const now = new Date();
+    const formatted = now.toLocaleString("fr-FR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const prompt = `
+Voici deux jeux de données :
+- Incidents routiers TomTom : ${JSON.stringify(processedTomTom).slice(0, 8000)}
+- Perturbations transports IDFM : ${JSON.stringify(ratpData).slice(0, 4000)}
+
+Tâches :
+1. Analyse les données en interne pour identifier les incidents les plus importants.
+2. Garde en priorité :
+   - Accidents,
+   - Embouteillages/travaux avec >5 minutes de retard ou fermetures majeures,
+   - Perturbations RATP/IDFM bloquantes (trafic interrompu, grève, coupures longues).
+3. Ignore les perturbations mineures.
+
+⚠️ Sortie attendue :
+- Écris UNIQUEMENT un flash radio de 120 secondes.
+- Le texte doit être fluide, oral, humain, comme s'il était lu à l'antenne.
+- Commence par : "Flash trafic – ${formatted}".
+- Ensuite enchaîne directement avec : "Bonjour, voici les principales perturbations…".
+- Évite de répéter ("ralentissement" ×3 = à éviter)
+- Pour finir donne une conclusion pratique et concise
+- Ne génère pas de date ou d'heure par toi-même, utilise exactement la valeur fournie.
+    `;
+
+    const flashText = await anthropicService.generateFlashTraffic(prompt);
+    
+    res.json({
+      status: 'success',
+      flash_traffic: flashText,
+      data_sources: {
+        tomtom: processedTomTom,
+        ratp: ratpData
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la génération du flash trafic:', error);
+    res.status(500).json({
+      status: 'error',
+      message: `Erreur lors de la génération du flash trafic: ${error.message}`
+    });
+  }
 });
 
 app.listen(PORT, () => {

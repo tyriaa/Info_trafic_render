@@ -112,13 +112,31 @@ class NormandieRSSScraper {
                 return this.getFallbackData();
             }
 
+            // Le flux RSS retourne en fait une page HTML Angular, pas du XML
+            // Essayer de détecter si c'est du HTML au lieu du RSS
+            if (xmlData.includes('<app-root>') || xmlData.includes('<!DOCTYPE html>') || xmlData.includes('<html')) {
+                console.log('Le flux RSS retourne du HTML au lieu du XML RSS. Utilisation des données de fallback.');
+                return this.getFallbackData();
+            }
+
+            // Nettoyer le XML avant parsing pour éviter les caractères invalides
+            const cleanXmlData = xmlData
+                .replace(/&(?![a-zA-Z0-9#]{1,7};)/g, '&amp;') // Échapper les & non valides
+                .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '') // Supprimer les caractères de contrôle
+                .replace(/&([^;]+)=([^;]*);/g, '&amp;$1=$2;'); // Corriger les entités malformées avec =
+
             // Analyser le XML
-            const parser = new xml2js.Parser({ explicitArray: false });
+            const parser = new xml2js.Parser({ 
+                explicitArray: false,
+                sanitizeText: true,
+                trim: true
+            });
             let result;
             try {
-                result = await parser.parseStringPromise(xmlData);
+                result = await parser.parseStringPromise(cleanXmlData);
             } catch (parseError) {
                 console.error('Erreur lors de l\'analyse XML:', parseError);
+                console.log('Le contenu reçu semble être du HTML, pas du RSS XML');
                 // En cas d'erreur de parsing, utiliser les données du fichier local
                 return this.getFallbackData();
             }
