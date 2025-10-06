@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "build": "npm install --production",
+    "build": "npm install --only=production",
     "dev": "nodemon index.js"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.17.2",
@@ -20,7 +20,7 @@
     "express": "^4.18.2",
     "gpt-tokenizer": "^3.0.1",
     "node-cron": "^3.0.3",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
