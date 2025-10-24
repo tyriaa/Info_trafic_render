@@ -5,6 +5,7 @@
  */
 
 const axios = require('axios');
+const { formatShortFrenchDate } = require('./dateUtils');
 
 // Configuration de base pour TomTom
 const TOMTOM_API_KEY = 'PVt4NaZSKKtziZi9DaqNAUzN4flNJnSo';
@@ -114,14 +115,14 @@ function formatTrafficData(rawData, cityName) {
       // Calculer le délai en minutes et l'arrondir
       const delayMinutes = props.delay ? Math.round(props.delay / 60) : 0;
 
-      // Formatter l'heure de début si disponible
+      // Formatter l'heure de début si disponible (avec fuseau horaire français)
       const startTime = props.startTime 
-        ? new Date(props.startTime).toLocaleString('fr-FR')
+        ? formatShortFrenchDate(props.startTime)
         : 'Non spécifié';
       
-      // Formatter l'heure de fin si disponible
+      // Formatter l'heure de fin si disponible (avec fuseau horaire français)
       const endTime = props.endTime 
-        ? new Date(props.endTime).toLocaleString('fr-FR')
+        ? formatShortFrenchDate(props.endTime)
         : 'Non spécifié';
 
       return {
@@ -146,9 +147,9 @@ function formatTrafficData(rawData, cityName) {
         priority: calculateIncidentPriority(props.iconCategory, delayMinutes, props.magnitudeOfDelay)
       };
     })
-    .filter(incident => isHighPriorityIncident(incident))
-    .sort((a, b) => b.priority - a.priority) // Trier par priorité décroissante
-    .slice(0, 30); // Limiter aux 30 incidents les plus importants
+    .filter(incident => isRelevantIncident(incident))
+    .sort((a, b) => b.priority - a.priority) // Trier par priorité décroissante (accidents/pannes en premier)
+    .slice(0, 50); // Limiter aux 50 incidents les plus importants (augmenté pour plus de diversité)
 
   return {
     cityName,
@@ -159,7 +160,7 @@ function formatTrafficData(rawData, cityName) {
 }
 
 /**
- * Calcule la priorité d'un incident basée sur son type et sa sévérité
+ * Calcule la priorité d'un incident avec priorité absolue pour accidents et pannes
  * @param {number} iconCategory - Catégorie de l'incident
  * @param {number} delayMinutes - Délai en minutes
  * @param {number} magnitudeOfDelay - Magnitude du délai (0-4)
@@ -168,74 +169,77 @@ function formatTrafficData(rawData, cityName) {
 function calculateIncidentPriority(iconCategory, delayMinutes, magnitudeOfDelay) {
   let priority = 0;
   
-  // Priorité basée sur le type d'incident
-  switch (iconCategory) {
-    case 1: // Accident
-      priority += 100;
-      break;
-    case 14: // Véhicule en panne
-      priority += 80;
-      break;
-    case 8: // Route fermée
-      priority += 70;
-      break;
-    case 7: // Voie fermée
-      priority += 60;
-      break;
-    case 6: // Embouteillage
-      priority += 40;
-      break;
-    case 9: // Travaux
-      priority += 30;
-      break;
-    case 3: // Conditions dangereuses
+  // PRIORITÉ ABSOLUE pour accidents et véhicules en panne
+  if (iconCategory === 1 || iconCategory === 14) {
+    priority = 1000; // Priorité absolue
+  } else {
+    // Priorité normale pour les autres types
+    switch (iconCategory) {
+      case 3: // Conditions dangereuses
+        priority += 80;
+        break;
+      case 5: // Verglas
+        priority += 70;
+        break;
+      case 8: // Route fermée
+        priority += 60;
+        break;
+      case 6: // Embouteillage
+        priority += 50;
+        break;
+      case 7: // Voie fermée
+        priority += 40;
+        break;
+      case 9: // Travaux
+        priority += 25;
+        break;
+      default:
+        priority += 10;
+    }
+  }
+  
+  // Bonus basé sur le délai (sauf pour les priorités absolues)
+  if (iconCategory !== 1 && iconCategory !== 14) {
+    if (delayMinutes >= 25) {
       priority += 50;
-      break;
-    case 5: // Verglas
-      priority += 45;
-      break;
-    default:
-      priority += 10;
-  }
-  
-  // Bonus basé sur le délai
-  if (delayMinutes >= 30) {
-    priority += 50;
-  } else if (delayMinutes >= 15) {
-    priority += 30;
-  } else if (delayMinutes >= 5) {
-    priority += 15;
-  }
-  
-  // Bonus basé sur la magnitude du délai
-  switch (magnitudeOfDelay) {
-    case 4: // Indéfini
-      priority += 40;
-      break;
-    case 3: // Majeur
+    } else if (delayMinutes >= 12) {
       priority += 30;
-      break;
-    case 2: // Modéré
+    } else if (delayMinutes >= 4) {
       priority += 15;
-      break;
-    case 1: // Mineur
-      priority += 5;
-      break;
+    }
+  }
+  
+  // Bonus basé sur la magnitude du délai (sauf pour les priorités absolues)
+  if (iconCategory !== 1 && iconCategory !== 14) {
+    switch (magnitudeOfDelay) {
+      case 4: // Indéfini
+        priority += 45;
+        break;
+      case 3: // Majeur
+        priority += 35;
+        break;
+      case 2: // Modéré
+        priority += 18;
+        break;
+      case 1: // Mineur
+        priority += 5;
+        break;
+    }
   }
   
   return priority;
 }
 
 /**
- * Détermine si un incident est de haute priorité
+ * Détermine si un incident est pertinent pour l'affichage
+ * Système plus inclusif basé sur la priorité absolue
  * @param {Object} incident - L'incident formaté
- * @returns {boolean} - True si l'incident est prioritaire
+ * @returns {boolean} - True si l'incident est pertinent
  */
-function isHighPriorityIncident(incident) {
+function isRelevantIncident(incident) {
   const { iconCategory, delay, location, description } = incident;
   
-  // PRIORITÉ MAXIMALE: Toujours inclure les accidents et véhicules en panne
-  // Même si les données sont incomplètes (N/A)
+  // PRIORITÉ ABSOLUE: Toujours inclure les accidents et véhicules en panne
   if (iconCategory === 1 || iconCategory === 14) {
     return true;
   }
@@ -245,30 +249,46 @@ function isHighPriorityIncident(incident) {
     return true;
   }
   
-  // PRIORITÉ MOYENNE: Embouteillages avec délai significatif (>= 10 minutes)
-  if (iconCategory === 6 && delay.minutes >= 10) {
+  // EMBOUTEILLAGES: Inclure ceux avec délai >= 5 minutes (plus inclusif)
+  if (iconCategory === 6 && delay.minutes >= 5) {
     return true;
   }
   
-  // PRIORITÉ MOYENNE: Routes fermées sur axes majeurs uniquement
+  // ROUTES ET VOIES FERMÉES: Système plus inclusif
   if (iconCategory === 8 || iconCategory === 7) {
     const text = `${location.from} ${location.to} ${description}`.toLowerCase();
-    // Filtrer uniquement les fermetures sur axes majeurs
+    
+    // Toujours inclure les axes majeurs
     if (text.includes('périphérique') || text.includes('autoroute') || 
         text.includes('nationale') || text.includes('a1') || text.includes('a4') ||
         text.includes('a6') || text.includes('a10') || text.includes('a13') ||
         text.includes('a86') || text.includes('n1') || text.includes('n2') ||
         text.includes('n3') || text.includes('n4') || text.includes('n6') ||
         text.includes('n7') || text.includes('n10') || text.includes('n13') ||
-        text.includes('n20') || text.includes('n104') || text.includes('n118') ||
-        delay.minutes >= 15) {
+        text.includes('n20') || text.includes('n104') || text.includes('n118')) {
       return true;
     }
-    return false; // Ignorer les petites routes fermées
+    
+    // Inclure les fermetures avec délai significatif (>= 10 minutes)
+    if (delay.minutes >= 10) {
+      return true;
+    }
+    
+    // Inclure les fermetures de routes importantes (même sans délai spécifié)
+    if (text.includes('route') || text.includes('boulevard') || text.includes('avenue')) {
+      return true;
+    }
+    
+    return false;
   }
   
-  // PRIORITÉ FAIBLE: Travaux avec délai très important (>= 20 minutes)
-  if (iconCategory === 9 && delay.minutes >= 20) {
+  // TRAVAUX: Inclure ceux avec délai >= 15 minutes (plus inclusif)
+  if (iconCategory === 9 && delay.minutes >= 15) {
+    return true;
+  }
+  
+  // AUTRES CONDITIONS MÉTÉO: Inclure brouillard, pluie, etc.
+  if (iconCategory === 2 || iconCategory === 4 || iconCategory === 10 || iconCategory === 11) {
     return true;
   }
   

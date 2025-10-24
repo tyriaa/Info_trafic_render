@@ -30,6 +30,261 @@
             border-bottom: 1px solid #eee;
         }
 
+        .alert-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: calc(100% - 4rem);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0066FF;
+            padding-bottom: 1rem;
+        }
+
+        .alert-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0066FF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-iframe-container {
+            position: relative;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 350px;
+            width: 100%;
+        }
+
+        /* Responsive design pour la section alert */
+        @media (max-width: 768px) {
+            .alert-section {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            .alert-title {
+                font-size: 1.2rem;
+            }
+            
+            #sytadin-frame-alert {
+                height: 400px;
+            }
+        }
+
+        .weather-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0066FF;
+            padding-bottom: 1rem;
+        }
+
+        .weather-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0066FF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weather-current {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+            padding: 15px 20px;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-current-icon {
+            font-size: 2.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .weather-current-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .weather-current-temp {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .weather-current-desc {
+            font-size: 1rem;
+            opacity: 0.9;
+            text-transform: capitalize;
+        }
+
+        .weather-current-details {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .weather-forecast {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .weather-day {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .weather-day:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border-color: #0066FF;
+        }
+
+        .weather-day-name {
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .weather-day-icon {
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+
+        .weather-day-temps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .weather-day-max {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .weather-day-min {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .weather-day-desc {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+            text-transform: capitalize;
+        }
+
+        .weather-next24h {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 1rem;
+        }
+
+        .weather-next24h-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .weather-hourly {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .weather-hour {
+            min-width: 80px;
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .weather-hour-time {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .weather-hour-icon {
+            font-size: 1.5rem;
+            margin: 5px 0;
+        }
+
+        .weather-hour-temp {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .weather-loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .weather-loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .header-logo {
             height: 40px;
         }
@@ -186,10 +441,20 @@
 
         #sytadin-frame {
             border: 0;
-            transform: scale(1.4);
+            transform: scale(1.6);
             transform-origin: 0 0;
-            margin-left: -200px;
+            margin-left: -400px;
             position: relative;
+        }
+
+        #sytadin-frame-alert {
+            width: 100%;
+            height: 250px;
+            border: none;
+            display: block;
+            transform: scale(2) translateX(-25%);
+            transform-origin: 0 0;
+            margin-bottom: -45px;
         }
 
         .active {
@@ -348,6 +613,175 @@
             background: #0053cc;
         }
         
+        /* Styles pour le système de feedback */
+        .feedback-container {
+            background-color: #f0f0f0;
+            padding: 1.5rem;
+            border-radius: 15px;
+            width: 375px;
+            flex-shrink: 0;
+        }
+
+        .feedback-container.hidden {
+            display: none;
+        }
+        
+        .feedback-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+        
+        .feedback-page {
+            display: none;
+        }
+        
+        .feedback-page.active {
+            display: block;
+        }
+        
+        .feedback-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding: 0 1.5rem;
+        }
+        
+        .feedback-nav-btn {
+            background: #0066FF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-nav-btn:hover {
+            background: #0053cc;
+        }
+        
+        .feedback-nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .feedback-page-indicator {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .feedback-submit-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 1.5rem;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-submit-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .feedback-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .feedback-question {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .question-text {
+            color: #6666ff;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .emoji-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .emoji-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .emoji {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .emoji:hover {
+            transform: scale(1.1);
+        }
+        
+        .emoji-label {
+            color: #0066ff;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .slider-container {
+            position: relative;
+            margin-top: 0.5rem;
+        }
+        
+        .feedback-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, #6666ff 0%, #6666ff 100%);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .feedback-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0066ff;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .feedback-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0066ff;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
     </style>
     <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
@@ -394,6 +828,128 @@
             
             const formattedDate = `${day}/${month}/${year} ${hours}:${minutes}`;
             document.querySelector('.last-update').textContent = `Dernière mise à jour : ${formattedDate}`;
+
+            // Fonction pour récupérer les prévisions météo 5 jours
+            async function loadWeatherForecast() {
+                try {
+                    const response = await fetch('/api/weather/paris/forecast');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const forecast = await response.json();
+                    
+                    if (forecast.error) {
+                        showWeatherError('Prévisions météo indisponibles');
+                        return;
+                    }
+                    
+                    displayWeatherForecast(forecast);
+                    updateWeatherLastUpdate(forecast.lastUpdate);
+                    
+                } catch (error) {
+                    console.error('Erreur lors du chargement des prévisions météo:', error);
+                    showWeatherError('Erreur lors du chargement des prévisions');
+                }
+            }
+
+            // Fonction pour afficher les prévisions météo
+            function displayWeatherForecast(forecast) {
+                const contentEl = document.getElementById('weather-content');
+                
+                let html = '';
+                
+                // Météo actuelle
+                if (forecast.current) {
+                    const current = forecast.current;
+                    html += `
+                        <div class="weather-current">
+                            <div class="weather-current-icon">${current.conditions.displayIcon}</div>
+                            <div class="weather-current-info">
+                                <div class="weather-current-temp">${current.temperature}°C</div>
+                                <div class="weather-current-desc">${current.conditions.description}</div>
+                                <div class="weather-current-details">
+                                    Ressenti ${current.feelsLike}°C • Humidité ${current.details.humidity}%
+                                    ${current.wind.speed ? ` • Vent ${current.wind.speed} km/h` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Prévisions 5 jours
+                html += '<div class="weather-forecast">';
+                forecast.dailySummary.forEach(day => {
+                    html += `
+                        <div class="weather-day">
+                            <div class="weather-day-name">${day.dayName}</div>
+                            <div class="weather-day-icon">${day.conditions.displayIcon}</div>
+                            <div class="weather-day-temps">
+                                <span class="weather-day-max">${day.temperature.max}°</span>
+                                <span class="weather-day-min">${day.temperature.min}°</span>
+                            </div>
+                            <div class="weather-day-desc">${day.conditions.description}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                // Prochaines 24 heures
+                if (forecast.next24Hours && forecast.next24Hours.length > 0) {
+                    html += `
+                        <div class="weather-next24h">
+                            <div class="weather-next24h-title">
+                                🕐 Prochaines 24 heures
+                            </div>
+                            <div class="weather-hourly">
+                    `;
+                    
+                    forecast.next24Hours.forEach(hour => {
+                        const time = new Date(hour.datetime).toLocaleTimeString('fr-FR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            timeZone: 'Europe/Paris'
+                        });
+                        
+                        html += `
+                            <div class="weather-hour">
+                                <div class="weather-hour-time">${time}</div>
+                                <div class="weather-hour-icon">${hour.conditions.displayIcon}</div>
+                                <div class="weather-hour-temp">${hour.temperature}°C</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div></div>';
+                }
+                
+                contentEl.innerHTML = html;
+            }
+
+            // Fonction pour afficher une erreur météo
+            function showWeatherError(message) {
+                const contentEl = document.getElementById('weather-content');
+                contentEl.innerHTML = `
+                    <div class="weather-loading">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                        <div>${message}</div>
+                        <div style="margin-top: 1rem; font-size: 0.9rem; color: #999;">
+                            Vérifiez que votre clé API OpenWeatherMap est active
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Fonction pour mettre à jour l'heure de dernière mise à jour
+            function updateWeatherLastUpdate(lastUpdate) {
+                const updateEl = document.getElementById('weather-last-update');
+                updateEl.textContent = `Dernière mise à jour: ${lastUpdate}`;
+            }
+
+            // Charger les prévisions météo au démarrage
+            loadWeatherForecast();
+
+            // Actualiser les prévisions toutes les 30 minutes
+            setInterval(loadWeatherForecast, 30 * 60 * 1000);
 
             // Fonction pour récupérer les perturbations
             async function fetchDisruptions() {
@@ -509,6 +1065,12 @@
                     if (data.status === 'success') {
                         document.getElementById('flash-trafic-content').innerHTML = 
                             `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                        
+                        // Afficher le système de feedback après génération réussie
+                        const feedbackContainer = document.getElementById('feedback-container');
+                        if (feedbackContainer) {
+                            feedbackContainer.classList.remove('hidden');
+                        }
                     } else {
                         throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
                     }
@@ -527,7 +1089,100 @@
             if (flashBtn) {
                 flashBtn.addEventListener('click', generateFlashTrafic);
             }
+            
+            // Initialiser le système de feedback
+            initFeedbackSystem();
         });
+        
+        // Fonction pour initialiser le système de feedback
+        function initFeedbackSystem() {
+            // Gérer les interactions des sliders et emojis
+            for (let i = 1; i <= 8; i++) {
+                const slider = document.getElementById(`slider-${i}`);
+                const question = slider.closest('.feedback-question');
+                const emojis = question.querySelectorAll('.emoji');
+                
+                // Synchroniser le slider avec les emojis
+                slider.addEventListener('input', function() {
+                    updateEmojiSelection(question, this.value);
+                });
+                
+                // Permettre de cliquer sur les emojis pour changer la valeur
+                emojis.forEach(emoji => {
+                    emoji.addEventListener('click', function() {
+                        const value = this.getAttribute('data-value');
+                        slider.value = value;
+                        updateEmojiSelection(question, value);
+                    });
+                });
+                
+                // Initialiser l'affichage
+                updateEmojiSelection(question, slider.value);
+            }
+        }
+        
+        // Fonction pour mettre à jour la sélection des emojis
+        function updateEmojiSelection(question, value) {
+            const emojis = question.querySelectorAll('.emoji');
+            emojis.forEach(emoji => {
+                const emojiValue = emoji.getAttribute('data-value');
+                if (emojiValue == value) {
+                    emoji.style.transform = 'scale(1.2)';
+                    emoji.style.filter = 'brightness(1.2)';
+                } else {
+                    emoji.style.transform = 'scale(1)';
+                    emoji.style.filter = 'brightness(0.7)';
+                }
+            });
+        }
+        
+        // Variables pour la pagination du feedback
+        let currentFeedbackPage = 1;
+        const totalFeedbackPages = 2;
+        
+        // Fonction pour changer de page dans le feedback
+        function changeFeedbackPage(direction) {
+            const newPage = currentFeedbackPage + direction;
+            
+            if (newPage < 1 || newPage > totalFeedbackPages) {
+                return;
+            }
+            
+            // Masquer la page actuelle
+            document.getElementById(`feedback-page-${currentFeedbackPage}`).classList.remove('active');
+            
+            // Afficher la nouvelle page
+            currentFeedbackPage = newPage;
+            document.getElementById(`feedback-page-${currentFeedbackPage}`).classList.add('active');
+            
+            // Mettre à jour l'indicateur de page
+            document.getElementById('current-page').textContent = currentFeedbackPage;
+            
+            // Mettre à jour l'état des boutons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentFeedbackPage === 1;
+            nextBtn.disabled = currentFeedbackPage === totalFeedbackPages;
+        }
+        
+        // Fonction pour envoyer le feedback
+        function submitFeedback() {
+            // Collecter toutes les réponses
+            const feedbackData = {};
+            for (let i = 1; i <= 8; i++) {
+                const slider = document.getElementById(`slider-${i}`);
+                if (slider) {
+                    feedbackData[`question_${i}`] = slider.value;
+                }
+            }
+            
+            // Afficher un message de confirmation
+            alert('Feedback envoyé avec succès ! Merci pour votre évaluation.');
+            
+            // Ici vous pourriez ajouter l'envoi vers un serveur
+            console.log('Feedback data:', feedbackData);
+        }
     </script>
 </head>
 <body>
@@ -541,15 +1196,294 @@
 
     <div class="flash-trafic">
         <div class="flash-trafic-title">Flash trafic</div>
-        <div class="disruption-bubble">
-          <h3>Flash trafic</h3>
-          <button id="generate-flash-btn" class="flash-generate-btn">Générer le flash trafic</button>
-          <div id="flash-trafic-content">
-            <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
+        <div class="source">Source : Claude 3.7 Sonnet API</div>
+        <div style="display: flex; gap: 2rem; align-items: flex-start;">
+          <div class="disruption-bubble" style="flex: 1;">
+            <button id="generate-flash-btn" class="flash-generate-btn">Générer le flash trafic</button>
+            <div id="flash-trafic-content">
+              <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
+            </div>
+          </div>
+          
+          <!-- Système de feedback -->
+          <div class="feedback-container hidden" id="feedback-container">
+            <h3 style="color: #0066FF; font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; text-align: center;">Feedback</h3>
+            <div class="feedback-content">
+                <!-- Page 1 -->
+                <div class="feedback-page active" id="feedback-page-1">
+                    <!-- Question 1 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Évaluation générale</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="3" class="feedback-slider" id="slider-1">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 2 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Le ton est-il adapté ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="3" class="feedback-slider" id="slider-2">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 3 -->
+                    <div class="feedback-question">
+                        <div class="question-text">La durée semble-t-elle appropriée ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="3" class="feedback-slider" id="slider-3">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 4 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Les perturbations RATP mentionnées sont-elles correctes ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="4" class="feedback-slider" id="slider-4">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Page 2 -->
+                <div class="feedback-page" id="feedback-page-2">
+                    <!-- Question 5 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Manque-t-il des perturbations importantes ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="5" class="feedback-slider" id="slider-5">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 6 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Les accidents/bouchons mentionnés sont-ils réels ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="5" class="feedback-slider" id="slider-6">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 7 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Y a-t-il des incidents majeurs oubliés ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="5" class="feedback-slider" id="slider-7">
+                        </div>
+                    </div>
+                    
+                    <!-- Question 8 -->
+                    <div class="feedback-question">
+                        <div class="question-text">Les localisations sont-elles précises ?</div>
+                        <div class="emoji-row">
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="1">😖</div>
+                                <div class="emoji-label">Worst</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="2">😕</div>
+                                <div class="emoji-label">Not Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="3">😐</div>
+                                <div class="emoji-label">Fine</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="4">😊</div>
+                                <div class="emoji-label">Look Good</div>
+                            </div>
+                            <div class="emoji-item">
+                                <div class="emoji" data-value="5">😍</div>
+                                <div class="emoji-label">Very Good</div>
+                            </div>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" min="1" max="5" value="5" class="feedback-slider" id="slider-8">
+                        </div>
+                    </div>
+                    
+                    <!-- Bouton Envoyer -->
+                    <button class="feedback-submit-btn" onclick="submitFeedback()">Envoyer</button>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="feedback-navigation">
+                <button class="feedback-nav-btn" id="prev-btn" onclick="changeFeedbackPage(-1)" disabled>Précédent</button>
+                <div class="feedback-page-indicator">
+                    <span id="current-page">1</span> / <span id="total-pages">2</span>
+                </div>
+                <button class="feedback-nav-btn" id="next-btn" onclick="changeFeedbackPage(1)">Suivant</button>
+            </div>
           </div>
         </div>
     </div>
     
+    <!-- Section Alertes Trafic -->
+    <div class="alert-section">
+        <div class="alert-header">
+            <div class="alert-title">
+                🚨 Alertes Trafic en Temps Réel
+            </div>
+            <div class="source">Source : Sytadin</div>
+        </div>
+        
+        <div class="alert-iframe-container">
+            <iframe id="sytadin-frame-alert" src="https://www.sytadin.fr/frame/alert_reseau.jsp.html?largeur=1400&hauteur=800" frameborder="0" scrolling="no"></iframe>
+        </div>
+    </div>
 
     <div class="main-content">
         <section class="disruptions">
@@ -605,6 +1539,24 @@
                 <iframe id="sytadin-frame" src="https://www.sytadin.fr/frame/cartographie.jsp.html?largeur=2000&hauteur=1200" frameborder="0" scrolling="no"></iframe>
             </div>
         </section>
+    </div>
+    <!-- Section météo complète -->
+    <div class="weather-section">
+        <div class="weather-header">
+            <div class="weather-title">
+                🌤️ Météo Paris
+            </div>
+            <div class="source">Source : OpenWeatherMap API</div>
+            <div id="weather-last-update" style="font-size: 0.9rem; color: #666;">
+                Chargement...
+            </div>
+        </div>
+
+        <div id="weather-content" class="weather-loading">
+            <div class="weather-loading-spinner"></div>
+            <div>Chargement des prévisions météo...</div>
+        </div>
+    </div>
     </main>
 
     <script>

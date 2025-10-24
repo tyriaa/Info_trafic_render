@@ -5,14 +5,14 @@ const cheerio = require('cheerio');
 require('dotenv').config();
 const PerturbationScraper = require('./scrapers/lille_scraper');
 const SNCFScraper = require('./scrapers/sncf_scraper');
-const NormandieRSSScraper = require('./scrapers/normandie_scraper');
-
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Initialisation des services IA et API externes
-const anthropicService = require('./utils/anthropicService');
 const tomTomService = require('./utils/tomTomService');
+const anthropicService = require('./utils/anthropicService');
+const weatherService = require('./utils/weatherService');
+const { formatFullFrenchDate } = require('./utils/dateUtils');
 
 // Configuration automatique via variables d'environnement (ANTHROPIC_API_KEY)
 // TomTom API configurée directement dans le service
@@ -357,6 +357,45 @@ app.get('/api/tomtom/incidents', async (req, res) => {
   }
 });
 
+// Route pour récupérer les données météo
+app.get('/api/weather/:city', async (req, res) => {
+  const { city } = req.params;
+  
+  try {
+    const weatherData = await weatherService.getWeatherData(city);
+    res.json(weatherData);
+  } catch (error) {
+    console.error(`Erreur lors de la récupération météo pour ${city}:`, error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des données météo' });
+  }
+});
+
+// Route pour récupérer un résumé météo court
+app.get('/api/weather/:city/summary', async (req, res) => {
+  const { city } = req.params;
+  
+  try {
+    const summary = await weatherService.getWeatherSummary(city);
+    res.json({ summary });
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du résumé météo pour ${city}:`, error);
+    res.status(500).json({ error: 'Erreur lors de la récupération du résumé météo' });
+  }
+});
+
+// Route pour récupérer les prévisions météo 5 jours
+app.get('/api/weather/:city/forecast', async (req, res) => {
+  const { city } = req.params;
+  
+  try {
+    const forecast = await weatherService.getWeatherForecast(city);
+    res.json(forecast);
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des prévisions pour ${city}:`, error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des prévisions météo' });
+  }
+});
+
 // Route pour récupérer uniquement les accidents TomTom pour Paris
 app.get('/api/tomtom/accidents/paris', async (req, res) => {
   try {
@@ -543,14 +582,7 @@ app.get('/api/generate-flash-traffic', async (req, res) => {
     };
 
     // 3. Générer le flash trafic avec Claude
-    const now = new Date();
-    const formatted = now.toLocaleString("fr-FR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    const formatted = formatFullFrenchDate();
 
     const prompt = `
 Voici deux jeux de données :

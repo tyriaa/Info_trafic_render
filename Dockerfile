@@ -1,5 +1,5 @@
-# Utiliser l'image officielle Node.js 20 LTS (recommandé pour Azure)
-FROM node:20
+# Utiliser l'image officielle Node.js 18 (compatible Azure)
+FROM node:18
 
 # Définir le répertoire de travail
 WORKDIR /app
