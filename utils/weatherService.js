@@ -6,7 +6,7 @@ const axios = require('axios');
 const { formatShortFrenchTime } = require('./dateUtils');
 
 // Configuration API OpenWeatherMap
-const API_KEY = '4b7bedb1e29f2bea27a1e085a02690e0';
+const API_KEY = process.env.OPENWEATHER_API_KEY; 
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 // Coordonnées des villes
