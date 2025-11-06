@@ -16,8 +16,19 @@ const CITY_BOUNDING_BOXES = {
   paris: {
     name: 'Paris',
     bbox: '2.0,48.6,2.8,49.1' // Bounding box élargie pour couvrir toute l'Île-de-France
+  },
+  lille: {
+    name: 'Lille',
+    bbox: '2.9,50.5,3.4,50.8' // Bounding box pour la métropole lilloise
+  },
+  marseille: {
+    name: 'Marseille',
+    bbox: '5.2,43.1,5.6,43.4' // Bounding box pour la métropole marseillaise
+  },
+  normandie: {
+    name: 'Normandie',
+    bbox: '-1.2,48.8,1.8,50.1' // Bounding box pour la région Normandie
   }
-  // Villes supprimées car non utilisées : lille, marseille, normandie
 };
 
 /**
@@ -144,6 +155,7 @@ function formatTrafficData(rawData, cityName) {
           start: startTime,
           end: endTime
         },
+        geometry: incident.geometry || null, // Conserver la géométrie originale
         priority: calculateIncidentPriority(props.iconCategory, delayMinutes, props.magnitudeOfDelay)
       };
     })

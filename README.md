@@ -38,19 +38,3 @@ Une application web qui affiche en temps réel les perturbations de transport da
 2. Installer les dépendances : `npm install`
 3. Configurer les variables d'environnement dans `.env`
 4. Lancer l'application : `npm start`
-
-<<<<<<< HEAD
-- **Backend** : Node.js, Express.js
-- **Frontend** : HTML5, CSS3, JavaScript ES6+
-- **APIs** : IDFM (RATP), TomTom Traffic, SNCF Connect, Vélib Métropole
-- **Cartes** : Leaflet.js avec tuiles personnalisées
-- **IA** : Anthropic Claude pour génération de contenu
-- **Containerisation** : Docker
-=======
-## Déploiement
-
-L'application est déployée sur Hugging Face Spaces et accessible à l'adresse :
-https://huggingface.co/spaces/tyriaa/Info_Trafic
-
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
->>>>>>> b47e729 (Ajout météo, mise a jour tri-traffic, nouvelle sytadin integration)

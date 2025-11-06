@@ -530,11 +530,7 @@
         }
 
         .custom-station-marker {
-            background-color: #FF4444;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid white;
+            background: transparent;
         }
 
         .map-legend {
@@ -590,6 +586,9 @@
             color: #000000 !important;
             font-size: 0.95rem;
             line-height: 1.5;
+            max-height: none !important;
+            overflow: visible !important;
+            white-space: normal !important;
         }
         
         .flash-trafic-content p {
@@ -612,6 +611,92 @@
         .flash-generate-btn:hover {
             background: #0053cc;
         }
+
+        /* Styles pour le menu de configuration */
+        .config-panel {
+            background: #f8f9fa;
+            border: 2px solid #0066FF;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+            max-width: 600px;
+            width: fit-content;
+        }
+
+        .config-panel.show {
+            display: block;
+        }
+
+        .config-toggle-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .config-toggle-btn:hover {
+            background: #218838;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .config-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .config-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 0.3rem;
+        }
+
+        .config-select, .config-input {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .config-input[type="range"] {
+            height: 6px;
+            background: #ddd;
+            outline: none;
+            border-radius: 3px;
+        }
+
+        .config-input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #0066FF;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .config-value {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 0.5rem;
+            min-width: 40px;
+        }
+
         
         /* Styles pour le système de feedback */
         .feedback-container {
@@ -1196,9 +1281,52 @@
 
     <div class="flash-trafic">
         <div class="flash-trafic-title">Flash trafic</div>
-        <div class="source">Source : Claude 3.7 Sonnet API</div>
         <div style="display: flex; gap: 2rem; align-items: flex-start;">
           <div class="disruption-bubble" style="flex: 1;">
+            <button id="config-toggle-btn" class="config-toggle-btn">⚙️ Configuration</button>
+            
+            <!-- Panneau de configuration -->
+            <div id="config-panel" class="config-panel">
+              <div class="config-row">
+                <div class="config-group">
+                  <label class="config-label" for="model-select">Modèle IA</label>
+                  <select id="model-select" class="config-select">
+                    <option value="claude">Claude 3.7 Sonnet</option>
+                    <option value="gpt4o">GPT-4o</option>
+                    <option value="pixtral">Pixtral</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="config-row">
+                <div class="config-group">
+                  <label class="config-label" for="temperature-slider">Température (Créativité)</label>
+                  <div style="display: flex; align-items: center;">
+                    <input type="range" id="temperature-slider" class="config-input" min="0" max="1" step="0.1" value="0.7">
+                    <span id="temperature-value" class="config-value">0.7</span>
+                  </div>
+                </div>
+                <div class="config-group">
+                  <label class="config-label" for="top-p-slider">Top-P (Vocabulaire)</label>
+                  <div style="display: flex; align-items: center;">
+                    <input type="range" id="top-p-slider" class="config-input" min="0" max="1" step="0.1" value="0.9">
+                    <span id="top-p-value" class="config-value">0.9</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="config-row">
+                <div class="config-group">
+                  <label class="config-label" for="max-tokens-select">Longueur maximale (tokens)</label>
+                  <select id="max-tokens-select" class="config-select">
+                    <option value="1000">Court (1000 tokens)</option>
+                    <option value="1500" selected>Moyen (1500 tokens)</option>
+                    <option value="2000">Maximum (2000 tokens)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
             <button id="generate-flash-btn" class="flash-generate-btn">Générer le flash trafic</button>
             <div id="flash-trafic-content">
               <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
@@ -1523,16 +1651,16 @@
                 <div id="leaflet-map" class="active">
                     <div class="map-legend">
                         <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                            <span class="legend-dot" style="background-color: #FF8C00;"></span>
+                            <span style="background-color: white; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1; margin-right: 8px;">🚲</span>
                             <span>Stations Vélib indisponibles</span>
                         </div>
                         <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                            <span class="legend-dot" style="background-color: #FF0000; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></span>
-                            <span>Accidents TomTom</span>
+                            <span class="legend-dot" style="background-color: #FF0000; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4); width: 16px; height: 16px;"></span>
+                            <span>Accidents TomTom (<span id="accident-count">0</span>)</span>
                         </div>
                         <div style="display: flex; align-items: center;">
-                            <span class="legend-dot" style="background-color: #FFA500; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3);"></span>
-                            <span>Véhicules en panne</span>
+                            <span class="legend-dot" style="background-color: #FFA500; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4); width: 16px; height: 16px;"></span>
+                            <span>Véhicules en panne (<span id="breakdown-count">0</span>)</span>
                         </div>
                     </div>
                 </div>
@@ -1610,12 +1738,12 @@
             markers.forEach(marker => marker.remove());
             markers = [];
 
-            // Créer l'icône personnalisée pour les stations
+            // Créer l'icône personnalisée pour les stations Vélib
             const stationIcon = L.divIcon({
                 className: 'custom-station-marker',
-                html: '<div style="background-color: #FF8C00; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
+                html: '<div style="background-color: white; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1;">🚲</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
             });
 
             // Ajouter les nouveaux marqueurs
@@ -1652,25 +1780,36 @@
             accidentMarkers.forEach(marker => marker.remove());
             accidentMarkers = [];
 
+            // Compteurs pour la légende
+            let accidentCount = 0;
+            let breakdownCount = 0;
+
             // Ajouter les nouveaux marqueurs d'accidents
-            accidents.forEach(accident => {
+            accidents.forEach((accident, index) => {
                 if (accident.coordinates && accident.coordinates.length === 2) {
                     // Déterminer le type d'incident basé sur la description
                     const isBreakdown = accident.description && accident.description.toLowerCase().includes('panne');
                     
-                    // Créer l'icône appropriée
+                    // Compter les types d'incidents
+                    if (isBreakdown) {
+                        breakdownCount++;
+                    } else {
+                        accidentCount++;
+                    }
+                    
+                    // Créer l'icône appropriée (plus grande que les stations Vélib)
                     const icon = isBreakdown ? 
                         L.divIcon({
                             className: 'custom-breakdown-marker',
-                            html: '<div style="background-color: #FFA500; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="background-color: white; width: 8px; height: 2px; margin: 6px auto; margin-top: 7px;"></div></div>',
-                            iconSize: [22, 22],
-                            iconAnchor: [11, 11]
+                            html: '<div style="background-color: #FFA500; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);"><div style="background-color: white; width: 12px; height: 3px; margin: 8px auto; margin-top: 10px; border-radius: 1px;"></div></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
                         }) :
                         L.divIcon({
                             className: 'custom-accident-marker',
-                            html: '<div style="background-color: #FF0000; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"><div style="background-color: white; width: 6px; height: 6px; border-radius: 50%; margin: 2px auto; margin-top: 2px;"></div></div>',
-                            iconSize: [22, 22],
-                            iconAnchor: [11, 11]
+                            html: '<div style="background-color: #FF0000; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);"><div style="background-color: white; width: 8px; height: 8px; border-radius: 50%; margin: 4px auto; margin-top: 4px;"></div></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
                         });
 
                     const marker = L.marker(accident.coordinates, {
@@ -1689,6 +1828,10 @@
                         ? `<br><small>Retard: ${accident.delay} min</small>`
                         : '';
                     
+                    const timeInfo = accident.startTime && accident.startTime !== 'Non spécifié'
+                        ? `<br><small>🕐 Depuis: ${accident.startTime}</small>`
+                        : '';
+                    
                     const incidentType = isBreakdown ? '🔧 Véhicule en panne' : '🚨 Accident';
                     
                     marker.bindPopup(`
@@ -1697,6 +1840,7 @@
                             ${accident.description}
                             ${locationInfo}
                             ${delayInfo}
+                            ${timeInfo}
                         </div>
                     `, {
                         closeButton: true,
@@ -1711,6 +1855,10 @@
                     accidentMarkers.push(marker);
                 }
             });
+            
+            // Mettre à jour les compteurs dans la légende
+            document.getElementById('accident-count').textContent = accidentCount;
+            document.getElementById('breakdown-count').textContent = breakdownCount;
         }
 
         async function fetchData() {
@@ -1727,12 +1875,15 @@
                 updateStationMarkers(velibData);
                 if (accidentsData.status === 'success') {
                     updateAccidentMarkers(accidentsData.accidents);
+                    console.log(`✅ ${accidentsData.accidents.length} accidents/pannes affichés sur la carte`);
+                } else {
+                    console.error('❌ Erreur accidents TomTom:', accidentsData.message);
                 }
                 
                 // Mettre à jour la bulle d'information
                 updateVelibBubble(velibData);
             } catch (error) {
-                console.error('Erreur lors de la récupération des données:', error);
+                console.error('❌ Erreur lors de la récupération des données:', error);
             }
         }
 
@@ -1800,12 +1951,47 @@
             initMap();
             fetchData(); // Garder l'appel à fetchData pour les autres fonctionnalités
             
-            // Fonction pour générer le flash trafic avec Claude
+            // Gestion du panneau de configuration
+            document.getElementById('config-toggle-btn').addEventListener('click', function() {
+                const panel = document.getElementById('config-panel');
+                panel.classList.toggle('show');
+            });
+
+            // Gestion des sliders de paramètres
+            const temperatureSlider = document.getElementById('temperature-slider');
+            const temperatureValue = document.getElementById('temperature-value');
+            const topPSlider = document.getElementById('top-p-slider');
+            const topPValue = document.getElementById('top-p-value');
+
+            temperatureSlider.addEventListener('input', function() {
+                temperatureValue.textContent = this.value;
+            });
+
+            topPSlider.addEventListener('input', function() {
+                topPValue.textContent = this.value;
+            });
+
+            
+            // Fonction pour générer le flash trafic avec les paramètres configurés
             async function generateFlashTrafic() {
                 try {
                     document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
                     
-                    const response = await fetch('/api/generate-flash-traffic');
+                    // Récupérer les paramètres de configuration
+                    const config = {
+                        model: document.getElementById('model-select').value,
+                        temperature: parseFloat(document.getElementById('temperature-slider').value),
+                        top_p: parseFloat(document.getElementById('top-p-slider').value),
+                        max_tokens: parseInt(document.getElementById('max-tokens-select').value)
+                    };
+                    
+                    const response = await fetch('/api/generate-flash-traffic', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(config)
+                    });
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1816,13 +2002,29 @@
                     if (data.status === 'success') {
                         document.getElementById('flash-trafic-content').innerHTML = 
                             `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                        
+                      // Mettre à jour la source affichée
+                        const sourceElement = document.querySelector('.source');
+                        let sourceName = '';
+                        switch(config.model) {
+                            case 'claude':
+                                sourceName = 'Claude 3.7 Sonnet API';
+                                break;
+                            case 'gpt4o':
+                                sourceName = 'GPT-4o API';
+                                break;
+                            case 'pixtral':
+                                sourceName = 'Pixtral API';
+                                break;
+                        }
+                        sourceElement.textContent = `Source : ${sourceName}`;
                     } else {
                         throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
                     }
                 } catch (error) {
                     console.error('Erreur lors de la génération du flash trafic:', error);
                     document.getElementById('flash-trafic-content').innerHTML = 
-                        '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier que votre clé API Claude est configurée.</p>';
+                        '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier votre configuration et vos clés API.</p>';
                 }
             }
 

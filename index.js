@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3001;
 // Initialisation des services IA et API externes
 const tomTomService = require('./utils/tomTomService');
 const anthropicService = require('./utils/anthropicService');
+const openaiService = require('./utils/openaiService');
+const mistralService = require('./utils/mistralService');
 const weatherService = require('./utils/weatherService');
 const { formatFullFrenchDate } = require('./utils/dateUtils');
 
@@ -400,27 +402,36 @@ app.get('/api/weather/:city/forecast', async (req, res) => {
 app.get('/api/tomtom/accidents/paris', async (req, res) => {
   try {
     const trafficData = await tomTomService.getTrafficIncidents('Paris', 'fr-FR');
-    const features = getFeatures(trafficData);
     
     // Filtrer uniquement les accidents et véhicules en panne (iconCategory === 1 ou 14)
-    const accidents = features
-      .filter(feature => {
-        const props = feature.properties || feature;
-        return isAccidentOrBreakdown(props);
-      })
-      .map(feature => {
-        const props = feature.properties || feature;
-        const geometry = feature.geometry;
+    const accidents = trafficData.incidents
+      .filter(incident => isAccidentOrBreakdown(incident))
+      .map(incident => {
+        const geometry = incident.geometry;
+        let coordinates = null;
+        
+        // Gérer les différents types de géométrie
+        if (geometry && geometry.coordinates) {
+          if (geometry.type === 'Point') {
+            // Pour un point, prendre les coordonnées directement [lon, lat] -> [lat, lon]
+            coordinates = [geometry.coordinates[1], geometry.coordinates[0]];
+          } else if (geometry.type === 'LineString' && geometry.coordinates.length > 0) {
+            // Pour une ligne, prendre le point central [lon, lat] -> [lat, lon]
+            const midIndex = Math.floor(geometry.coordinates.length / 2);
+            coordinates = [geometry.coordinates[midIndex][1], geometry.coordinates[midIndex][0]];
+          }
+        }
         
         return {
-          id: props.id || Math.random().toString(36).substr(2, 9),
-          description: props.description || 'Accident signalé',
-          severity: props.severity || 'unknown',
-          delay: minutes(props.delay),
-          coordinates: geometry ? [geometry.coordinates[1], geometry.coordinates[0]] : null,
-          from: props.from || '',
-          to: props.to || '',
-          roadNumbers: props.roadNumbers || []
+          id: incident.id || Math.random().toString(36).substr(2, 9),
+          description: incident.description || 'Accident signalé',
+          severity: incident.severity || 'unknown',
+          delay: incident.delay ? incident.delay.minutes : 0,
+          coordinates: coordinates,
+          from: incident.location?.from || '',
+          to: incident.location?.to || '',
+          roadNumbers: incident.roads || [],
+          startTime: incident.timing?.start || 'Non spécifié'
         };
       })
       .filter(accident => accident.coordinates); // Garder seulement ceux avec coordonnées
@@ -439,29 +450,168 @@ app.get('/api/tomtom/accidents/paris', async (req, res) => {
   }
 });
 
-// Fonctions utilitaires pour le traitement des données TomTom (basées sur test.js)
-function getFeatures(root) {
-  if (Array.isArray(root?.features)) return root.features;
-  if (Array.isArray(root?.incidents)) return root.incidents;
-  if (Array.isArray(root)) return root;
-  if (root?.type === "Feature" && root?.properties) return [root];
-  return [];
-}
+// Route pour récupérer uniquement les accidents TomTom pour Lille
+app.get('/api/tomtom/accidents/lille', async (req, res) => {
+  try {
+    const trafficData = await tomTomService.getTrafficIncidents('Lille', 'fr-FR');
+    
+    // Filtrer uniquement les accidents et véhicules en panne (iconCategory === 1 ou 14)
+    const accidents = trafficData.incidents
+      .filter(incident => isAccidentOrBreakdown(incident))
+      .map(incident => {
+        const geometry = incident.geometry;
+        let coordinates = null;
+        
+        // Gérer les différents types de géométrie
+        if (geometry && geometry.coordinates) {
+          if (geometry.type === 'Point') {
+            // Pour un point, prendre les coordonnées directement [lon, lat] -> [lat, lon]
+            coordinates = [geometry.coordinates[1], geometry.coordinates[0]];
+          } else if (geometry.type === 'LineString' && geometry.coordinates.length > 0) {
+            // Pour une ligne, prendre le point central [lon, lat] -> [lat, lon]
+            const midIndex = Math.floor(geometry.coordinates.length / 2);
+            coordinates = [geometry.coordinates[midIndex][1], geometry.coordinates[midIndex][0]];
+          }
+        }
+        
+        return {
+          id: incident.id || Math.random().toString(36).substr(2, 9),
+          description: incident.description || 'Accident signalé',
+          severity: incident.severity || 'unknown',
+          delay: incident.delay ? incident.delay.minutes : 0,
+          coordinates: coordinates,
+          from: incident.location?.from || '',
+          to: incident.location?.to || '',
+          roadNumbers: incident.roads || [],
+          startTime: incident.timing?.start || 'Non spécifié'
+        };
+      })
+      .filter(accident => accident.coordinates); // Garder seulement ceux avec coordonnées
+    
+    res.json({
+      status: 'success',
+      accidents: accidents,
+      count: accidents.length
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des accidents TomTom pour Lille:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération des accidents TomTom: ${error.message}`
+    });
+  }
+});
 
+// Route pour récupérer uniquement les accidents TomTom pour Marseille
+app.get('/api/tomtom/accidents/marseille', async (req, res) => {
+  try {
+    const trafficData = await tomTomService.getTrafficIncidents('Marseille', 'fr-FR');
+    
+    // Filtrer uniquement les accidents et véhicules en panne (iconCategory === 1 ou 14)
+    const accidents = trafficData.incidents
+      .filter(incident => isAccidentOrBreakdown(incident))
+      .map(incident => {
+        const geometry = incident.geometry;
+        let coordinates = null;
+        
+        // Gérer les différents types de géométrie
+        if (geometry && geometry.coordinates) {
+          if (geometry.type === 'Point') {
+            // Pour un point, prendre les coordonnées directement [lon, lat] -> [lat, lon]
+            coordinates = [geometry.coordinates[1], geometry.coordinates[0]];
+          } else if (geometry.type === 'LineString' && geometry.coordinates.length > 0) {
+            // Pour une ligne, prendre le point central [lon, lat] -> [lat, lon]
+            const midIndex = Math.floor(geometry.coordinates.length / 2);
+            coordinates = [geometry.coordinates[midIndex][1], geometry.coordinates[midIndex][0]];
+          }
+        }
+        
+        return {
+          id: incident.id || Math.random().toString(36).substr(2, 9),
+          description: incident.description || 'Accident signalé',
+          severity: incident.severity || 'unknown',
+          delay: incident.delay ? incident.delay.minutes : 0,
+          coordinates: coordinates,
+          from: incident.location?.from || '',
+          to: incident.location?.to || '',
+          roadNumbers: incident.roads || [],
+          startTime: incident.timing?.start || 'Non spécifié'
+        };
+      })
+      .filter(accident => accident.coordinates); // Garder seulement ceux avec coordonnées
+    
+    res.json({
+      status: 'success',
+      accidents: accidents,
+      count: accidents.length
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des accidents TomTom pour Marseille:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération des accidents TomTom: ${error.message}`
+    });
+  }
+});
+
+// Route pour récupérer uniquement les accidents TomTom pour Normandie
+app.get('/api/tomtom/accidents/normandie', async (req, res) => {
+  try {
+    const trafficData = await tomTomService.getTrafficIncidents('Normandie', 'fr-FR');
+    
+    // Filtrer uniquement les accidents et véhicules en panne (iconCategory === 1 ou 14)
+    const accidents = trafficData.incidents
+      .filter(incident => isAccidentOrBreakdown(incident))
+      .map(incident => {
+        const geometry = incident.geometry;
+        let coordinates = null;
+        
+        // Gérer les différents types de géométrie
+        if (geometry && geometry.coordinates) {
+          if (geometry.type === 'Point') {
+            // Pour un point, prendre les coordonnées directement [lon, lat] -> [lat, lon]
+            coordinates = [geometry.coordinates[1], geometry.coordinates[0]];
+          } else if (geometry.type === 'LineString' && geometry.coordinates.length > 0) {
+            // Pour une ligne, prendre le point central [lon, lat] -> [lat, lon]
+            const midIndex = Math.floor(geometry.coordinates.length / 2);
+            coordinates = [geometry.coordinates[midIndex][1], geometry.coordinates[midIndex][0]];
+          }
+        }
+        
+        return {
+          id: incident.id || Math.random().toString(36).substr(2, 9),
+          description: incident.description || 'Accident signalé',
+          severity: incident.severity || 'unknown',
+          delay: incident.delay ? incident.delay.minutes : 0,
+          coordinates: coordinates,
+          from: incident.location?.from || '',
+          to: incident.location?.to || '',
+          roadNumbers: incident.roads || [],
+          startTime: incident.timing?.start || 'Non spécifié'
+        };
+      })
+      .filter(accident => accident.coordinates); // Garder seulement ceux avec coordonnées
+    
+    res.json({
+      status: 'success',
+      accidents: accidents,
+      count: accidents.length
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des accidents TomTom pour Normandie:', error);
+    res.status(500).json({ 
+      status: 'error',
+      message: `Erreur lors de la récupération des accidents TomTom: ${error.message}`
+    });
+  }
+});
+
+// Fonction utilitaire pour filtrer les accidents et véhicules en panne
 function isAccidentOrBreakdown(props) {
   if (!props) return false;
   if (props.iconCategory === 1 || props.iconCategory === 14) return true;
   return Array.isArray(props.events) && props.events.some(e => e.iconCategory === 1 || e.iconCategory === 14);
 }
-
-function minutes(delay) {
-  const v = Number(delay || 0);
-  return Math.max(0, Math.round(v / 60));
-}
-
-// Fonctions supprimées car non utilisées : labelType(), uniqKey()
-
-// Fonction extractTopIncidents() supprimée car remplacée par le filtrage du tomTomService
 
 // Fonction pour formater le texte (même logique que testratp.js)
 function formatText(text) {
@@ -508,8 +658,8 @@ function normalizeLineNameForFlash(lineName) {
     return lineName;
 }
 
-// Route pour générer le flash trafic avec Claude (basée sur testClaude.js)
-app.get('/api/generate-flash-traffic', async (req, res) => {
+// Route pour générer le flash trafic avec différents modèles IA
+app.post('/api/generate-flash-traffic', async (req, res) => {
   try {
     // 1. Récupérer les données TomTom pour Paris (déjà filtrées et priorisées)
     const tomtomData = await tomTomService.getTrafficIncidents('Paris', 'fr-FR');
@@ -581,7 +731,15 @@ app.get('/api/generate-flash-traffic', async (req, res) => {
         detailed: allDisruptions
     };
 
-    // 3. Générer le flash trafic avec Claude
+    // 3. Récupérer les paramètres de configuration depuis la requête
+    const {
+      model = 'claude',
+      temperature = 0.7,
+      top_p = 0.9,
+      max_tokens = 400
+    } = req.body;
+
+    // 4. Générer le flash trafic avec le modèle sélectionné
     const formatted = formatFullFrenchDate();
 
     const prompt = `
@@ -603,15 +761,42 @@ Tâches :
 - Commence par : "Flash trafic – ${formatted}".
 - Ensuite enchaîne directement avec : "Bonjour, voici les principales perturbations…".
 - Évite de répéter ("ralentissement" ×3 = à éviter)
-- Pour finir donne une conclusion pratique et concise
+- IMPÉRATIF : Termine TOUJOURS par une phrase complète avec une conclusion
+- IMPÉRATIF : Surveille ta longueur pour ne pas dépasser la limite de tokens
+- Si tu approches de la limite, conclus rapidement mais proprement
 - Ne génère pas de date ou d'heure par toi-même, utilise exactement la valeur fournie.
     `;
 
-    const flashText = await anthropicService.generateFlashTraffic(prompt);
+    const options = {
+      temperature,
+      top_p,
+      max_tokens
+    };
+
+    let flashText;
+    let modelUsed;
+
+    switch (model) {
+      case 'claude':
+        flashText = await anthropicService.generateFlashTraffic(prompt, options);
+        modelUsed = 'Claude 3.7 Sonnet';
+        break;
+      case 'gpt4o':
+        flashText = await openaiService.generateFlashTraffic(prompt, options);
+        modelUsed = 'GPT-4o';
+        break;
+      case 'pixtral':
+        flashText = await mistralService.generateFlashTraffic(prompt, options);
+        modelUsed = 'Pixtral';
+        break;
+      default:
+        throw new Error(`Modèle non supporté: ${model}`);
+    }
     
     res.json({
       status: 'success',
       flash_traffic: flashText,
+      model_used: modelUsed,
       data_sources: {
         tomtom: processedTomTom,
         ratp: ratpData
@@ -620,6 +805,30 @@ Tâches :
 
   } catch (error) {
     console.error('Erreur lors de la génération du flash trafic:', error);
+    res.status(500).json({
+      status: 'error',
+      message: `Erreur lors de la génération du flash trafic: ${error.message}`
+    });
+  }
+});
+
+// Route de compatibilité GET pour l'ancien système (utilise Claude par défaut)
+app.get('/api/generate-flash-traffic', async (req, res) => {
+  try {
+    // Simuler une requête POST avec les paramètres par défaut
+    req.body = {
+      model: 'claude',
+      temperature: 0.7,
+      top_p: 0.9,
+      max_tokens: 400,
+      api_key: null
+    };
+    
+    // Rediriger vers le handler POST (on réutilise la même logique)
+    return app._router.handle(Object.assign(req, { method: 'POST' }), res);
+    
+  } catch (error) {
+    console.error('Erreur lors de la génération du flash trafic (route GET):', error);
     res.status(500).json({
       status: 'error',
       message: `Erreur lors de la génération du flash trafic: ${error.message}`

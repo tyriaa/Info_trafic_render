@@ -402,6 +402,7 @@
     <script>
         let map;  // Variable globale pour la carte
         let trafficLayer; // Couche pour le trafic
+        let accidentMarkers = []; // Pour stocker les marqueurs d'accidents
 
         // Fonction pour initialiser la carte
         function initMap() {
@@ -425,8 +426,116 @@
             }).addTo(map);
         }
 
+        // Fonction pour mettre à jour les marqueurs d'accidents
+        function updateAccidentMarkers(accidents) {
+            // Supprimer les anciens marqueurs d'accidents
+            accidentMarkers.forEach(marker => marker.remove());
+            accidentMarkers = [];
+
+            // Compteurs pour la légende
+            let accidentCount = 0;
+            let breakdownCount = 0;
+
+            // Ajouter les nouveaux marqueurs d'accidents
+            accidents.forEach((accident, index) => {
+                if (accident.coordinates && accident.coordinates.length === 2) {
+                    // Déterminer le type d'incident basé sur la description
+                    const isBreakdown = accident.description && accident.description.toLowerCase().includes('panne');
+                    
+                    // Compter les types d'incidents
+                    if (isBreakdown) {
+                        breakdownCount++;
+                    } else {
+                        accidentCount++;
+                    }
+                    
+                    // Créer l'icône appropriée (plus grande que les stations Vélib)
+                    const icon = isBreakdown ? 
+                        L.divIcon({
+                            className: 'custom-breakdown-marker',
+                            html: '<div style="background-color: #FFA500; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);"><div style="background-color: white; width: 12px; height: 3px; margin: 8px auto; margin-top: 10px; border-radius: 1px;"></div></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        }) :
+                        L.divIcon({
+                            className: 'custom-accident-marker',
+                            html: '<div style="background-color: #FF0000; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4);"><div style="background-color: white; width: 8px; height: 8px; border-radius: 50%; margin: 4px auto; margin-top: 4px;"></div></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        });
+
+                    const marker = L.marker(accident.coordinates, {
+                        icon: icon
+                    });
+                    
+                    const roadInfo = accident.roadNumbers && accident.roadNumbers.length > 0 
+                        ? ` (${accident.roadNumbers.join(', ')})` 
+                        : '';
+                    
+                    const locationInfo = accident.from && accident.to 
+                        ? `<br><small>De ${accident.from} vers ${accident.to}</small>`
+                        : '';
+                    
+                    const delayInfo = accident.delay > 0 
+                        ? `<br><small>Retard: ${accident.delay} min</small>`
+                        : '';
+                    
+                    const timeInfo = accident.startTime && accident.startTime !== 'Non spécifié'
+                        ? `<br><small>🕐 Depuis: ${accident.startTime}</small>`
+                        : '';
+                    
+                    const incidentType = isBreakdown ? '🔧 Véhicule en panne' : '🚨 Accident';
+                    
+                    marker.bindPopup(`
+                        <div style="padding: 10px; min-width: 200px;">
+                            <strong>${incidentType}${roadInfo}</strong><br>
+                            ${accident.description}
+                            ${locationInfo}
+                            ${delayInfo}
+                            ${timeInfo}
+                        </div>
+                    `, {
+                        closeButton: true,
+                        maxWidth: 300
+                    });
+
+                    marker.on('mouseover', function() {
+                        this.openPopup();
+                    });
+
+                    marker.addTo(map);
+                    accidentMarkers.push(marker);
+                }
+            });
+            
+            // Mettre à jour les compteurs dans la légende
+            document.getElementById('accident-count').textContent = accidentCount;
+            document.getElementById('breakdown-count').textContent = breakdownCount;
+        }
+
+        // Fonction pour récupérer les accidents TomTom
+        async function fetchAccidents() {
+            try {
+                const response = await fetch('/api/tomtom/accidents/normandie');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateAccidentMarkers(data.accidents);
+                    console.log(`✅ ${data.accidents.length} accidents/pannes affichés sur la carte de Normandie`);
+                } else {
+                    console.error('❌ Erreur accidents TomTom Normandie:', data.message);
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors de la récupération des accidents Normandie:', error);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             initMap();
+            fetchAccidents(); // Récupérer les accidents TomTom
+            
+            // Rafraîchir les accidents toutes les 5 minutes
+            setInterval(fetchAccidents, 5 * 60 * 1000);
         });
     </script>
 </head>
@@ -469,7 +578,18 @@
             </div>
 
             <section class="map-container">
-                <div id="leaflet-map"></div>
+                <div id="leaflet-map">
+                    <div class="map-legend" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 14px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FF0000; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border-radius: 50%; margin-right: 8px;"></span>
+                            <span>Accidents TomTom (<span id="accident-count">0</span>)</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span style="display: inline-block; width: 16px; height: 16px; background-color: #FFA500; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.4); border-radius: 50%; margin-right: 8px;"></span>
+                            <span>Véhicules en panne (<span id="breakdown-count">0</span>)</span>
+                        </div>
+                    </div>
+                </div>
             </section>
         </div>
 
