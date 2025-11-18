@@ -736,36 +736,30 @@ app.post('/api/generate-flash-traffic', async (req, res) => {
       model = 'claude',
       temperature = 0.7,
       top_p = 0.9,
-      max_tokens = 400
+      max_tokens = 400,
+      custom_prompt = null
     } = req.body;
+    
+    console.log('📊 Config reçue:', { model, temp: temperature, topP: top_p, maxTokens: max_tokens, promptLength: custom_prompt?.length || 0 });
 
     // 4. Générer le flash trafic avec le modèle sélectionné
     const formatted = formatFullFrenchDate();
 
-    const prompt = `
-Voici deux jeux de données :
-- Incidents routiers TomTom : ${JSON.stringify(processedTomTom).slice(0, 8000)}
-- Perturbations transports IDFM : ${JSON.stringify(ratpData).slice(0, 4000)}
-
-Tâches :
-1. Analyse les données en interne pour identifier les incidents les plus importants.
-2. Garde en priorité :
-   - Accidents,
-   - Embouteillages/travaux avec >5 minutes de retard ou fermetures majeures,
-   - Perturbations RATP/IDFM bloquantes (trafic interrompu, grève, coupures longues).
-3. Ignore les perturbations mineures.
-
-⚠️ Sortie attendue :
-- Écris UNIQUEMENT un flash radio de 120 secondes.
-- Le texte doit être fluide, oral, humain, comme s'il était lu à l'antenne.
-- Commence par : "Flash trafic – ${formatted}".
-- Ensuite enchaîne directement avec : "Bonjour, voici les principales perturbations…".
-- Évite de répéter ("ralentissement" ×3 = à éviter)
-- IMPÉRATIF : Termine TOUJOURS par une phrase complète avec une conclusion
-- IMPÉRATIF : Surveille ta longueur pour ne pas dépasser la limite de tokens
-- Si tu approches de la limite, conclus rapidement mais proprement
-- Ne génère pas de date ou d'heure par toi-même, utilise exactement la valeur fournie.
-    `;
+    // Construire le prompt avec remplacement des variables
+    const dataString = `Incidents routiers TomTom : ${JSON.stringify(processedTomTom).slice(0, 8000)}\nPerturbations transports IDFM : ${JSON.stringify(ratpData).slice(0, 4000)}`;
+    
+    // Utiliser le prompt fourni, sinon un prompt par défaut minimal
+    const promptTemplate = custom_prompt || `Voici les données de trafic en Île-de-France : {{data}}\nGénère un flash radio professionnel pour le {{date}}.`;
+    
+    console.log('🔍 Template utilisé:', custom_prompt ? 'PERSONNALISÉ' : 'PAR DÉFAUT');
+    console.log('🔍 Template (50 premiers chars):', promptTemplate.substring(0, 50));
+    
+    const prompt = promptTemplate
+      .replace(/\{\{data\}\}/g, dataString)
+      .replace(/\{\{date\}\}/g, formatted);
+      
+    console.log('✅ Prompt final prêt, longueur:', prompt.length, 'caractères');
+    console.log('🔍 Prompt final (100 premiers chars):', prompt.substring(0, 100));
 
     const options = {
       temperature,
@@ -792,6 +786,8 @@ Tâches :
       default:
         throw new Error(`Modèle non supporté: ${model}`);
     }
+    
+    console.log('✅ Flash généré:', flashText.length, 'caractères avec', modelUsed);
     
     res.json({
       status: 'success',

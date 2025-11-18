@@ -618,10 +618,10 @@
             border: 2px solid #0066FF;
             border-radius: 10px;
             padding: 1rem;
-            margin-bottom: 1rem;
+            margin: 1rem 0 0 0;
             display: none;
-            max-width: 600px;
-            width: fit-content;
+            max-width: none;
+            width: 100%;
         }
 
         .config-panel.show {
@@ -697,18 +697,58 @@
             min-width: 40px;
         }
 
+        .config-textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 100px;
+            margin-top: 0.3rem;
+        }
+
+        .config-textarea:focus {
+            outline: none;
+            border-color: #0066FF;
+        }
+
+        .reset-prompt-btn {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 0.4rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .reset-prompt-btn:hover {
+            background: #e0e0e0;
+            border-color: #ccc;
+        }
+
+        .config-group code {
+            background: #f5f5f5;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #0066FF;
+        }
+
         
         /* Styles pour le système de feedback */
         .feedback-container {
             background-color: #f0f0f0;
             padding: 1.5rem;
             border-radius: 15px;
-            width: 375px;
+            width: 300px;
             flex-shrink: 0;
-        }
-
-        .feedback-container.hidden {
-            display: none;
+            display: none; /* Toujours caché */
         }
         
         .feedback-content {
@@ -1134,46 +1174,9 @@
                 return 'severity-low';
             }
 
-            // Fonction pour générer le flash trafic avec Claude
-            async function generateFlashTrafic() {
-                try {
-                    document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
-                    
-                    const response = await fetch('/api/generate-flash-traffic');
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        document.getElementById('flash-trafic-content').innerHTML = 
-                            `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
-                        
-                        // Afficher le système de feedback après génération réussie
-                        const feedbackContainer = document.getElementById('feedback-container');
-                        if (feedbackContainer) {
-                            feedbackContainer.classList.remove('hidden');
-                        }
-                    } else {
-                        throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
-                    }
-                } catch (error) {
-                    console.error('Erreur lors de la génération du flash trafic:', error);
-                    document.getElementById('flash-trafic-content').innerHTML = 
-                        '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier que votre clé API Claude est configurée.</p>';
-                }
-            }
 
             // Charger les perturbations
             fetchDisruptions();
-
-            // Ajouter le déclenchement manuel sur clic du bouton
-            const flashBtn = document.getElementById('generate-flash-btn');
-            if (flashBtn) {
-                flashBtn.addEventListener('click', generateFlashTrafic);
-            }
             
             // Initialiser le système de feedback
             initFeedbackSystem();
@@ -1281,52 +1284,75 @@
 
     <div class="flash-trafic">
         <div class="flash-trafic-title">Flash trafic</div>
-        <div style="display: flex; gap: 2rem; align-items: flex-start;">
-          <div class="disruption-bubble" style="flex: 1;">
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+          <div style="flex: 1;">
             <button id="config-toggle-btn" class="config-toggle-btn">⚙️ Configuration</button>
             
             <!-- Panneau de configuration -->
             <div id="config-panel" class="config-panel">
-              <div class="config-row">
-                <div class="config-group">
-                  <label class="config-label" for="model-select">Modèle IA</label>
-                  <select id="model-select" class="config-select">
-                    <option value="claude">Claude 3.7 Sonnet</option>
-                    <option value="gpt4o">GPT-4o</option>
-                    <option value="pixtral">Pixtral</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div class="config-row">
-                <div class="config-group">
-                  <label class="config-label" for="temperature-slider">Température (Créativité)</label>
-                  <div style="display: flex; align-items: center;">
-                    <input type="range" id="temperature-slider" class="config-input" min="0" max="1" step="0.1" value="0.7">
-                    <span id="temperature-value" class="config-value">0.7</span>
+              <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
+                <!-- Colonne 1 : Paramètres -->
+                <div>
+                  <div class="config-row">
+                    <div class="config-group">
+                      <label class="config-label" for="model-select">Modèle IA</label>
+                      <select id="model-select" class="config-select">
+                        <option value="claude">Claude 3.7 Sonnet</option>
+                        <option value="gpt4o">GPT-4o</option>
+                        <option value="pixtral">Pixtral</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="config-row">
+                    <div class="config-group">
+                      <label class="config-label" for="temperature-slider">Température (Créativité)</label>
+                      <div style="display: flex; align-items: center;">
+                        <input type="range" id="temperature-slider" class="config-input" min="0" max="1" step="0.1" value="0.7">
+                        <span id="temperature-value" class="config-value">0.7</span>
+                      </div>
+                    </div>
+                    <div class="config-group">
+                      <label class="config-label" for="top-p-slider">Top-P (Vocabulaire)</label>
+                      <div style="display: flex; align-items: center;">
+                        <input type="range" id="top-p-slider" class="config-input" min="0" max="1" step="0.1" value="0.9">
+                        <span id="top-p-value" class="config-value">0.9</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="config-row">
+                    <div class="config-group">
+                      <label class="config-label" for="max-tokens-select">Longueur maximale (tokens)</label>
+                      <select id="max-tokens-select" class="config-select">
+                        <option value="1000">Court (1000 tokens)</option>
+                        <option value="1500" selected>Moyen (1500 tokens)</option>
+                        <option value="4096">Sans limite</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-                <div class="config-group">
-                  <label class="config-label" for="top-p-slider">Top-P (Vocabulaire)</label>
-                  <div style="display: flex; align-items: center;">
-                    <input type="range" id="top-p-slider" class="config-input" min="0" max="1" step="0.1" value="0.9">
-                    <span id="top-p-value" class="config-value">0.9</span>
+                
+                <!-- Colonne 2 : Prompt -->
+                <div>
+                  <div class="config-group" style="width: 100%;">
+                    <label class="config-label" for="custom-prompt">Personnalisation du prompt</label>
+                    <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.5rem;">
+                      💡 Modifiez le prompt ci-dessous. Variables : <code>{{data}}</code> (données de trafic) et <code>{{date}}</code> (date formatée)
+                    </div>
+                    <textarea id="custom-prompt" class="config-textarea" rows="12"></textarea>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                      <button id="reset-prompt-btn" class="reset-prompt-btn">Réinitialiser au prompt par défaut</button>
+                      <button id="generate-from-config-btn" class="flash-generate-btn" style="margin: 0;">Générer un point trafic</button>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <div class="config-row">
-                <div class="config-group">
-                  <label class="config-label" for="max-tokens-select">Longueur maximale (tokens)</label>
-                  <select id="max-tokens-select" class="config-select">
-                    <option value="1000">Court (1000 tokens)</option>
-                    <option value="1500" selected>Moyen (1500 tokens)</option>
-                    <option value="2000">Maximum (2000 tokens)</option>
-                  </select>
                 </div>
               </div>
             </div>
-            
+          </div>
+          
+          <!-- Zone du flash trafic généré -->
+          <div style="flex: 1; background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
             <button id="generate-flash-btn" class="flash-generate-btn">Générer le flash trafic</button>
             <div id="flash-trafic-content">
               <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
@@ -1971,6 +1997,31 @@
                 topPValue.textContent = this.value;
             });
 
+            // Initialiser le prompt par défaut dans le textarea
+            const defaultPrompt = `Voici les données de trafic en Île-de-France :
+{{data}}
+
+Tâches :
+1. Analyse les données en interne pour identifier les incidents les plus importants.
+2. Garde en priorité :
+   - Accidents,
+   - Embouteillages/travaux avec >5 minutes de retard ou fermetures majeures,
+   - Perturbations RATP/IDFM bloquantes (trafic interrompu, grève, coupures longues).
+3. Ignore les perturbations mineures.
+4. Note : Les données incluent à la fois les incidents routiers TomTom ET les perturbations transports IDFM/RATP.
+
+⚠️ Sortie attendue :
+- Écris UNIQUEMENT un flash radio de 120 secondes.
+- Le texte doit être fluide, oral, humain, comme s'il était lu à l'antenne.
+- Commence par : "Flash trafic – {{date}}".
+- Ensuite enchaîne directement avec : "Bonjour, voici les principales perturbations…".
+- Évite de répéter ("ralentissement" ×3 = à éviter)
+- IMPÉRATIF : Termine TOUJOURS par une phrase complète avec une conclusion
+- IMPÉRATIF : Surveille ta longueur pour ne pas dépasser la limite de tokens
+- Si tu approches de la limite, conclus rapidement mais proprement
+- Ne génère pas de date ou d'heure par toi-même, utilise exactement la valeur fournie.`;
+
+            document.getElementById('custom-prompt').value = defaultPrompt;
             
             // Fonction pour générer le flash trafic avec les paramètres configurés
             async function generateFlashTrafic() {
@@ -1978,12 +2029,22 @@
                     document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
                     
                     // Récupérer les paramètres de configuration
+                    const customPrompt = document.getElementById('custom-prompt').value.trim();
                     const config = {
                         model: document.getElementById('model-select').value,
                         temperature: parseFloat(document.getElementById('temperature-slider').value),
                         top_p: parseFloat(document.getElementById('top-p-slider').value),
-                        max_tokens: parseInt(document.getElementById('max-tokens-select').value)
+                        max_tokens: parseInt(document.getElementById('max-tokens-select').value),
+                        custom_prompt: customPrompt
                     };
+                    
+                    console.log('📤 Config envoyée:', { 
+                        model: config.model, 
+                        temp: config.temperature, 
+                        topP: config.top_p, 
+                        maxTokens: config.max_tokens, 
+                        promptLength: customPrompt.length 
+                    });
                     
                     const response = await fetch('/api/generate-flash-traffic', {
                         method: 'POST',
@@ -2003,21 +2064,7 @@
                         document.getElementById('flash-trafic-content').innerHTML = 
                             `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
                         
-                      // Mettre à jour la source affichée
-                        const sourceElement = document.querySelector('.source');
-                        let sourceName = '';
-                        switch(config.model) {
-                            case 'claude':
-                                sourceName = 'Claude 3.7 Sonnet API';
-                                break;
-                            case 'gpt4o':
-                                sourceName = 'GPT-4o API';
-                                break;
-                            case 'pixtral':
-                                sourceName = 'Pixtral API';
-                                break;
-                        }
-                        sourceElement.textContent = `Source : ${sourceName}`;
+                        // Le système de feedback est désactivé
                     } else {
                         throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
                     }
@@ -2026,6 +2073,26 @@
                     document.getElementById('flash-trafic-content').innerHTML = 
                         '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier votre configuration et vos clés API.</p>';
                 }
+            }
+            
+            // Ajouter le déclenchement manuel sur clic des boutons
+            const flashBtn = document.getElementById('generate-flash-btn');
+            if (flashBtn) {
+                flashBtn.addEventListener('click', generateFlashTrafic);
+            }
+            
+            const generateFromConfigBtn = document.getElementById('generate-from-config-btn');
+            if (generateFromConfigBtn) {
+                generateFromConfigBtn.addEventListener('click', generateFlashTrafic);
+            }
+
+            // Gestionnaire pour le bouton de réinitialisation du prompt
+            const resetPromptBtn = document.getElementById('reset-prompt-btn');
+            if (resetPromptBtn) {
+                resetPromptBtn.addEventListener('click', function() {
+                    document.getElementById('custom-prompt').value = defaultPrompt;
+                    alert('Le prompt a été réinitialisé au prompt par défaut.');
+                });
             }
 
         });

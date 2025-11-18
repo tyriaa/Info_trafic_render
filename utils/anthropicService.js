@@ -9,8 +9,6 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 
 // Clé API depuis les variables d'environnement
 const API_KEY = process.env.ANTHROPIC_API_KEY || '';
-console.log('ANTHROPIC_API_KEY chargée:', API_KEY ? 'OUI' : 'NON');
-console.log('Longueur de la clé:', API_KEY.length);
 
 // Initialisation du client Anthropic
 const anthropic = new Anthropic({
