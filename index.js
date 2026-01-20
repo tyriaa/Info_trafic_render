@@ -15,6 +15,7 @@ const openaiService = require('./utils/openaiService');
 const mistralService = require('./utils/mistralService');
 const weatherService = require('./utils/weatherService');
 const { formatFullFrenchDate } = require('./utils/dateUtils');
+const databaseService = require('./services/databaseService');
 
 // Configuration automatique via variables d'environnement (ANTHROPIC_API_KEY)
 // TomTom API configurée directement dans le service
@@ -828,6 +829,65 @@ app.get('/api/generate-flash-traffic', async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: `Erreur lors de la génération du flash trafic: ${error.message}`
+    });
+  }
+});
+
+// Route POST pour enregistrer le feedback dans la base de données
+app.post('/api/feedback', async (req, res) => {
+  try {
+    console.log('📥 Réception d\'un feedback');
+    
+    // Récupérer les données du feedback
+    const feedbackData = req.body;
+    
+    // Ajouter les métadonnées de la requête
+    feedbackData.ip_address = req.ip || req.connection.remoteAddress;
+    feedbackData.user_agent = req.get('user-agent');
+    
+    // Validation basique
+    if (!feedbackData.rating || feedbackData.rating < 1 || feedbackData.rating > 5) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'La note (rating) est obligatoire et doit être entre 1 et 5'
+      });
+    }
+    
+    // Insérer dans la base de données
+    const result = await databaseService.insertFeedback(feedbackData);
+    
+    console.log(`✅ Feedback enregistré avec succès (ID: ${result.id})`);
+    
+    res.json({
+      status: 'success',
+      message: 'Feedback enregistré avec succès',
+      id: result.id
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'enregistrement du feedback:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de l\'enregistrement du feedback',
+      error: error.message
+    });
+  }
+});
+
+// Route GET pour récupérer les statistiques de feedback (optionnel)
+app.get('/api/feedback/stats', async (req, res) => {
+  try {
+    const stats = await databaseService.getFeedbackStats();
+    res.json({
+      status: 'success',
+      stats: stats
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des statistiques:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des statistiques',
+      error: error.message
     });
   }
 });

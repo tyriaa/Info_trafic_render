@@ -740,171 +740,388 @@
             color: #0066FF;
         }
 
-        
-        /* Styles pour le système de feedback */
-        .feedback-container {
-            background-color: #f0f0f0;
-            padding: 1.5rem;
-            border-radius: 15px;
-            width: 300px;
-            flex-shrink: 0;
-            display: none; /* Toujours caché */
+        /* Styles pour les filtres de personnalisation du prompt */
+        .prompt-filters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
-        
-        .feedback-content {
+
+        .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
-            padding: 1.5rem;
-            border-radius: 10px;
+            gap: 0.5rem;
         }
-        
-        .feedback-page {
+
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0066FF;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:hover {
+            border-color: #0066FF;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+
+        .prompt-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .prompt-btn {
+            padding: 0.6rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            font-weight: 500;
+        }
+
+        .prompt-btn:hover {
+            background: #f8f9fa;
+            border-color: #0066FF;
+        }
+
+        .prompt-btn-primary {
+            background: #0066FF;
+            color: white;
+            border-color: #0066FF;
+        }
+
+        .prompt-btn-primary:hover {
+            background: #0053cc;
+        }
+
+        /* Modal pour le prompt brut */
+        .prompt-modal {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .feedback-page.active {
-            display: block;
+
+        .prompt-modal.show {
+            display: flex;
         }
-        
-        .feedback-navigation {
+
+        .prompt-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .prompt-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
-            padding: 0 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #0066FF;
         }
+
+        .prompt-modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #0066FF;
+        }
+
+        .prompt-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .prompt-modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .prompt-modal-textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .prompt-modal-textarea:focus {
+            outline: none;
+            border-color: #0066FF;
+        }
+
         
-        .feedback-nav-btn {
+        /* Styles pour le nouveau système de feedback */
+        .feedback-btn {
             background: #0066FF;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-        
-        .feedback-nav-btn:hover {
-            background: #0053cc;
-        }
-        
-        .feedback-nav-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .feedback-page-indicator {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .feedback-submit-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
-            margin-top: 1.5rem;
-            width: 100%;
+            font-size: 0.95rem;
+            margin-top: 1rem;
             transition: all 0.2s ease;
+            display: none;
         }
         
-        .feedback-submit-btn:hover {
-            background: #218838;
+        .feedback-btn:hover {
+            background: #0053cc;
             transform: translateY(-1px);
         }
         
-        .feedback-column {
+        .feedback-btn.show {
+            display: inline-block;
+        }
+        
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-modal.show {
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
         }
         
-        .feedback-question {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
+        .feedback-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
         
-        .question-text {
-            color: #6666ff;
-            font-size: 1rem;
-            font-weight: 600;
-            text-align: center;
-        }
-        
-        .emoji-row {
+        .feedback-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #0066FF;
         }
         
-        .emoji-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
+        .feedback-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0066FF;
         }
         
-        .emoji {
-            font-size: 2rem;
+        .feedback-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            color: #666;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
         }
         
-        .emoji:hover {
-            transform: scale(1.1);
+        .feedback-close:hover {
+            background: #f0f0f0;
+            color: #333;
         }
         
-        .emoji-label {
-            color: #0066ff;
-            font-size: 0.8rem;
-            font-weight: 500;
+        .feedback-question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 1rem;
             text-align: center;
         }
         
-        .slider-container {
-            position: relative;
-            margin-top: 0.5rem;
+        .feedback-emoji-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
         }
         
-        .feedback-slider {
+        .feedback-emoji {
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.4;
+            filter: grayscale(100%);
+        }
+        
+        .feedback-emoji:hover {
+            transform: scale(1.2);
+            opacity: 0.7;
+            filter: grayscale(50%);
+        }
+        
+        .feedback-emoji.selected {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.3);
+        }
+        
+        .feedback-section {
+            margin-bottom: 2rem;
+        }
+        
+        .feedback-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .feedback-textarea {
             width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: linear-gradient(to right, #6666ff 0%, #6666ff 100%);
+            min-height: 100px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            resize: vertical;
+        }
+        
+        .feedback-textarea:focus {
             outline: none;
-            -webkit-appearance: none;
-            appearance: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
         }
         
-        .feedback-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #0066ff;
+        .feedback-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
             cursor: pointer;
-            border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .feedback-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #0066ff;
+        .feedback-select:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+        
+        .feedback-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+        
+        .feedback-submit {
+            background: #0066FF;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
             cursor: pointer;
-            border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-submit:hover {
+            background: #0053cc;
+            transform: translateY(-1px);
+        }
+        
+        .feedback-cancel {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-cancel:hover {
+            background: #e0e0e0;
         }
         
     </style>
@@ -1178,98 +1395,147 @@
             // Charger les perturbations
             fetchDisruptions();
             
-            // Initialiser le système de feedback
-            initFeedbackSystem();
+            // Initialiser le nouveau système de feedback
+            initNewFeedbackSystem();
         });
         
-        // Fonction pour initialiser le système de feedback
-        function initFeedbackSystem() {
-            // Gérer les interactions des sliders et emojis
-            for (let i = 1; i <= 8; i++) {
-                const slider = document.getElementById(`slider-${i}`);
-                const question = slider.closest('.feedback-question');
-                const emojis = question.querySelectorAll('.emoji');
-                
-                // Synchroniser le slider avec les emojis
-                slider.addEventListener('input', function() {
-                    updateEmojiSelection(question, this.value);
+        // Variables globales pour le feedback
+        let selectedRating = null;
+        let generatedFlashContent = null;
+        let generatedFlashConfig = null;
+        let generatedPrompt = null;
+        
+        // Fonction pour initialiser le nouveau système de feedback
+        function initNewFeedbackSystem() {
+            const feedbackBtn = document.getElementById('feedback-btn');
+            const feedbackModal = document.getElementById('feedback-modal');
+            const closeFeedbackModal = document.getElementById('close-feedback-modal');
+            const feedbackCancelBtn = document.getElementById('feedback-cancel-btn');
+            const feedbackSubmitBtn = document.getElementById('feedback-submit-btn');
+            const feedbackEmojis = document.querySelectorAll('.feedback-emoji');
+            
+            // Gérer les clics sur les emojis
+            feedbackEmojis.forEach(emoji => {
+                emoji.addEventListener('click', function() {
+                    // Retirer la sélection de tous les emojis
+                    feedbackEmojis.forEach(e => e.classList.remove('selected'));
+                    // Ajouter la sélection à l'emoji cliqué
+                    this.classList.add('selected');
+                    selectedRating = parseInt(this.getAttribute('data-rating'));
                 });
-                
-                // Permettre de cliquer sur les emojis pour changer la valeur
-                emojis.forEach(emoji => {
-                    emoji.addEventListener('click', function() {
-                        const value = this.getAttribute('data-value');
-                        slider.value = value;
-                        updateEmojiSelection(question, value);
-                    });
+            });
+            
+            // Ouvrir la modal de feedback
+            if (feedbackBtn) {
+                feedbackBtn.addEventListener('click', function() {
+                    feedbackModal.classList.add('show');
                 });
-                
-                // Initialiser l'affichage
-                updateEmojiSelection(question, slider.value);
+            }
+            
+            // Fermer la modal
+            if (closeFeedbackModal) {
+                closeFeedbackModal.addEventListener('click', function() {
+                    feedbackModal.classList.remove('show');
+                    resetFeedbackForm();
+                });
+            }
+            
+            if (feedbackCancelBtn) {
+                feedbackCancelBtn.addEventListener('click', function() {
+                    feedbackModal.classList.remove('show');
+                    resetFeedbackForm();
+                });
+            }
+            
+            // Fermer en cliquant en dehors
+            feedbackModal.addEventListener('click', function(e) {
+                if (e.target === feedbackModal) {
+                    feedbackModal.classList.remove('show');
+                    resetFeedbackForm();
+                }
+            });
+            
+            // Soumettre le feedback
+            if (feedbackSubmitBtn) {
+                feedbackSubmitBtn.addEventListener('click', function() {
+                    submitNewFeedback();
+                });
             }
         }
         
-        // Fonction pour mettre à jour la sélection des emojis
-        function updateEmojiSelection(question, value) {
-            const emojis = question.querySelectorAll('.emoji');
-            emojis.forEach(emoji => {
-                const emojiValue = emoji.getAttribute('data-value');
-                if (emojiValue == value) {
-                    emoji.style.transform = 'scale(1.2)';
-                    emoji.style.filter = 'brightness(1.2)';
-                } else {
-                    emoji.style.transform = 'scale(1)';
-                    emoji.style.filter = 'brightness(0.7)';
-                }
-            });
+        // Fonction pour réinitialiser le formulaire de feedback
+        function resetFeedbackForm() {
+            selectedRating = null;
+            document.querySelectorAll('.feedback-emoji').forEach(e => e.classList.remove('selected'));
+            document.getElementById('feedback-positive').value = '';
+            document.getElementById('feedback-negative').value = '';
+            document.getElementById('feedback-filters-useful').value = '';
         }
         
-        // Variables pour la pagination du feedback
-        let currentFeedbackPage = 1;
-        const totalFeedbackPages = 2;
-        
-        // Fonction pour changer de page dans le feedback
-        function changeFeedbackPage(direction) {
-            const newPage = currentFeedbackPage + direction;
-            
-            if (newPage < 1 || newPage > totalFeedbackPages) {
+        // Fonction pour soumettre le nouveau feedback
+        async function submitNewFeedback() {
+            // Validation
+            if (!selectedRating) {
+                alert('Veuillez sélectionner une note avec les emojis.');
                 return;
             }
             
-            // Masquer la page actuelle
-            document.getElementById(`feedback-page-${currentFeedbackPage}`).classList.remove('active');
+            // Collecter les données du feedback
+            const feedbackData = {
+                timestamp: new Date().toISOString(),
+                rating: selectedRating,
+                positive_comment: document.getElementById('feedback-positive').value.trim(),
+                negative_comment: document.getElementById('feedback-negative').value.trim(),
+                filters_useful: document.getElementById('feedback-filters-useful').value,
+                
+                // Configuration utilisée pour la génération
+                model: document.getElementById('model-select').value,
+                temperature: parseFloat(document.getElementById('temperature-slider').value),
+                top_p: parseFloat(document.getElementById('top-p-slider').value),
+                max_tokens: parseInt(document.getElementById('max-tokens-select').value),
+                
+                // Filtres de prompt utilisés
+                filter_tone: document.getElementById('filter-tone').value,
+                filter_urgency: document.getElementById('filter-urgency').value,
+                filter_detail: document.getElementById('filter-detail').value,
+                filter_geo: document.getElementById('filter-geo').value,
+                filter_style: document.getElementById('filter-style').value,
+                filter_custom: document.getElementById('filter-custom').value.trim(),
+                
+                // Prompt complet utilisé pour la génération
+                full_prompt: generatedPrompt,
+                
+                // Contenu généré (pour référence)
+                flash_content: generatedFlashContent
+            };
             
-            // Afficher la nouvelle page
-            currentFeedbackPage = newPage;
-            document.getElementById(`feedback-page-${currentFeedbackPage}`).classList.add('active');
+            console.log('📊 Feedback collecté (prêt pour SQL):', feedbackData);
             
-            // Mettre à jour l'indicateur de page
-            document.getElementById('current-page').textContent = currentFeedbackPage;
-            
-            // Mettre à jour l'état des boutons
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            
-            prevBtn.disabled = currentFeedbackPage === 1;
-            nextBtn.disabled = currentFeedbackPage === totalFeedbackPages;
-        }
-        
-        // Fonction pour envoyer le feedback
-        function submitFeedback() {
-            // Collecter toutes les réponses
-            const feedbackData = {};
-            for (let i = 1; i <= 8; i++) {
-                const slider = document.getElementById(`slider-${i}`);
-                if (slider) {
-                    feedbackData[`question_${i}`] = slider.value;
+            // Envoyer vers la base de données SQL
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(feedbackData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log('✅ Feedback enregistré dans la base de données (ID:', result.id, ')');
+                    alert('Merci pour votre feedback ! Vos commentaires ont été enregistrés.');
+                } else {
+                    console.error('❌ Erreur serveur:', result.message);
+                    alert('Une erreur est survenue lors de l\'enregistrement de votre feedback. Veuillez réessayer.');
                 }
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'envoi du feedback:', error);
+                alert('Impossible de contacter le serveur. Veuillez vérifier votre connexion.');
             }
             
-            // Afficher un message de confirmation
-            alert('Feedback envoyé avec succès ! Merci pour votre évaluation.');
-            
-            // Ici vous pourriez ajouter l'envoi vers un serveur
-            console.log('Feedback data:', feedbackData);
+            // Fermer la modal et réinitialiser
+            document.getElementById('feedback-modal').classList.remove('show');
+            resetFeedbackForm();
         }
     </script>
 </head>
@@ -1291,7 +1557,7 @@
             <!-- Panneau de configuration -->
             <div id="config-panel" class="config-panel">
               <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
-                <!-- Colonne 1 : Paramètres -->
+                <!-- Colonne 1 : Paramètres IA -->
                 <div>
                   <div class="config-row">
                     <div class="config-group">
@@ -1312,6 +1578,9 @@
                         <span id="temperature-value" class="config-value">0.7</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  <div class="config-row">
                     <div class="config-group">
                       <label class="config-label" for="top-p-slider">Top-P (Vocabulaire)</label>
                       <div style="display: flex; align-items: center;">
@@ -1333,17 +1602,83 @@
                   </div>
                 </div>
                 
-                <!-- Colonne 2 : Prompt -->
+                <!-- Colonne 2 : Personnalisation du prompt -->
                 <div>
                   <div class="config-group" style="width: 100%;">
-                    <label class="config-label" for="custom-prompt">Personnalisation du prompt</label>
-                    <div style="font-size: 0.75rem; color: #666; margin-bottom: 0.5rem;">
-                      💡 Modifiez le prompt ci-dessous. Variables : <code>{{data}}</code> (données de trafic) et <code>{{date}}</code> (date formatée)
+                    <label class="config-label">Personnalisation du prompt</label>
+                    
+                    <!-- Grille de filtres -->
+                    <div class="prompt-filters-grid">
+                      <!-- Ton -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>🎙️ Ton</span>
+                        </label>
+                        <select id="filter-tone" class="filter-select">
+                          <option value="neutre">Neutre</option>
+                          <option value="dynamique">Dynamique et rythmé</option>
+                          <option value="pose">Posé et rassurant</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Géographie -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>🗺️ Géographie</span>
+                        </label>
+                        <select id="filter-geo" class="filter-select">
+                          <option value="axes-majeurs">Axes majeurs</option>
+                          <option value="zones-specifiques">Zones spécifiques</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Urgence -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>⏱️ Urgence</span>
+                        </label>
+                        <select id="filter-urgency" class="filter-select">
+                          <option value="critiques-debut">Critiques dès le début</option>
+                          <option value="progressive">Hiérarchisation progressive</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Style antenne -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>📻 Style antenne</span>
+                        </label>
+                        <select id="filter-style" class="filter-select">
+                          <option value="information-pure">Information pure</option>
+                          <option value="accompagnement">Accompagnement conducteur</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Détail -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>🧠 Détail</span>
+                        </label>
+                        <select id="filter-detail" class="filter-select">
+                          <option value="phrases-courtes">Phrases courtes</option>
+                          <option value="contexte-utile">Contexte utile</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Instruction libre -->
+                      <div class="filter-group">
+                        <label class="filter-label">
+                          <span>💬 Instruction libre</span>
+                        </label>
+                        <input type="text" id="filter-custom" class="filter-input" placeholder="Instruction...">
+                      </div>
                     </div>
-                    <textarea id="custom-prompt" class="config-textarea" rows="12"></textarea>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                      <button id="reset-prompt-btn" class="reset-prompt-btn">Réinitialiser au prompt par défaut</button>
-                      <button id="generate-from-config-btn" class="flash-generate-btn" style="margin: 0;">Générer un point trafic</button>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="prompt-actions">
+                      <button id="show-raw-prompt-btn" class="prompt-btn">Accès prompt brut</button>
+                      <button id="reset-prompt-btn" class="prompt-btn">Réinitialiser au prompt par défaut</button>
+                      <button id="generate-from-config-btn" class="prompt-btn prompt-btn-primary">Générer un point trafic</button>
                     </div>
                   </div>
                 </div>
@@ -1357,14 +1692,13 @@
             <div id="flash-trafic-content">
               <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic.</p>
             </div>
+            <button id="feedback-btn" class="feedback-btn">Feedback</button>
           </div>
           
-          <!-- Système de feedback -->
-          <div class="feedback-container hidden" id="feedback-container">
-            <h3 style="color: #0066FF; font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; text-align: center;">Feedback</h3>
-            <div class="feedback-content">
-                <!-- Page 1 -->
-                <div class="feedback-page active" id="feedback-page-1">
+          <!-- Ancien système de feedback supprimé -->
+          <div style="display: none;">
+            <!-- Placeholder pour compatibilité -->
+            <div id="old-feedback-container">
                     <!-- Question 1 -->
                     <div class="feedback-question">
                         <div class="question-text">Évaluation générale</div>
@@ -1613,15 +1947,60 @@
                 </div>
             </div>
             
-            <!-- Navigation -->
-            <div class="feedback-navigation">
-                <button class="feedback-nav-btn" id="prev-btn" onclick="changeFeedbackPage(-1)" disabled>Précédent</button>
-                <div class="feedback-page-indicator">
-                    <span id="current-page">1</span> / <span id="total-pages">2</span>
-                </div>
-                <button class="feedback-nav-btn" id="next-btn" onclick="changeFeedbackPage(1)">Suivant</button>
             </div>
           </div>
+        </div>
+    </div>
+    
+    <!-- Nouvelle Modal de Feedback -->
+    <div id="feedback-modal" class="feedback-modal">
+        <div class="feedback-modal-content">
+            <div class="feedback-header">
+                <h3 class="feedback-title">Feedback</h3>
+                <button id="close-feedback-modal" class="feedback-close">×</button>
+            </div>
+            
+            <!-- Titre de la question -->
+            <div class="feedback-question-title">Donnez votre avis</div>
+            <p style="text-align: center; color: #666; margin-bottom: 1.5rem;">Que pensez-vous du résultat du flash trafic généré ?</p>
+            
+            <!-- Emojis de notation -->
+            <div class="feedback-emoji-row">
+                <span class="feedback-emoji" data-rating="1">😞</span>
+                <span class="feedback-emoji" data-rating="2">😐</span>
+                <span class="feedback-emoji" data-rating="3">🙂</span>
+                <span class="feedback-emoji" data-rating="4">😊</span>
+                <span class="feedback-emoji" data-rating="5">😍</span>
+            </div>
+            
+            <!-- Point positif -->
+            <div class="feedback-section">
+                <label class="feedback-label">Point positif</label>
+                <textarea id="feedback-positive" class="feedback-textarea" placeholder="Qu'avez-vous apprécié dans ce flash trafic ?"></textarea>
+            </div>
+            
+            <!-- Point négatif -->
+            <div class="feedback-section">
+                <label class="feedback-label">Point négatif</label>
+                <textarea id="feedback-negative" class="feedback-textarea" placeholder="Qu'est-ce qui pourrait être amélioré ?"></textarea>
+            </div>
+            
+            <!-- Est-ce que les filtres ont été utiles -->
+            <div class="feedback-section">
+                <label class="feedback-label">Est-ce que les filtres ont été utiles ?</label>
+                <select id="feedback-filters-useful" class="feedback-select">
+                    <option value="">Sélectionnez...</option>
+                    <option value="oui">Oui</option>
+                    <option value="non">Non</option>
+                    <option value="partiellement">Partiellement</option>
+                </select>
+            </div>
+            
+            <!-- Actions -->
+            <div class="feedback-actions">
+                <button id="feedback-cancel-btn" class="feedback-cancel">Annuler</button>
+                <button id="feedback-submit-btn" class="feedback-submit">Envoyer</button>
+            </div>
         </div>
     </div>
     
@@ -1997,45 +2376,100 @@
                 topPValue.textContent = this.value;
             });
 
-            // Initialiser le prompt par défaut dans le textarea
-            const defaultPrompt = `Voici les données de trafic en Île-de-France :
-{{data}}
+            // Fonction pour construire le prompt dynamiquement selon les filtres
+            function buildPromptFromFilters() {
+                const tone = document.getElementById('filter-tone').value;
+                const urgency = document.getElementById('filter-urgency').value;
+                const detail = document.getElementById('filter-detail').value;
+                const geo = document.getElementById('filter-geo').value;
+                const style = document.getElementById('filter-style').value;
+                const customInstruction = document.getElementById('filter-custom').value.trim();
+                
+                // Instructions selon les filtres
+                const toneInstructions = {
+                    'neutre': 'Adopte un ton neutre, factuel et clair.',
+                    'dynamique': 'Adopte un ton dynamique et rythmé, typique des heures de pointe.',
+                    'pose': 'Adopte un ton posé et rassurant.'
+                };
+                
+                const urgencyInstructions = {
+                    'critiques-debut': 'Mets en avant les situations les plus critiques dès le début.',
+                    'progressive': 'Garde une hiérarchisation progressive sans dramatisation.'
+                };
+                
+                const detailInstructions = {
+                    'phrases-courtes': 'Va à l\'essentiel, phrases courtes.',
+                    'contexte-utile': 'Ajoute un minimum de contexte utile aux conducteurs.'
+                };
+                
+                const geoInstructions = {
+                    'axes-majeurs': 'Donne la priorité aux axes majeurs franciliens.',
+                    'zones-specifiques': 'Insiste particulièrement sur les zones suivantes : {{zones}}.'
+                };
+                
+                const styleInstructions = {
+                    'information-pure': 'Style information pure, ton journal.',
+                    'accompagnement': 'Style accompagnement conducteur, proche et utile.'
+                };
+                
+                // Construction du prompt
+                const prompt = `Tu es un journaliste radio spécialisé dans l'information trafic en Île-de-France. Tu écris des flashs trafic destinés à être lus à l'antenne, en direct. Ton écriture est orale, fluide, naturelle, professionnelle et immédiatement diffusable.
 
-Tâches :
-1. Analyse les données en interne pour identifier les incidents les plus importants.
-2. Garde en priorité :
-   - Accidents,
-   - Embouteillages/travaux avec >5 minutes de retard ou fermetures majeures,
-   - Perturbations RATP/IDFM bloquantes (trafic interrompu, grève, coupures longues).
-3. Ignore les perturbations mineures.
-4. Note : Les données incluent à la fois les incidents routiers TomTom ET les perturbations transports IDFM/RATP.
+Analyse les données en interne pour identifier uniquement les incidents les plus importants. Garde en priorité les accidents, les embouteillages ou travaux provoquant plus de 5 minutes de retard ou des fermetures majeures, ainsi que les perturbations RATP / Île-de-France Mobilités bloquantes comme un trafic interrompu, une grève ou une coupure longue. Ignore systématiquement les perturbations mineures, locales ou sans impact significatif. Les données incluent à la fois des incidents routiers (TomTom) et des perturbations de transports (IDFM/RATP).
 
-⚠️ Sortie attendue :
-- Écris UNIQUEMENT un flash radio de 120 secondes.
-- Le texte doit être fluide, oral, humain, comme s'il était lu à l'antenne.
-- Commence par : "Flash trafic – {{date}}".
-- Ensuite enchaîne directement avec : "Bonjour, voici les principales perturbations…".
-- Évite de répéter ("ralentissement" ×3 = à éviter)
-- IMPÉRATIF : Termine TOUJOURS par une phrase complète avec une conclusion
-- IMPÉRATIF : Surveille ta longueur pour ne pas dépasser la limite de tokens
-- Si tu approches de la limite, conclus rapidement mais proprement
-- Ne génère pas de date ou d'heure par toi-même, utilise exactement la valeur fournie.`;
+Adapte ton écriture selon les paramètres éditoriaux suivants :
+- 🎙️ Ton : ${toneInstructions[tone]}
+- ⏱️ Urgence : ${urgencyInstructions[urgency]}
+- 🧠 Détail : ${detailInstructions[detail]}
+- 🗺️ Géographie : ${geoInstructions[geo]}
+- 📻 Style antenne : ${styleInstructions[style]}
+${customInstruction ? `\nConsignes additionnelles de l'utilisateur : ${customInstruction}` : ''}
 
-            document.getElementById('custom-prompt').value = defaultPrompt;
+⚠️ Règles prioritaires (elles passent avant toute consigne additionnelle) :
+- Écris UNIQUEMENT un flash trafic radio d'une durée maximale de 120 secondes
+- Texte continu, sans titres ni listes, fluide, humain, prêt à être lu à l'antenne
+- Commence exactement par « Flash trafic – {{date}} »
+- Enchaîne immédiatement avec « Bonjour, voici les principales perturbations… »
+- Hiérarchise par importance réelle pour les usagers
+- Ignore les perturbations mineures
+- N'ajoute aucune information non présente dans les données
+- Évite les répétitions
+- Termine TOUJOURS par une phrase complète de conclusion adaptée à un flash radio
+- Ne commente jamais ton raisonnement
+
+Données trafic à analyser :
+{{data}}`;
+
+                return prompt;
+            }
+            
+            // Initialiser le prompt par défaut
+            let currentPrompt = buildPromptFromFilters();
+            
+            // Mettre à jour le prompt quand les filtres changent
+            ['filter-tone', 'filter-urgency', 'filter-detail', 'filter-geo', 'filter-style', 'filter-custom'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', function() {
+                        currentPrompt = buildPromptFromFilters();
+                    });
+                }
+            });
             
             // Fonction pour générer le flash trafic avec les paramètres configurés
             async function generateFlashTrafic() {
                 try {
                     document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
                     
-                    // Récupérer les paramètres de configuration
-                    const customPrompt = document.getElementById('custom-prompt').value.trim();
+                    // Utiliser le prompt construit dynamiquement
+                    const promptToUse = buildPromptFromFilters();
+                    
                     const config = {
                         model: document.getElementById('model-select').value,
                         temperature: parseFloat(document.getElementById('temperature-slider').value),
                         top_p: parseFloat(document.getElementById('top-p-slider').value),
                         max_tokens: parseInt(document.getElementById('max-tokens-select').value),
-                        custom_prompt: customPrompt
+                        custom_prompt: promptToUse
                     };
                     
                     console.log('📤 Config envoyée:', { 
@@ -2043,7 +2477,7 @@ Tâches :
                         temp: config.temperature, 
                         topP: config.top_p, 
                         maxTokens: config.max_tokens, 
-                        promptLength: customPrompt.length 
+                        promptLength: promptToUse.length 
                     });
                     
                     const response = await fetch('/api/generate-flash-traffic', {
@@ -2064,7 +2498,15 @@ Tâches :
                         document.getElementById('flash-trafic-content').innerHTML = 
                             `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
                         
-                        // Le système de feedback est désactivé
+                        // Sauvegarder le contenu généré et le prompt pour le feedback
+                        generatedFlashContent = data.flash_traffic;
+                        generatedPrompt = promptToUse;
+                        
+                        // Afficher le bouton de feedback
+                        const feedbackBtn = document.getElementById('feedback-btn');
+                        if (feedbackBtn) {
+                            feedbackBtn.classList.add('show');
+                        }
                     } else {
                         throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
                     }
@@ -2086,12 +2528,124 @@ Tâches :
                 generateFromConfigBtn.addEventListener('click', generateFlashTrafic);
             }
 
+            // Gestionnaire pour afficher le prompt brut dans la modal
+            const showRawPromptBtn = document.getElementById('show-raw-prompt-btn');
+            const promptModal = document.getElementById('prompt-modal');
+            const closePromptModal = document.getElementById('close-prompt-modal');
+            const rawPromptTextarea = document.getElementById('raw-prompt-textarea');
+            
+            if (showRawPromptBtn) {
+                showRawPromptBtn.addEventListener('click', function() {
+                    const generatedPrompt = buildPromptFromFilters();
+                    rawPromptTextarea.value = generatedPrompt;
+                    promptModal.classList.add('show');
+                });
+            }
+            
+            // Fermer la modal
+            if (closePromptModal) {
+                closePromptModal.addEventListener('click', function() {
+                    promptModal.classList.remove('show');
+                });
+            }
+            
+            // Fermer la modal en cliquant en dehors
+            if (promptModal) {
+                promptModal.addEventListener('click', function(e) {
+                    if (e.target === promptModal) {
+                        promptModal.classList.remove('show');
+                    }
+                });
+            }
+            
             // Gestionnaire pour le bouton de réinitialisation du prompt
             const resetPromptBtn = document.getElementById('reset-prompt-btn');
             if (resetPromptBtn) {
                 resetPromptBtn.addEventListener('click', function() {
-                    document.getElementById('custom-prompt').value = defaultPrompt;
-                    alert('Le prompt a été réinitialisé au prompt par défaut.');
+                    // Réinitialiser tous les filtres à leurs valeurs par défaut
+                    document.getElementById('filter-tone').value = 'neutre';
+                    document.getElementById('filter-urgency').value = 'critiques-debut';
+                    document.getElementById('filter-detail').value = 'phrases-courtes';
+                    document.getElementById('filter-geo').value = 'axes-majeurs';
+                    document.getElementById('filter-style').value = 'information-pure';
+                    document.getElementById('filter-custom').value = '';
+                    
+                    // Mettre à jour le prompt
+                    currentPrompt = buildPromptFromFilters();
+                    
+                    alert('Les filtres ont été réinitialisés aux valeurs par défaut.');
+                });
+            }
+            
+            // Gestionnaire pour générer depuis le prompt brut édité
+            const generateFromRawPromptBtn = document.getElementById('generate-from-raw-prompt-btn');
+            if (generateFromRawPromptBtn) {
+                generateFromRawPromptBtn.addEventListener('click', async function() {
+                    try {
+                        // Récupérer le prompt édité depuis la modal
+                        const editedPrompt = rawPromptTextarea.value.trim();
+                        
+                        if (!editedPrompt) {
+                            alert('Le prompt ne peut pas être vide.');
+                            return;
+                        }
+                        
+                        // Fermer la modal
+                        promptModal.classList.remove('show');
+                        
+                        // Afficher le message de chargement
+                        document.getElementById('flash-trafic-content').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
+                        
+                        // Préparer la configuration
+                        const config = {
+                            model: document.getElementById('model-select').value,
+                            temperature: parseFloat(document.getElementById('temperature-slider').value),
+                            top_p: parseFloat(document.getElementById('top-p-slider').value),
+                            max_tokens: parseInt(document.getElementById('max-tokens-select').value),
+                            custom_prompt: editedPrompt
+                        };
+                        
+                        console.log('📤 Génération depuis prompt brut édité:', { 
+                            model: config.model, 
+                            promptLength: editedPrompt.length 
+                        });
+                        
+                        // Appeler l'API
+                        const response = await fetch('/api/generate-flash-traffic', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(config)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            document.getElementById('flash-trafic-content').innerHTML = 
+                                `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                            
+                            // Sauvegarder le contenu généré et le prompt pour le feedback
+                            generatedFlashContent = data.flash_traffic;
+                            generatedPrompt = editedPrompt;
+                            
+                            // Afficher le bouton de feedback
+                            const feedbackBtn = document.getElementById('feedback-btn');
+                            if (feedbackBtn) {
+                                feedbackBtn.classList.add('show');
+                            }
+                        } else {
+                            throw new Error(data.message || 'Erreur lors de la génération du flash trafic');
+                        }
+                    } catch (error) {
+                        console.error('Erreur lors de la génération depuis le prompt brut:', error);
+                        document.getElementById('flash-trafic-content').innerHTML = 
+                            '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier votre configuration et vos clés API.</p>';
+                    }
                 });
             }
 
@@ -2100,5 +2654,19 @@ Tâches :
         // Rafraîchir les données toutes les 5 minutes
         setInterval(fetchData, 300000);
     </script>
+
+    <!-- Modal pour le prompt brut -->
+    <div id="prompt-modal" class="prompt-modal">
+        <div class="prompt-modal-content">
+            <div class="prompt-modal-header">
+                <h3 class="prompt-modal-title">Prompt brut - Éditable</h3>
+                <button id="close-prompt-modal" class="prompt-modal-close">×</button>
+            </div>
+            <textarea id="raw-prompt-textarea" class="prompt-modal-textarea"></textarea>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end;">
+                <button id="generate-from-raw-prompt-btn" class="prompt-btn prompt-btn-primary">Générer depuis ce prompt</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

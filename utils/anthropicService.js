@@ -9,6 +9,8 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 
 // Clé API depuis les variables d'environnement
 const API_KEY = process.env.ANTHROPIC_API_KEY || '';
+console.log('ANTHROPIC_API_KEY chargée:', API_KEY ? 'OUI' : 'NON');
+console.log('Longueur de la clé:', API_KEY.length);
 
 // Initialisation du client Anthropic
 const anthropic = new Anthropic({
@@ -59,11 +61,7 @@ const generateFlashTraffic = async (prompt, options = {}) => {
       ]
     });
 
-    const generatedText = response.content[0].text;
-    console.log('Réponse Claude - Longueur:', generatedText.length);
-    console.log('Réponse Claude - Fin:', generatedText.slice(-50));
-    console.log('Réponse Claude - Stop reason:', response.stop_reason);
-    return generatedText;
+    return response.content[0].text;
   } catch (error) {
     console.error('Erreur lors de la génération du flash trafic:', error);
     
