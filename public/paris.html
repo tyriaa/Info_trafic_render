@@ -1607,8 +1607,8 @@
                   <div class="config-group" style="width: 100%;">
                     <label class="config-label">Personnalisation du prompt</label>
                     
-                    <!-- Grille de filtres -->
-                    <div class="prompt-filters-grid">
+                    <!-- Grille de filtres (masquée) -->
+                    <div class="prompt-filters-grid" style="display: none;">
                       <!-- Ton -->
                       <div class="filter-group">
                         <label class="filter-label">
@@ -1676,9 +1676,9 @@
                     
                     <!-- Boutons d'action -->
                     <div class="prompt-actions">
-                      <button id="show-raw-prompt-btn" class="prompt-btn">Accès prompt brut</button>
-                      <button id="reset-prompt-btn" class="prompt-btn">Réinitialiser au prompt par défaut</button>
-                      <button id="generate-from-config-btn" class="prompt-btn prompt-btn-primary">Générer un point trafic</button>
+                      <button id="show-raw-prompt-btn" class="prompt-btn">Modifier le prompt brut</button>
+                      <button id="reset-prompt-btn" class="prompt-btn" style="display: none;">Réinitialiser au prompt par défaut</button>
+                      <button id="generate-from-config-btn" class="prompt-btn prompt-btn-primary" style="display: none;">Générer un point trafic</button>
                     </div>
                   </div>
                 </div>
