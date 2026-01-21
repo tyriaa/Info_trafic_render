@@ -1480,6 +1480,14 @@
                 return;
             }
             
+            // Désactiver le bouton et afficher le chargement
+            const submitBtn = document.getElementById('feedback-submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Envoi en cours...';
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+            
             // Collecter les données du feedback
             const feedbackData = {
                 timestamp: new Date().toISOString(),
@@ -1531,6 +1539,12 @@
             } catch (error) {
                 console.error('❌ Erreur lors de l\'envoi du feedback:', error);
                 alert('Impossible de contacter le serveur. Veuillez vérifier votre connexion.');
+            } finally {
+                // Réactiver le bouton
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
             }
             
             // Fermer la modal et réinitialiser
@@ -1985,11 +1999,11 @@
                 <textarea id="feedback-negative" class="feedback-textarea" placeholder="Qu'est-ce qui pourrait être amélioré ?"></textarea>
             </div>
             
-            <!-- Est-ce que les filtres ont été utiles -->
-            <div class="feedback-section">
+            <!-- Est-ce que les filtres ont été utiles (masqué) -->
+            <div class="feedback-section" style="display: none;">
                 <label class="feedback-label">Est-ce que les filtres ont été utiles ?</label>
                 <select id="feedback-filters-useful" class="feedback-select">
-                    <option value="">Sélectionnez...</option>
+                    <option value=""> Sélectionnez...</option>
                     <option value="oui">Oui</option>
                     <option value="non">Non</option>
                     <option value="partiellement">Partiellement</option>
