@@ -232,6 +232,358 @@
             font-style: italic;
             margin: 1rem;
         }
+
+        /* Styles Flash Trafic */
+        .flash-trafic {
+            background-color: #f8f8f8;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            margin: 2rem;
+        }
+        
+        .flash-trafic-title {
+            color: #0066FF;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .flash-generate-btn {
+            background: #0066FF;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .flash-generate-btn:hover {
+            background: #0053cc;
+        }
+
+        .config-toggle-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .config-toggle-btn:hover {
+            background: #218838;
+        }
+
+        .config-panel {
+            background: #f8f9fa;
+            border: 2px solid #0066FF;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0 0 0;
+            display: none;
+            width: 100%;
+        }
+
+        .config-panel.show {
+            display: block;
+        }
+
+        .config-group {
+            margin-bottom: 1rem;
+        }
+
+        .config-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 0.3rem;
+        }
+
+        .config-select, .config-input {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .config-value {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 0.5rem;
+            min-width: 40px;
+        }
+
+        .prompt-btn {
+            padding: 0.6rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            font-weight: 500;
+        }
+
+        .prompt-btn:hover {
+            background: #f8f9fa;
+            border-color: #0066FF;
+        }
+
+        .prompt-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prompt-modal.show {
+            display: flex;
+        }
+
+        .prompt-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .prompt-modal-textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+        }
+
+        /* Styles Feedback */
+        .feedback-btn {
+            background: #0066FF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            transition: all 0.2s ease;
+            display: none;
+        }
+        
+        .feedback-btn:hover {
+            background: #0053cc;
+            transform: translateY(-1px);
+        }
+        
+        .feedback-btn.show {
+            display: inline-block;
+        }
+        
+        .feedback-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-modal.show {
+            display: flex;
+        }
+        
+        .feedback-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #0066FF;
+        }
+        
+        .feedback-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0066FF;
+        }
+        
+        .feedback-close {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .feedback-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .feedback-question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0066FF;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .feedback-emoji-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .feedback-emoji {
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.4;
+            filter: grayscale(100%);
+        }
+        
+        .feedback-emoji:hover {
+            transform: scale(1.2);
+            opacity: 0.7;
+            filter: grayscale(50%);
+        }
+        
+        .feedback-emoji.selected {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.3);
+        }
+        
+        .feedback-section {
+            margin-bottom: 2rem;
+        }
+        
+        .feedback-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .feedback-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            resize: vertical;
+        }
+        
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+        
+        .feedback-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .feedback-select:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+        }
+        
+        .feedback-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+        
+        .feedback-submit {
+            background: #0066FF;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-submit:hover {
+            background: #0053cc;
+            transform: translateY(-1px);
+        }
+        
+        .feedback-cancel {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .feedback-cancel:hover {
+            background: #e0e0e0;
+        }
     </style>
     <script>
         let map;
@@ -527,6 +879,132 @@
         <div class="city-name">Provence</div>
     </header>
 
+    <!-- Section Flash Trafic Marseille -->
+    <div class="flash-trafic">
+        <div class="flash-trafic-title">Flash trafic Marseille</div>
+        <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            <div style="flex: 1;">
+                <button id="config-toggle-btn-marseille" class="config-toggle-btn">⚙️ Configuration</button>
+                
+                <div id="config-panel-marseille" class="config-panel">
+                    <div style="display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem;">
+                        <div>
+                            <div class="config-group">
+                                <label class="config-label">Modèle IA</label>
+                                <select id="model-select-marseille" class="config-select">
+                                    <option value="claude">Claude 3.7 Sonnet</option>
+                                    <option value="gpt4o">GPT-4o</option>
+                                    <option value="pixtral">Pixtral</option>
+                                </select>
+                            </div>
+                            
+                            <div class="config-group">
+                                <label class="config-label">Température</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="range" id="temperature-slider-marseille" class="config-input" min="0" max="1" step="0.1" value="0.7">
+                                    <span id="temperature-value-marseille" class="config-value">0.7</span>
+                                </div>
+                            </div>
+                            
+                            <div class="config-group">
+                                <label class="config-label">Top-P</label>
+                                <div style="display: flex; align-items: center;">
+                                    <input type="range" id="top-p-slider-marseille" class="config-input" min="0" max="1" step="0.1" value="0.9">
+                                    <span id="top-p-value-marseille" class="config-value">0.9</span>
+                                </div>
+                            </div>
+                            
+                            <div class="config-group">
+                                <label class="config-label">Longueur max</label>
+                                <select id="max-tokens-select-marseille" class="config-select">
+                                    <option value="1000">Court (1000)</option>
+                                    <option value="1500" selected>Moyen (1500)</option>
+                                    <option value="4096">Sans limite</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="config-group">
+                                <label class="config-label">Personnalisation du prompt</label>
+                                <button id="show-raw-prompt-btn-marseille" class="prompt-btn">Modifier le prompt brut</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="flex: 1; background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <button id="generate-flash-btn-marseille" class="flash-generate-btn">Générer le flash trafic</button>
+                <div id="flash-trafic-content-marseille">
+                    <p style="color: #000000 !important;">Cliquez sur le bouton ci-dessus pour générer le flash trafic Marseille.</p>
+                </div>
+                <button id="feedback-btn-marseille" class="feedback-btn">Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal prompt brut -->
+    <div id="prompt-modal-marseille" class="prompt-modal">
+        <div class="prompt-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid #0066FF;">
+                <h2 style="font-size: 1.3rem; font-weight: 600; color: #0066FF;">Modifier le prompt brut</h2>
+                <button id="close-prompt-modal-marseille" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <textarea id="raw-prompt-textarea-marseille" class="prompt-modal-textarea"></textarea>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: flex-end;">
+                <button id="cancel-prompt-btn-marseille" class="prompt-btn">Annuler</button>
+                <button id="generate-from-raw-prompt-btn-marseille" class="prompt-btn" style="background: #0066FF; color: white;">Générer avec ce prompt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Feedback -->
+    <div id="feedback-modal-marseille" class="feedback-modal">
+        <div class="feedback-modal-content">
+            <div class="feedback-header">
+                <h2 class="feedback-title">Votre avis sur ce flash trafic</h2>
+                <button id="close-feedback-modal-marseille" class="feedback-close">×</button>
+            </div>
+            
+            <div class="feedback-section">
+                <div class="feedback-question-title">Comment évaluez-vous ce flash trafic ?</div>
+                <div class="feedback-emoji-row">
+                    <span class="feedback-emoji" data-rating="1">😖</span>
+                    <span class="feedback-emoji" data-rating="2">😕</span>
+                    <span class="feedback-emoji" data-rating="3">😐</span>
+                    <span class="feedback-emoji" data-rating="4">😊</span>
+                    <span class="feedback-emoji" data-rating="5">😍</span>
+                </div>
+            </div>
+            
+            <div class="feedback-section">
+                <label class="feedback-label">Point positif</label>
+                <textarea id="feedback-positive-marseille" class="feedback-textarea" placeholder="Qu'avez-vous apprécié dans ce flash trafic ?"></textarea>
+            </div>
+            
+            <div class="feedback-section">
+                <label class="feedback-label">Point négatif</label>
+                <textarea id="feedback-negative-marseille" class="feedback-textarea" placeholder="Qu'est-ce qui pourrait être amélioré ?"></textarea>
+            </div>
+            
+            <div class="feedback-section" style="display: none;">
+                <label class="feedback-label">Est-ce que les filtres ont été utiles ?</label>
+                <select id="feedback-filters-useful-marseille" class="feedback-select">
+                    <option value="">Sélectionnez...</option>
+                    <option value="oui">Oui</option>
+                    <option value="non">Non</option>
+                    <option value="partiellement">Partiellement</option>
+                </select>
+            </div>
+            
+            <div class="feedback-actions">
+                <button id="feedback-cancel-btn-marseille" class="feedback-cancel">Annuler</button>
+                <button id="feedback-submit-btn-marseille" class="feedback-submit">Envoyer</button>
+            </div>
+        </div>
+    </div>
+
     <main>
         <div class="top-row">
             <div class="disruptions">
@@ -576,5 +1054,258 @@
             <div class="ferry-list"></div>
         </div>
     </main>
+
+    <script>
+        // === FLASH TRAFIC MARSEILLE ===
+        const defaultPromptMarseille = `Tu es un journaliste radio spécialisé dans l'information trafic à Marseille et en Provence. Tu produis des synthèses trafic destinées à aider un journaliste à l'antenne, en direct.
+Ton écriture est orale, fluide, naturelle, professionnelle, mais présentée sous forme de bullet points clairs et immédiatement exploitables.
+
+Analyse les données en interne pour identifier uniquement les incidents les plus importants.
+Garde en priorité :
+	•	les accidents
+	•	les embouteillages
+	•	les travaux provoquant plus de 5 minutes de retard ou des fermetures majeures
+	•	les perturbations transports bloquantes (trafic interrompu, coupure longue, grève)
+
+Ignore systématiquement :
+	•	les perturbations mineures
+	•	les incidents très locaux
+	•	les informations sans impact significatif pour les usagers
+
+Les données incluent à la fois :
+	•	des incidents routiers (TomTom Marseille)
+	•	des perturbations de transports (RTM)
+
+Paramètres éditoriaux obligatoires :
+	•	🎙️ Ton : neutre, factuel, clair
+	•	⏱️ Urgence : incidents les plus critiques en premier
+	•	🧠 Détail : phrases très courtes, impact usager immédiat
+	•	🗺️ Géographie : priorité aux grands axes marseillais et lignes structurantes
+	•	📻 Usage antenne : lecture rapide, pas de phrase longue
+
+⚠️ Règles prioritaires :
+	•	Ne produis PAS de texte continu
+	•	Ne produis QUE des bullet points
+	•	Un incident = un bloc de bullet points
+	•	Chaque bloc doit contenir, quand l'information est disponible :
+	•	l'axe ou la ligne concernée
+	•	la localisation précise
+	•	la nature du problème
+	•	l'impact concret pour l'usager (retard, fermeture, trafic interrompu)
+	•	Classe les incidents par importance réelle
+	•	N'ajoute aucune information absente des données
+	•	Évite toute répétition
+	•	N'ajoute ni conclusion, ni commentaire, ni titre
+	•	N'explique jamais ton raisonnement
+
+Format de sortie attendu :
+	•	[AXE / LIGNE]
+	•	Localisation
+	•	Problème
+	•	Impact usager
+
+Données trafic à analyser :
+{{data}}`;
+
+        let currentPromptMarseille = defaultPromptMarseille;
+        let selectedRatingMarseille = null;
+        let generatedFlashContentMarseille = '';
+        let generatedPromptMarseille = '';
+
+        // Gestion panneau config
+        document.getElementById('config-toggle-btn-marseille').addEventListener('click', function() {
+            document.getElementById('config-panel-marseille').classList.toggle('show');
+        });
+
+        // Sliders
+        document.getElementById('temperature-slider-marseille').addEventListener('input', function() {
+            document.getElementById('temperature-value-marseille').textContent = this.value;
+        });
+
+        document.getElementById('top-p-slider-marseille').addEventListener('input', function() {
+            document.getElementById('top-p-value-marseille').textContent = this.value;
+        });
+
+        // Modal prompt
+        document.getElementById('show-raw-prompt-btn-marseille').addEventListener('click', function() {
+            document.getElementById('raw-prompt-textarea-marseille').value = currentPromptMarseille;
+            document.getElementById('prompt-modal-marseille').classList.add('show');
+        });
+
+        document.getElementById('close-prompt-modal-marseille').addEventListener('click', function() {
+            document.getElementById('prompt-modal-marseille').classList.remove('show');
+        });
+
+        document.getElementById('cancel-prompt-btn-marseille').addEventListener('click', function() {
+            document.getElementById('prompt-modal-marseille').classList.remove('show');
+        });
+
+        // Génération flash trafic
+        async function generateFlashTrafficMarseille(customPrompt = null) {
+            try {
+                document.getElementById('flash-trafic-content-marseille').innerHTML = '<p style="color: #000000 !important;">Génération du flash trafic en cours...</p>';
+                
+                const config = {
+                    model: document.getElementById('model-select-marseille').value,
+                    temperature: parseFloat(document.getElementById('temperature-slider-marseille').value),
+                    top_p: parseFloat(document.getElementById('top-p-slider-marseille').value),
+                    max_tokens: parseInt(document.getElementById('max-tokens-select-marseille').value),
+                    custom_prompt: customPrompt || currentPromptMarseille
+                };
+                
+                const response = await fetch('/api/generate-flash-traffic-marseille', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('flash-trafic-content-marseille').innerHTML = 
+                        `<p style="white-space: pre-line; color: #000000 !important;">${data.flash_traffic}</p>`;
+                    
+                    generatedFlashContentMarseille = data.flash_traffic;
+                    generatedPromptMarseille = customPrompt || currentPromptMarseille;
+                    
+                    const feedbackBtn = document.getElementById('feedback-btn-marseille');
+                    if (feedbackBtn) {
+                        feedbackBtn.classList.add('show');
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors de la génération');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('flash-trafic-content-marseille').innerHTML = 
+                    '<p style="color: #000000 !important;">Erreur lors de la génération du flash trafic. Veuillez vérifier votre configuration.</p>';
+            }
+        }
+
+        document.getElementById('generate-flash-btn-marseille').addEventListener('click', function() {
+            generateFlashTrafficMarseille();
+        });
+
+        document.getElementById('generate-from-raw-prompt-btn-marseille').addEventListener('click', function() {
+            const editedPrompt = document.getElementById('raw-prompt-textarea-marseille').value;
+            currentPromptMarseille = editedPrompt;
+            document.getElementById('prompt-modal-marseille').classList.remove('show');
+            generateFlashTrafficMarseille(editedPrompt);
+        });
+
+        // === SYSTÈME DE FEEDBACK MARSEILLE ===
+        function initNewFeedbackSystemMarseille() {
+            const feedbackModal = document.getElementById('feedback-modal-marseille');
+            const closeFeedbackModal = document.getElementById('close-feedback-modal-marseille');
+            const feedbackCancelBtn = document.getElementById('feedback-cancel-btn-marseille');
+            const feedbackSubmitBtn = document.getElementById('feedback-submit-btn-marseille');
+            const feedbackEmojis = document.querySelectorAll('#feedback-modal-marseille .feedback-emoji');
+            
+            feedbackEmojis.forEach(emoji => {
+                emoji.addEventListener('click', function() {
+                    feedbackEmojis.forEach(e => e.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedRatingMarseille = parseInt(this.getAttribute('data-rating'));
+                });
+            });
+            
+            closeFeedbackModal.addEventListener('click', function() {
+                feedbackModal.classList.remove('show');
+            });
+            
+            feedbackCancelBtn.addEventListener('click', function() {
+                feedbackModal.classList.remove('show');
+            });
+            
+            feedbackSubmitBtn.addEventListener('click', function() {
+                submitNewFeedbackMarseille();
+            });
+        }
+
+        function resetFeedbackFormMarseille() {
+            selectedRatingMarseille = null;
+            document.querySelectorAll('#feedback-modal-marseille .feedback-emoji').forEach(e => e.classList.remove('selected'));
+            document.getElementById('feedback-positive-marseille').value = '';
+            document.getElementById('feedback-negative-marseille').value = '';
+            document.getElementById('feedback-filters-useful-marseille').value = '';
+        }
+        
+        async function submitNewFeedbackMarseille() {
+            if (!selectedRatingMarseille) {
+                alert('Veuillez sélectionner une note avec les emojis.');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('feedback-submit-btn-marseille');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Envoi en cours...';
+            submitBtn.style.opacity = '0.6';
+            submitBtn.style.cursor = 'not-allowed';
+            
+            const feedbackData = {
+                timestamp: new Date().toISOString(),
+                rating: selectedRatingMarseille,
+                positive_comment: document.getElementById('feedback-positive-marseille').value.trim(),
+                negative_comment: document.getElementById('feedback-negative-marseille').value.trim(),
+                filters_useful: document.getElementById('feedback-filters-useful-marseille').value,
+                
+                model: document.getElementById('model-select-marseille').value,
+                temperature: parseFloat(document.getElementById('temperature-slider-marseille').value),
+                top_p: parseFloat(document.getElementById('top-p-slider-marseille').value),
+                max_tokens: parseInt(document.getElementById('max-tokens-select-marseille').value),
+                
+                filter_tone: 'neutre',
+                filter_urgency: 'critiques-debut',
+                filter_detail: 'phrases-courtes',
+                filter_geo: 'axes-majeurs',
+                filter_style: 'information-pure',
+                filter_custom: '',
+                
+                full_prompt: generatedPromptMarseille,
+                flash_content: generatedFlashContentMarseille,
+                page: 'marseille'
+            };
+            
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(feedbackData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log('✅ Feedback Marseille enregistré (ID:', result.id, ')');
+                    alert('Merci pour votre feedback ! Vos commentaires ont été enregistrés.');
+                } else {
+                    console.error('❌ Erreur serveur:', result.message);
+                    alert('Une erreur est survenue lors de l\'enregistrement de votre feedback. Veuillez réessayer.');
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors de l\'envoi du feedback:', error);
+                alert('Impossible de contacter le serveur. Veuillez vérifier votre connexion.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            }
+            
+            document.getElementById('feedback-modal-marseille').classList.remove('show');
+            resetFeedbackFormMarseille();
+        }
+
+        document.getElementById('feedback-btn-marseille').addEventListener('click', function() {
+            document.getElementById('feedback-modal-marseille').classList.add('show');
+        });
+
+        initNewFeedbackSystemMarseille();
+    </script>
 </body>
 </html>

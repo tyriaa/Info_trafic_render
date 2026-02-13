@@ -833,6 +833,163 @@ app.get('/api/generate-flash-traffic', async (req, res) => {
   }
 });
 
+// Route pour générer le flash trafic Normandie (RSS MyAstuce + TomTom Rouen)
+app.post('/api/generate-flash-traffic-normandie', async (req, res) => {
+  try {
+    // 1. Récupérer les données TomTom pour Rouen
+    const tomtomData = await tomTomService.getTrafficIncidents('Rouen', 'fr-FR');
+    
+    const processedTomTom = {
+      accidents: tomtomData.incidents.filter(i => i.iconCategory === 1),
+      vehicleBreakdowns: tomtomData.incidents.filter(i => i.iconCategory === 14),
+      majorTraffic: tomtomData.incidents.filter(i => i.iconCategory === 6 && i.delay.minutes >= 10),
+      roadClosures: tomtomData.incidents.filter(i => (i.iconCategory === 8 || i.iconCategory === 7)),
+      allIncidents: tomtomData.incidents
+    };
+
+    // 2. Récupérer les données RSS MyAstuce (perturbations transports Normandie)
+    const NormandieRSSScraper = require('./scrapers/normandie_scraper');
+    const normandieScraper = new NormandieRSSScraper();
+    const normandieData = await normandieScraper.getPerturbations();
+
+    // 3. Récupérer les paramètres de configuration
+    const {
+      model = 'claude',
+      temperature = 0.7,
+      top_p = 0.9,
+      max_tokens = 400,
+      custom_prompt = null
+    } = req.body;
+    
+    console.log('📊 Config Normandie reçue:', { model, temp: temperature, topP: top_p, maxTokens: max_tokens });
+
+    // 4. Construire le prompt avec les données Normandie
+    const formatted = formatFullFrenchDate();
+    const dataString = `Incidents routiers TomTom Rouen : ${JSON.stringify(processedTomTom).slice(0, 8000)}\nPerturbations transports MyAstuce : ${JSON.stringify(normandieData).slice(0, 4000)}`;
+    
+    const promptTemplate = custom_prompt || `Voici les données de trafic en Normandie (Rouen) : {{data}}\nGénère un flash radio professionnel pour le {{date}}.`;
+    
+    const prompt = promptTemplate
+      .replace(/\{\{data\}\}/g, dataString)
+      .replace(/\{\{date\}\}/g, formatted);
+
+    console.log('✅ Prompt final prêt, longueur:', prompt.length, 'caractères');
+
+    // 5. Générer avec le modèle IA sélectionné
+    let flashTraffic;
+    
+    if (model === 'gpt4o') {
+      flashTraffic = await openaiService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    } else if (model === 'pixtral') {
+      flashTraffic = await mistralService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    } else {
+      flashTraffic = await anthropicService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    }
+
+    console.log('✅ Flash Normandie généré:', flashTraffic.length, 'caractères avec', model);
+
+    res.json({
+      status: 'success',
+      flash_traffic: flashTraffic,
+      model_used: model,
+      data_sources: {
+        tomtom_incidents: processedTomTom.allIncidents.length,
+        normandie_disruptions: normandieData.data ? Object.values(normandieData.data).flat().length : 0
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur génération flash Normandie:', error);
+    res.status(500).json({
+      status: 'error',
+      message: `Erreur lors de la génération du flash trafic Normandie: ${error.message}`
+    });
+  }
+});
+
+// Route pour générer le flash trafic Marseille (API RTM + TomTom Marseille)
+app.post('/api/generate-flash-traffic-marseille', async (req, res) => {
+  try {
+    // 1. Récupérer les données TomTom pour Marseille
+    const tomtomData = await tomTomService.getTrafficIncidents('Marseille', 'fr-FR');
+    
+    const processedTomTom = {
+      accidents: tomtomData.incidents.filter(i => i.iconCategory === 1),
+      vehicleBreakdowns: tomtomData.incidents.filter(i => i.iconCategory === 14),
+      majorTraffic: tomtomData.incidents.filter(i => i.iconCategory === 6 && i.delay.minutes >= 10),
+      roadClosures: tomtomData.incidents.filter(i => (i.iconCategory === 8 || i.iconCategory === 7)),
+      allIncidents: tomtomData.incidents
+    };
+
+    // 2. Récupérer les données RTM (perturbations transports Marseille)
+    let rtmData = { alertsToday: [], alertsComing: [] };
+    try {
+      const rtmResponse = await axios.get('https://api.rtm.fr/front/getAlertes/FR/All');
+      if (rtmResponse.data && rtmResponse.data.data) {
+        rtmData = {
+          alertsToday: rtmResponse.data.data.AlertesToday || [],
+          alertsComing: rtmResponse.data.data.AlertesComing || []
+        };
+      }
+    } catch (rtmError) {
+      console.warn('⚠️ Erreur RTM API:', rtmError.message);
+    }
+
+    // 3. Récupérer les paramètres de configuration
+    const {
+      model = 'claude',
+      temperature = 0.7,
+      top_p = 0.9,
+      max_tokens = 400,
+      custom_prompt = null
+    } = req.body;
+    
+    console.log('📊 Config Marseille reçue:', { model, temp: temperature, topP: top_p, maxTokens: max_tokens });
+
+    // 4. Construire le prompt avec les données Marseille
+    const formatted = formatFullFrenchDate();
+    const dataString = `Incidents routiers TomTom Marseille : ${JSON.stringify(processedTomTom).slice(0, 8000)}\nPerturbations transports RTM : ${JSON.stringify(rtmData).slice(0, 4000)}`;
+    
+    const promptTemplate = custom_prompt || `Voici les données de trafic à Marseille : {{data}}\nGénère un flash radio professionnel pour le {{date}}.`;
+    
+    const prompt = promptTemplate
+      .replace(/\{\{data\}\}/g, dataString)
+      .replace(/\{\{date\}\}/g, formatted);
+
+    console.log('✅ Prompt final prêt, longueur:', prompt.length, 'caractères');
+
+    // 5. Générer avec le modèle IA sélectionné
+    let flashTraffic;
+    
+    if (model === 'gpt4o') {
+      flashTraffic = await openaiService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    } else if (model === 'pixtral') {
+      flashTraffic = await mistralService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    } else {
+      flashTraffic = await anthropicService.generateFlashTraffic(prompt, temperature, top_p, max_tokens);
+    }
+
+    console.log('✅ Flash Marseille généré:', flashTraffic.length, 'caractères avec', model);
+
+    res.json({
+      status: 'success',
+      flash_traffic: flashTraffic,
+      model_used: model,
+      data_sources: {
+        tomtom_incidents: processedTomTom.allIncidents.length,
+        rtm_alerts: rtmData.alertsToday.length + rtmData.alertsComing.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur génération flash Marseille:', error);
+    res.status(500).json({
+      status: 'error',
+      message: `Erreur lors de la génération du flash trafic Marseille: ${error.message}`
+    });
+  }
+});
+
 // Route POST pour enregistrer le feedback dans la base de données
 app.post('/api/feedback', async (req, res) => {
   try {
