@@ -5,6 +5,7 @@ const cheerio = require('cheerio');
 require('dotenv').config();
 const PerturbationScraper = require('./scrapers/lille_scraper');
 const SNCFScraper = require('./scrapers/sncf_scraper');
+const NormandieRSSScraper = require('./scrapers/normandie_scraper');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -848,7 +849,6 @@ app.post('/api/generate-flash-traffic-normandie', async (req, res) => {
     };
 
     // 2. Récupérer les données RSS MyAstuce (perturbations transports Normandie)
-    const NormandieRSSScraper = require('./scrapers/normandie_scraper');
     const normandieScraper = new NormandieRSSScraper();
     const normandieData = await normandieScraper.getPerturbations();
 
