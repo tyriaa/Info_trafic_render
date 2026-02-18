@@ -50,8 +50,8 @@ async function getTrafficIncidents(city, language = 'fr-FR') {
     const params = {
       key: TOMTOM_API_KEY,
       bbox: cityData.bbox,
+      fields: '{incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity}}}',
       language: language
-      // fields: retiré car cause erreur 400 (encodage des accolades)
       // timeValidityFilter: 'present' - SUPPRIMÉ car il élimine tous les incidents
     };
 
