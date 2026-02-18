@@ -1,6 +1,22 @@
 const axios = require('axios');
 const xml2js = require('xml2js');
-const puppeteer = require('puppeteer');
+
+// Utiliser puppeteer-core avec chromium pour Azure/production
+let puppeteer;
+let chromium;
+try {
+    // En production (Azure), utiliser puppeteer-core avec chromium
+    if (process.env.NODE_ENV === 'production' || process.env.WEBSITE_INSTANCE_ID) {
+        puppeteer = require('puppeteer-core');
+        chromium = require('@sparticuz/chromium');
+    } else {
+        // En local, utiliser puppeteer standard
+        puppeteer = require('puppeteer');
+    }
+} catch (error) {
+    // Fallback sur puppeteer standard si les packages ne sont pas disponibles
+    puppeteer = require('puppeteer');
+}
 
 class NormandieRSSScraper {
     constructor() {
@@ -134,10 +150,27 @@ class NormandieRSSScraper {
     async fetchRSSWithPuppeteer() {
         let browser;
         try {
-            browser = await puppeteer.launch({
+            // Configuration pour Azure App Service et autres environnements cloud
+            const puppeteerOptions = {
                 headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ]
+            };
+
+            // Sur Azure/production, utiliser chromium de @sparticuz/chromium
+            if (chromium && (process.env.NODE_ENV === 'production' || process.env.WEBSITE_INSTANCE_ID)) {
+                puppeteerOptions.executablePath = await chromium.executablePath();
+                puppeteerOptions.args = chromium.args;
+            }
+
+            browser = await puppeteer.launch(puppeteerOptions);
             const page = await browser.newPage();
             
             // Configurer le User-Agent
