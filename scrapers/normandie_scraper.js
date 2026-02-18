@@ -4,18 +4,28 @@ const xml2js = require('xml2js');
 // Utiliser puppeteer-core avec chromium pour Azure/production
 let puppeteer;
 let chromium;
+
+// Détecter si on est sur Azure ou en production
+const isAzure = process.env.WEBSITE_INSTANCE_ID || process.env.WEBSITE_SITE_NAME;
+const isProduction = process.env.NODE_ENV === 'production';
+
 try {
-    // En production (Azure), utiliser puppeteer-core avec chromium
-    if (process.env.NODE_ENV === 'production' || process.env.WEBSITE_INSTANCE_ID) {
+    if (isAzure || isProduction) {
+        // En production (Azure), utiliser puppeteer-core avec chromium
+        console.log('🔧 Environnement Azure/Production détecté - utilisation de @sparticuz/chromium');
         puppeteer = require('puppeteer-core');
         chromium = require('@sparticuz/chromium');
     } else {
         // En local, utiliser puppeteer standard
+        console.log('🔧 Environnement local détecté - utilisation de puppeteer standard');
         puppeteer = require('puppeteer');
+        chromium = null;
     }
 } catch (error) {
-    // Fallback sur puppeteer standard si les packages ne sont pas disponibles
+    console.error('⚠️ Erreur lors du chargement de puppeteer:', error.message);
+    // Fallback sur puppeteer standard
     puppeteer = require('puppeteer');
+    chromium = null;
 }
 
 class NormandieRSSScraper {
@@ -165,9 +175,13 @@ class NormandieRSSScraper {
             };
 
             // Sur Azure/production, utiliser chromium de @sparticuz/chromium
-            if (chromium && (process.env.NODE_ENV === 'production' || process.env.WEBSITE_INSTANCE_ID)) {
+            if (chromium) {
+                console.log('🔧 Utilisation de @sparticuz/chromium pour le binaire Chrome');
                 puppeteerOptions.executablePath = await chromium.executablePath();
                 puppeteerOptions.args = chromium.args;
+                console.log('✅ Chromium path configuré:', puppeteerOptions.executablePath);
+            } else {
+                console.log('🔧 Utilisation du Chromium local de Puppeteer');
             }
 
             browser = await puppeteer.launch(puppeteerOptions);
