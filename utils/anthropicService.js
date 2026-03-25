@@ -18,7 +18,7 @@ const anthropic = new Anthropic({
 });
 
 // Modèle Claude par défaut 
-const DEFAULT_MODEL = "claude-3-7-sonnet-20250219";
+const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 
 // Fonctions supprimées car non utilisées :
 // - generateResponse()
