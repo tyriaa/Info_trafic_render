@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rouen Express - ICI Info Trafic</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { min-height: 100vh; background-color: #f5f5f5; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header-logo { height: 40px; width: auto; }
+        .header-center { font-size: 0.9rem; color: #666; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .nav-link { padding: 0.5rem 1.2rem; background: #0072F9; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; transition: background 0.3s ease; }
+        .nav-link:hover { background: #0052cc; }
+        .city-name { font-weight: 600; color: #333; }
+        .main-container { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+        .page-title { font-size: 2.5rem; font-weight: 700; color: #0072F9; margin-bottom: 2rem; }
+
+        .top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+
+        .meteo-widget { background: linear-gradient(135deg, #0072F9 0%, #0052cc 100%); color: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 200px; }
+        .meteo-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .meteo-city { font-size: 1.2rem; font-weight: 600; }
+        .meteo-source { font-size: 0.7rem; opacity: 0.7; }
+        .meteo-main { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .meteo-icon { font-size: 3.5rem; }
+        .meteo-temp { font-size: 2.5rem; font-weight: 700; }
+        .meteo-desc { font-size: 0.95rem; opacity: 0.9; text-transform: capitalize; }
+        .meteo-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 0.85rem; opacity: 0.95; }
+        .meteo-detail-item { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.5rem; text-align: center; }
+        .meteo-detail-value { font-weight: 600; font-size: 1rem; margin-top: 0.2rem; }
+
+        .vigicrues-widget { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 200px; }
+        .vigicrues-header { display: flex; justify-content: space-between; margin-bottom: 1rem; color: #666; font-weight: 600; }
+        .vigicrues-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .vigicrues-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem; background: #f8f9fa; border-radius: 8px; }
+        .vigicrues-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        .vigicrues-name { flex: 1; font-size: 0.9rem; }
+        .vigicrues-level { font-size: 0.8rem; color: #666; font-weight: 500; }
+
+        .section-container { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .section-header { font-size: 1.1rem; font-weight: 600; color: #666; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .section-source { font-size: 0.75rem; color: #999; font-weight: 400; font-style: italic; }
+
+        .carousel-wrapper { position: relative; padding: 0 60px; overflow: hidden; }
+        .carousel-container { position: relative; overflow: hidden; width: 100%; }
+        .carousel-track { display: flex; gap: 2rem; transition: transform 0.3s ease; width: max-content; }
+        .event-card { width: 350px; background: #0072F9; border-radius: 12px; padding: 1.5rem; color: white; cursor: pointer; transition: transform 0.2s ease; text-decoration: none; display: flex; flex-direction: column; flex-shrink: 0; }
+        .event-card.minor { background: #95a5a6; }
+        .event-card.trafic-card { background: #e74c3c; }
+        .event-card.trafic-card.minor { background: #f39c12; }
+        .event-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(7, 114, 249, 0.4); }
+        .event-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.4; min-height: 60px; }
+        .event-info { font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.95; }
+        .event-info strong { font-weight: 600; }
+        .event-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+        .event-tag { background: rgba(255,255,255,0.25); font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+        .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 10; }
+        .carousel-nav:hover { background: #f0f0f0; }
+        .carousel-nav.prev { left: 10px; }
+        .carousel-nav.next { right: 10px; }
+        .carousel-nav svg { width: 20px; height: 20px; fill: #333; }
+
+        .loading { text-align: center; padding: 3rem; color: #666; }
+        .loading-spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid #ddd; border-top-color: #0072F9; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 0.5rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg { text-align: center; padding: 2rem; color: #e74c3c; }
+        .empty-state { text-align: center; padding: 3rem 2rem; color: #999; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 0.8rem; }
+        .empty-state-text { font-size: 1rem; font-weight: 500; }
+        .count-badge { background: #0072F9; color: white; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+
+        .air-polluant { background: #f0f4f8; border-radius: 8px; padding: 0.6rem 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+        .air-polluant-label { font-size: 0.8rem; color: #555; font-weight: 500; }
+        .air-polluant-value { font-size: 0.85rem; font-weight: 600; color: #333; }
+
+        .trains-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .train-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.6rem; background: #f8f9fa; border-radius: 6px; font-size: 0.85rem; }
+        .train-time { font-weight: 700; color: #4361ee; min-width: 45px; }
+        .train-type { background: #e3e8f0; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; color: #555; }
+        .train-dest { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .train-number { font-size: 0.75rem; color: #888; }
+
+        @media (max-width: 768px) {
+            .top-row { grid-template-columns: 1fr; }
+            div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html">
+            <img src="assets/images/express.svg" alt="ICI Info Trafic Express" class="header-logo">
+        </a>
+        <div class="header-center">Dernière mise à jour : <span id="last-update-time"></span></div>
+        <div class="header-right">
+            <a href="normandie.html" class="nav-link">← Info Trafic</a>
+            <div class="city-name">Rouen Express</div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Rouen Express</h1>
+
+        <!-- Widget ICI Express IA -->
+        <div class="section-container" style="background:linear-gradient(135deg,#1a237e 0%,#0072F9 100%);color:white;margin-bottom:1.5rem;">
+            <div class="section-header" style="background:transparent;color:white;border-bottom:1px solid rgba(255,255,255,0.2);">
+                <span style="color:white;">🎙️ ICI Express — Générateur IA</span>
+                <span class="section-source" style="color:rgba(255,255,255,0.8);">Scripts radio 60" à partir des data locales</span>
+            </div>
+            <div id="ici-express-widget" data-city="rouen" style="padding:1rem 1.2rem;">
+                <div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;margin-bottom:1rem;">
+                    <label style="font-size:0.85rem;opacity:0.9;">Modèle :</label>
+                    <select id="ici-model" style="padding:0.35rem 0.7rem;border-radius:6px;border:none;font-size:0.85rem;">
+                        <option value="claude">Claude 3.7 Sonnet</option>
+                        <option value="gpt4o">GPT-4o</option>
+                        <option value="pixtral">Pixtral (Mistral)</option>
+                    </select>
+                </div>
+                <div id="ici-formats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.7rem;">
+                    <div style="opacity:0.8;">Chargement des formats…</div>
+                </div>
+                <div id="ici-result" style="margin-top:1.2rem;"></div>
+            </div>
+        </div>
+
+        <!-- Row 1: Météo + Vigicrues -->
+        <div class="top-row">
+            <div class="meteo-widget" id="meteo-widget">
+                <div class="loading"><div class="loading-spinner"></div><div>Chargement météo...</div></div>
+            </div>
+            <div class="vigicrues-widget">
+                <div class="vigicrues-header">
+                    <span>Vigilance crues (Seine)</span>
+                    <span class="section-source">Vigicrues</span>
+                </div>
+                <div id="vigicrues-content">
+                    <div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Événements -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Événements <span id="events-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : OpenAgenda</span>
+            </div>
+            <div id="events-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Trafic -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Trafic routier <span id="trafic-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : TomTom</span>
+            </div>
+            <div id="trafic-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Travaux Métropole Rouen -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Travaux en cours <span id="travaux-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : Opendatasoft - Métropole Rouen</span>
+            </div>
+            <div id="travaux-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Actualités -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Actualités <span id="actus-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : France Bleu Normandie</span>
+            </div>
+            <div id="actus-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Qualité de l'air -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Qualité de l'air</span>
+                <span class="section-source">Source : OpenWeatherMap / Atmo</span>
+            </div>
+            <div id="air-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Trains SNCF -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Trains - Rouen-Rive-Droite <span id="trains-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : SNCF</span>
+            </div>
+            <div id="trains-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Brocantes -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Brocantes & Vide-greniers <span id="brocantes-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : vide-greniers.org (Seine-Maritime)</span>
+            </div>
+            <div id="brocantes-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Pharmacies de garde -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Pharmacies de garde</span>
+                <span class="section-source">Source : Ordre des pharmaciens</span>
+            </div>
+            <div id="pharmacies-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Emploi Métropole -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Emploi - Métropole Rouen <span id="emploi-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : recrutement.metropole-rouen-normandie.fr</span>
+            </div>
+            <div id="emploi-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- France Travail -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Offres France Travail <span id="ft-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : candidat.francetravail.fr</span>
+            </div>
+            <div id="ft-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Sorties Seinoscope -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Sorties en Seine-Maritime <span id="sorties-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : Seinoscope</span>
+            </div>
+            <div id="sorties-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+
+        <!-- Conseil Municipal -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Conseil Municipal <span id="conseil-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : Ville de Rouen</span>
+            </div>
+            <div id="conseil-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+        </div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('last-update-time').textContent = now.toLocaleString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        const carouselPositions = {};
+        function scrollCarousel(type, direction) {
+            const track = document.getElementById(`${type}-track`);
+            if (!track) return;
+            const cards = track.querySelectorAll('.event-card');
+            if (cards.length === 0) return;
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 32;
+            const moveAmount = (cardWidth + gap) * 3;
+            if (!carouselPositions[type]) carouselPositions[type] = 0;
+            carouselPositions[type] += direction * moveAmount;
+            const maxScroll = Math.max(0, (cards.length - 3) * (cardWidth + gap));
+            carouselPositions[type] = Math.max(0, Math.min(carouselPositions[type], maxScroll));
+            track.style.transform = `translateX(-${carouselPositions[type]}px)`;
+        }
+
+        function createCarouselHTML(trackId, cards) {
+            if (!cards || cards.length === 0) {
+                return `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Aucune donnée disponible</div></div>`;
+            }
+            return `
+                <div class="carousel-wrapper">
+                    <button class="carousel-nav prev" onclick="scrollCarousel('${trackId}', -1)">
+                        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                    <div class="carousel-container">
+                        <div class="carousel-track" id="${trackId}-track">${cards.join('')}</div>
+                    </div>
+                    <button class="carousel-nav next" onclick="scrollCarousel('${trackId}', 1)">
+                        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </button>
+                </div>`;
+        }
+
+        // ============================================================
+        // 1. Météo
+        // ============================================================
+        async function loadMeteo() {
+            try {
+                const response = await fetch('/api/rouen/meteo');
+                const result = await response.json();
+                const data = result.data;
+                if (data.error) {
+                    document.getElementById('meteo-widget').innerHTML = `<div class="meteo-header"><span class="meteo-city">Rouen</span></div><div style="text-align:center;padding:2rem;">Météo indisponible</div>`;
+                    return;
+                }
+                document.getElementById('meteo-widget').innerHTML = `
+                    <div class="meteo-header">
+                        <span class="meteo-city">Météo Rouen</span>
+                        <span class="meteo-source">OpenWeatherMap</span>
+                    </div>
+                    <div class="meteo-main">
+                        <div class="meteo-icon">${data.conditions.displayIcon}</div>
+                        <div>
+                            <div class="meteo-temp">${data.temperature.current}°C</div>
+                            <div class="meteo-desc">${data.conditions.description}</div>
+                        </div>
+                    </div>
+                    <div class="meteo-details">
+                        <div class="meteo-detail-item"><div>Ressenti</div><div class="meteo-detail-value">${data.temperature.feelsLike}°C</div></div>
+                        <div class="meteo-detail-item"><div>Humidité</div><div class="meteo-detail-value">${data.details.humidity}%</div></div>
+                        <div class="meteo-detail-item"><div>Vent</div><div class="meteo-detail-value">${data.wind.speed || 0} km/h</div></div>
+                    </div>`;
+            } catch (err) {
+                document.getElementById('meteo-widget').innerHTML = `<div style="text-align:center;padding:2rem;color:white;">Météo indisponible</div>`;
+            }
+        }
+
+        // ============================================================
+        // 2. Vigicrues
+        // ============================================================
+        async function loadVigicrues() {
+            const container = document.getElementById('vigicrues-content');
+            try {
+                const response = await fetch('/api/rouen/vigicrues');
+                const result = await response.json();
+                const data = result.data;
+                if (!data.vigilance || data.vigilance.length === 0) {
+                    container.innerHTML = `
+                        <div class="vigicrues-list">
+                            <div class="vigicrues-item">
+                                <div class="vigicrues-dot" style="background:#00CC00;"></div>
+                                <span class="vigicrues-name">Aucune vigilance en cours</span>
+                                <span class="vigicrues-level">Situation normale</span>
+                            </div>
+                        </div>`;
+                    return;
+                }
+                const items = data.vigilance.map(v => `
+                    <div class="vigicrues-item">
+                        <div class="vigicrues-dot" style="background:${v.couleur};"></div>
+                        <span class="vigicrues-name">${v.cours_eau}${v.troncon ? ' – ' + v.troncon : ''}</span>
+                        <span class="vigicrues-level">${v.niveauLabel}</span>
+                    </div>`).join('');
+                container.innerHTML = `<div class="vigicrues-list">${items}</div>`;
+            } catch (err) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌊</div><div class="empty-state-text">Vigicrues indisponible</div></div>`;
+            }
+        }
+
+        // ============================================================
+        // 3. Événements
+        // ============================================================
+        async function loadEvenements() {
+            const container = document.getElementById('events-container');
+            try {
+                const response = await fetch('/api/rouen/evenements');
+                const result = await response.json();
+                const events = result.data;
+                if (!events || events.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Aucun événement à venir</div></div>`;
+                    return;
+                }
+                document.getElementById('events-count').textContent = events.length;
+                document.getElementById('events-count').style.display = 'inline';
+                const cards = events.map(e => {
+                    const linkAttr = e.link ? `onclick="window.open('${e.link}', '_blank')"` : '';
+                    return `
+                        <div class="event-card" ${linkAttr}>
+                            <div class="event-title">${e.title}</div>
+                            <div class="event-info"><strong>📅</strong> ${e.dateStart || 'Date à venir'}${e.timeStart ? ' à ' + e.timeStart : ''}</div>
+                            ${e.location ? `<div class="event-info"><strong>📍</strong> ${e.location}</div>` : ''}
+                        </div>`;
+                });
+                container.innerHTML = createCarouselHTML('events', cards);
+            } catch (err) {
+                container.innerHTML = `<div class="error-msg">Erreur chargement événements</div>`;
+            }
+        }
+
+        // ============================================================
+        // 4. Trafic
+        // ============================================================
+        async function loadTrafic() {
+            const container = document.getElementById('trafic-container');
+            try {
+                const response = await fetch('/api/rouen/trafic');
+                const result = await response.json();
+                const data = result.data;
+                const filtered = (data?.incidents || []).filter(inc => inc.iconCategory !== 8 && inc.iconCategory !== 9);
+                if (!filtered || filtered.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">Aucun incident majeur signalé</div></div>`;
+                    return;
+                }
+                document.getElementById('trafic-count').textContent = filtered.length;
+                document.getElementById('trafic-count').style.display = 'inline';
+                const cards = filtered.map(inc => {
+                    const isMajor = inc.iconCategory === 1 || inc.iconCategory === 14 || (inc.delay && inc.delay.minutes >= 15);
+                    const cardClass = isMajor ? 'trafic-card' : 'trafic-card minor';
+                    const icon = inc.iconCategory === 1 ? '🚨' : inc.iconCategory === 14 ? '🚗' : '⚠️';
+                    const from = inc.location?.from || '';
+                    const to = inc.location?.to || '';
+                    const roads = inc.roads && inc.roads.length > 0 ? inc.roads.join(', ') : '';
+                    const delayMin = inc.delay?.minutes || 0;
+                    return `
+                        <div class="event-card ${cardClass}">
+                            <div class="event-title">${icon} ${inc.description || inc.type || 'Incident'}</div>
+                            ${from && from !== 'Non spécifié' ? `<div class="event-info"><strong>De :</strong> ${from}</div>` : ''}
+                            ${to && to !== 'Non spécifié' ? `<div class="event-info"><strong>Vers :</strong> ${to}</div>` : ''}
+                            ${roads ? `<div class="event-info"><strong>Route :</strong> ${roads}</div>` : ''}
+                            ${delayMin > 0 ? `<div class="event-info"><strong>Retard :</strong> ${delayMin} min</div>` : ''}
+                        </div>`;
+                });
+                container.innerHTML = createCarouselHTML('trafic', cards);
+            } catch (err) {
+                container.innerHTML = `<div class="error-msg">Erreur chargement trafic</div>`;
+            }
+        }
+
+        // ============================================================
+        // 5. Travaux Métropole Rouen
+        // ============================================================
+        async function loadTravaux() {
+            const container = document.getElementById('travaux-container');
+            try {
+                const response = await fetch('/api/rouen/travaux');
+                const result = await response.json();
+                const data = result.data;
+                const travaux = data?.travaux || [];
+                if (travaux.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><div class="empty-state-text">Aucun chantier en cours</div></div>`;
+                    return;
+                }
+                document.getElementById('travaux-count').textContent = travaux.length;
+                document.getElementById('travaux-count').style.display = 'inline';
+                const cards = travaux.map(t => `
+                    <div class="event-card">
+                        <div class="event-title">🚧 ${t.title}</div>
+                        ${t.location ? `<div class="event-info"><strong>📍</strong> ${t.location}</div>` : ''}
+                        ${t.address ? `<div class="event-info">${t.address}</div>` : ''}
+                        ${t.startDate ? `<div class="event-info"><strong>Début :</strong> ${t.startDate}</div>` : ''}
+                        ${t.endDate ? `<div class="event-info"><strong>Fin :</strong> ${t.endDate}</div>` : ''}
+                        ${t.type ? `<div class="event-info"><strong>Type :</strong> ${t.type}</div>` : ''}
+                        ${t.impact ? `<div class="event-info"><strong>Impact :</strong> ${t.impact}</div>` : ''}
+                    </div>`);
+                container.innerHTML = createCarouselHTML('travaux', cards);
+            } catch (err) {
+                container.innerHTML = `<div class="error-msg">Erreur chargement travaux</div>`;
+            }
+        }
+
+        // ============================================================
+        // 6. Actualités
+        // ============================================================
+        async function loadActualites() {
+            const container = document.getElementById('actus-container');
+            try {
+                const response = await fetch('/api/rouen/actualites');
+                const result = await response.json();
+                const actus = result.data;
+                if (!actus || actus.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📰</div><div class="empty-state-text">Aucune actualité disponible</div></div>`;
+                    return;
+                }
+                document.getElementById('actus-count').textContent = actus.length;
+                document.getElementById('actus-count').style.display = 'inline';
+                const cards = actus.map(a => {
+                    const linkAttr = a.link ? `onclick="window.open('${a.link}', '_blank')"` : '';
+                    return `
+                        <div class="event-card" ${linkAttr}>
+                            <div class="event-title">${a.title}</div>
+                            ${a.date ? `<div class="event-info"><strong>📅</strong> ${a.date}</div>` : ''}
+                            ${a.summary ? `<div class="event-info" style="opacity:0.85;">${a.summary.substring(0, 150)}${a.summary.length > 150 ? '...' : ''}</div>` : ''}
+                        </div>`;
+                });
+                container.innerHTML = createCarouselHTML('actus', cards);
+            } catch (err) {
+                container.innerHTML = `<div class="error-msg">Erreur chargement actualités</div>`;
+            }
+        }
+
+        // ============================================================
+        // 7. Qualité de l'air
+        // ============================================================
+        async function loadQualiteAir() {
+            const container = document.getElementById('air-container');
+            try {
+                const response = await fetch('/api/rouen/qualite-air');
+                const result = await response.json();
+                const data = result.data;
+                if (!data || data.aqi === null) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌬️</div><div class="empty-state-text">Données air indisponibles</div></div>`;
+                    return;
+                }
+                const polluants = data.polluants ? Object.values(data.polluants)
+                    .filter(p => p.value !== undefined)
+                    .map(p => `<div class="air-polluant"><span class="air-polluant-label">${p.label}</span><span class="air-polluant-value">${p.value.toFixed(1)} ${p.unit}</span></div>`)
+                    .join('') : '';
+                container.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;padding:1rem;">
+                        <div style="text-align:center;min-width:120px;">
+                            <div style="font-size:3rem;">${data.emoji}</div>
+                            <div style="font-size:1.5rem;font-weight:700;color:${data.color};">${data.label}</div>
+                            <div style="font-size:0.8rem;color:#888;margin-top:0.3rem;">Indice AQI : ${data.aqi}/5</div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.5rem;flex:1;">
+                            ${polluants}
+                        </div>
+                    </div>`;
+            } catch (err) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌬️</div><div class="empty-state-text">Données air indisponibles</div></div>`;
+            }
+        }
+
+        // ============================================================
+        // 8. Trains SNCF
+        // ============================================================
+        async function loadTrains() {
+            const container = document.getElementById('trains-container');
+            try {
+                const response = await fetch('/api/rouen/trains');
+                const result = await response.json();
+                const data = result.data;
+                if ((!data.departures || data.departures.length === 0) && (!data.arrivals || data.arrivals.length === 0)) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚂</div><div class="empty-state-text">Aucun train disponible</div></div>`;
+                    return;
+                }
+                const totalTrains = (data.departures?.length || 0) + (data.arrivals?.length || 0);
+                document.getElementById('trains-count').textContent = totalTrains;
+                document.getElementById('trains-count').style.display = 'inline';
+
+                let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;padding:1rem;">';
+                html += '<div><h4 style="margin-bottom:0.8rem;color:#4361ee;">🚀 Départs</h4>';
+                if (data.departures?.length > 0) {
+                    html += '<div class="trains-list">';
+                    data.departures.slice(0, 8).forEach(t => {
+                        html += `<div class="train-item">
+                            <span class="train-time">${t.time}</span>
+                            <span class="train-type">${t.type || 'Train'}</span>
+                            <span class="train-dest">${t.direction}</span>
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else { html += '<div style="color:#999;font-size:0.85rem;">Aucun départ imminent</div>'; }
+                html += '</div>';
+
+                html += '<div><h4 style="margin-bottom:0.8rem;color:#e63946;">📥 Arrivées</h4>';
+                if (data.arrivals?.length > 0) {
+                    html += '<div class="trains-list">';
+                    data.arrivals.slice(0, 8).forEach(t => {
+                        html += `<div class="train-item">
+                            <span class="train-time">${t.time}</span>
+                            <span class="train-type">${t.type || 'Train'}</span>
+                            <span class="train-dest">${t.direction}</span>
+                        </div>`;
+                    });
+                    html += '</div>';
+                } else { html += '<div style="color:#999;font-size:0.85rem;">Aucune arrivée imminente</div>'; }
+                html += '</div></div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚂</div><div class="empty-state-text">Trains indisponibles</div></div>`;
+            }
+        }
+
+        // ============================================================
+        // 9. Brocantes
+        // ============================================================
+        async function loadBrocantes() {
+            const container = document.getElementById('brocantes-container');
+            try {
+                const response = await fetch('/api/rouen/brocantes');
+                const result = await response.json();
+                const brocantes = result.data;
+                if (!brocantes || brocantes.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍️</div><div class="empty-state-text">Aucune brocante</div></div>`;
+                    return;
+                }
+                document.getElementById('brocantes-count').textContent = brocantes.length;
+                document.getElementById('brocantes-count').style.display = 'inline';
+                const cards = brocantes.map(b => {
+                    const linkAttr = b.link ? `onclick="window.open('${b.link}', '_blank')" style="cursor:pointer;"` : '';
+                    return `
+                        <div class="event-card" ${linkAttr}>
+                            <div class="event-title">🛍️ ${b.title}</div>
+                            ${b.date ? `<div class="event-info"><strong>📅</strong> ${b.date}</div>` : ''}
+                            ${b.location ? `<div class="event-info"><strong>📍</strong> ${b.location}</div>` : ''}
+                        </div>`;
+                });
+                container.innerHTML = createCarouselHTML('brocantes', cards);
+            } catch (err) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍️</div><div class="empty-state-text">Brocantes indisponibles</div></div>`;
+            }
+        }
+
+        // ============================================================
+        // 10. Pharmacies
+        // ============================================================
+        async function loadPharmacies() {
+            const container = document.getElementById('pharmacies-container');
+            try {
+                const response = await fetch('/api/rouen/pharmacies');
+                const result = await response.json();
+                const data = result.data;
+                let html = '<div style="padding:1rem;">';
+                html += `<div style="background:#e3f2fd;border-radius:8px;padding:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;">
+                    <span style="font-size:1.5rem;">💊</span>
+                    <div>
+                        <div style="font-weight:600;">Pharmacie de garde</div>
+                        <div style="font-size:0.85rem;color:#555;">${data.info}</div>
+                    </div>
+                </div>`;
+                if (data.liens?.length > 0) {
+                    html += '<div style="display:flex;gap:0.8rem;flex-wrap:wrap;">';
+                    data.liens.forEach(l => {
+                        html += `<a href="${l.url}" target="_blank" style="background:#4361ee;color:white;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:500;">${l.label}</a>`;
+                    });
+                    html += '</div>';
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="padding:1rem;color:#555;">Appelez le 3237 pour connaître la pharmacie de garde</div>`;
+            }
+        }
+
+        // ============================================================
+        // 11. Emploi
+        // ============================================================
+        async function loadEmploi() {
+            const container = document.getElementById('emploi-container');
+            try {
+                const response = await fetch('/api/rouen/emploi');
+                const result = await response.json();
+                const data = result.data;
+                let html = '<div style="padding:1rem;">';
+                html += `<div style="margin-bottom:1rem;">
+                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-size:0.9rem;font-weight:600;">
+                        💼 Voir toutes les offres sur metropole-rouen-normandie.fr
+                    </a>
+                </div>`;
+                if (data.offres?.length > 0) {
+                    document.getElementById('emploi-count').textContent = data.offres.length;
+                    document.getElementById('emploi-count').style.display = 'inline';
+                    const cards = data.offres.map(o => {
+                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
+                        return `
+                            <div class="event-card" ${linkAttr}>
+                                <div class="event-title">💼 ${o.title}</div>
+                                ${o.category ? `<div class="event-info"><strong>📂</strong> ${o.category}</div>` : ''}
+                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
+                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
+                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                            </div>`;
+                    });
+                    html += createCarouselHTML('emploi', cards);
+                } else {
+                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez le site pour voir les offres</div></div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="padding:1rem;">
+                    <a href="https://www.metropole-rouen-normandie.fr/offres-demploi" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        💼 Voir les offres d'emploi
+                    </a>
+                </div>`;
+            }
+        }
+
+        // ============================================================
+        // 12. France Travail
+        // ============================================================
+        async function loadFranceTravail() {
+            const container = document.getElementById('ft-container');
+            try {
+                const response = await fetch('/api/rouen/france-travail');
+                const result = await response.json();
+                const data = result.data;
+                let html = '<div style="padding:1rem;">';
+                html += `<div style="margin-bottom:1rem;">
+                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        🔎 Voir toutes les offres sur France Travail
+                    </a>
+                </div>`;
+                if (data.offres?.length > 0) {
+                    document.getElementById('ft-count').textContent = data.offres.length;
+                    document.getElementById('ft-count').style.display = 'inline';
+                    const cards = data.offres.map(o => {
+                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
+                        return `
+                            <div class="event-card" ${linkAttr}>
+                                <div class="event-title">💼 ${o.title}</div>
+                                ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
+                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
+                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
+                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                            </div>`;
+                    });
+                    html += createCarouselHTML('ft', cards);
+                } else {
+                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez France Travail pour voir les offres</div></div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="padding:1rem;">
+                    <a href="https://candidat.francetravail.fr/offres/emploi/rouen/v36" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        🔎 Voir les offres France Travail
+                    </a>
+                </div>`;
+            }
+        }
+
+        // ============================================================
+        // 13. Sorties Seinoscope
+        // ============================================================
+        async function loadSorties() {
+            const container = document.getElementById('sorties-container');
+            try {
+                const response = await fetch('/api/rouen/sorties');
+                const result = await response.json();
+                const data = result.data;
+                let html = '<div style="padding:1rem;">';
+                html += `<div style="margin-bottom:1rem;">
+                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        🎭 Voir toutes les sorties sur Seinoscope
+                    </a>
+                </div>`;
+                if (data.sorties?.length > 0) {
+                    document.getElementById('sorties-count').textContent = data.sorties.length;
+                    document.getElementById('sorties-count').style.display = 'inline';
+                    const cards = data.sorties.map(s => {
+                        const linkAttr = s.link ? `onclick="window.open('${s.link}', '_blank')" style="cursor:pointer;"` : '';
+                        return `
+                            <div class="event-card" ${linkAttr}>
+                                <div class="event-title">🎭 ${s.title}</div>
+                                ${s.category ? `<div class="event-info"><strong>🏷️</strong> ${s.category}</div>` : ''}
+                                ${s.date ? `<div class="event-info"><strong>📅</strong> ${s.date}</div>` : ''}
+                                ${s.location ? `<div class="event-info"><strong>📍</strong> ${s.location}</div>` : ''}
+                            </div>`;
+                    });
+                    html += createCarouselHTML('sorties', cards);
+                } else {
+                    html += `<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Consultez Seinoscope</div></div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="padding:1rem;">
+                    <a href="https://www.seinoscope.fr/" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">🎭 Voir Seinoscope</a>
+                </div>`;
+            }
+        }
+
+        // ============================================================
+        // 14. Conseil municipal
+        // ============================================================
+        async function loadConseilMunicipal() {
+            const container = document.getElementById('conseil-container');
+            try {
+                const response = await fetch('/api/rouen/conseil-municipal');
+                const result = await response.json();
+                const data = result.data;
+
+                if (!data.seances || data.seances.length === 0) {
+                    container.innerHTML = `<div style="padding:1rem;">
+                        <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">🏛️ Voir les séances sur rouen.fr</a>
+                    </div>`;
+                    return;
+                }
+
+                document.getElementById('conseil-count').textContent = data.seances.length + ' séance' + (data.seances.length > 1 ? 's' : '');
+                document.getElementById('conseil-count').style.display = 'inline';
+
+                // Afficher chaque séance comme un bloc pliable avec toutes ses délibérations
+                let html = '<div style="padding:0.5rem;">';
+
+                data.seances.forEach((seance, idx) => {
+                    const isFirst = idx === 0;
+                    html += `
+                        <details ${isFirst ? 'open' : ''} style="margin-bottom:1rem;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fafbfc;">
+                            <summary style="padding:1rem 1.2rem;cursor:pointer;background:linear-gradient(135deg,#0072F9 0%,#0052cc 100%);color:white;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                                <span style="font-size:1.05rem;">🏛️ ${seance.titre}</span>
+                                <span style="background:rgba(255,255,255,0.25);padding:0.2rem 0.7rem;border-radius:20px;font-size:0.8rem;font-weight:600;">
+                                    ${seance.nombreDelibs} délibération${seance.nombreDelibs > 1 ? 's' : ''}
+                                </span>
+                            </summary>
+                            <div style="padding:1rem 1.2rem;">
+                                <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+                                    <a href="${seance.url}" target="_blank" style="background:#0072F9;color:white;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:500;">📄 Page de la séance</a>
+                                    ${seance.zipUrl ? `<a href="${seance.zipUrl}" target="_blank" style="background:#10b981;color:white;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:500;">� Télécharger ZIP des délibérations</a>` : ''}
+                                    ${seance.pvUrl ? `<a href="${seance.pvUrl}" target="_blank" style="background:#ef4444;color:white;padding:0.4rem 0.9rem;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:500;">📋 Procès-verbal (PDF)</a>` : ''}
+                                </div>
+                                <div style="max-height:500px;overflow-y:auto;border-top:1px solid #e5e7eb;padding-top:0.8rem;">
+                                    ${seance.deliberations.map(d => `
+                                        <a href="${d.url}" target="_blank" style="display:flex;align-items:flex-start;gap:0.8rem;padding:0.6rem 0.8rem;border-radius:6px;text-decoration:none;color:#333;transition:background 0.15s;margin-bottom:0.3rem;" onmouseover="this.style.background='#eef4ff'" onmouseout="this.style.background='transparent'">
+                                            <span style="background:#0072F9;color:white;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.75rem;font-weight:700;flex-shrink:0;min-width:42px;text-align:center;">${d.numero}</span>
+                                            <span style="flex:1;font-size:0.88rem;line-height:1.4;">${d.titre}</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </details>`;
+                });
+
+                html += `<div style="margin-top:1rem;text-align:center;">
+                    <a href="${data.lienDirect}" target="_blank" style="color:#0072F9;text-decoration:none;font-size:0.85rem;">→ Voir toutes les séances sur rouen.fr</a>
+                </div>`;
+                html += '</div>';
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="padding:1rem;">
+                    <a href="https://rouen.fr/seances-conseil-municipal" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">🏛️ Voir les séances</a>
+                </div>`;
+            }
+        }
+
+        // ============================================================
+        // Widget ICI Express IA
+        // ============================================================
+        async function initIciExpress() {
+            const widget = document.getElementById('ici-express-widget');
+            if (!widget) return;
+            const city = widget.dataset.city;
+            const grid = document.getElementById('ici-formats-grid');
+            const resultEl = document.getElementById('ici-result');
+            const modelSelect = document.getElementById('ici-model');
+
+            try {
+                const resp = await fetch('/api/ici-express/formats');
+                const { data: formats } = await resp.json();
+                // Grouper par catégorie
+                const byCat = {};
+                formats.forEach(f => {
+                    if (!byCat[f.category]) byCat[f.category] = [];
+                    byCat[f.category].push(f);
+                });
+                grid.innerHTML = '';
+                Object.entries(byCat).forEach(([cat, list]) => {
+                    const catBox = document.createElement('div');
+                    catBox.style.cssText = 'background:rgba(255,255,255,0.08);border-radius:10px;padding:0.7rem;';
+                    catBox.innerHTML = `<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;opacity:0.8;margin-bottom:0.5rem;">${cat}</div>`;
+                    list.forEach(f => {
+                        const btn = document.createElement('button');
+                        btn.className = 'ici-format-btn';
+                        btn.dataset.format = f.key;
+                        btn.style.cssText = 'display:block;width:100%;text-align:left;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.55rem 0.7rem;border-radius:8px;margin-bottom:0.35rem;cursor:pointer;font-size:0.85rem;transition:background 0.15s;';
+                        const letterBadge = f.formatLetter ? `<span style="display:inline-block;background:rgba(255,255,255,0.3);color:white;font-size:0.68rem;font-weight:800;padding:0.08rem 0.4rem;border-radius:4px;margin-right:0.4rem;letter-spacing:0.5px;">FORMAT ${f.formatLetter}</span>` : '';
+                        btn.innerHTML = `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:0.15rem;">${letterBadge}<span style="font-size:1.05rem;margin-right:0.35rem;">${f.emoji}</span><strong>${f.label}</strong></div><div style="font-size:0.72rem;opacity:0.75;margin-top:0.2rem;">${f.description}</div>`;
+                        btn.addEventListener('mouseover', () => btn.style.background = 'rgba(255,255,255,0.22)');
+                        btn.addEventListener('mouseout', () => btn.style.background = 'rgba(255,255,255,0.12)');
+                        btn.addEventListener('click', () => generateIciExpress(city, f.key, f.label, f.emoji, f.habillage, modelSelect.value, resultEl));
+                        catBox.appendChild(btn);
+                    });
+                    grid.appendChild(catBox);
+                });
+            } catch (err) {
+                grid.innerHTML = `<div style="color:#ffaaaa;">Erreur chargement formats : ${err.message}</div>`;
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        // Rend un bullet en HTML : transforme (source: URL) en lien, met le [PRÉFIXE] en badge
+        function renderBulletLine(line) {
+            let clean = line.replace(/^[-•*]\s*/, '').trim();
+            // Badge préfixe [CATÉGORIE]
+            let prefixBadge = '';
+            const pm = clean.match(/^\[([^\]]+)\]\s*/);
+            if (pm) {
+                prefixBadge = `<span style="display:inline-block;background:#1a237e;color:white;font-size:0.68rem;font-weight:800;padding:0.1rem 0.45rem;border-radius:4px;margin-right:0.4rem;letter-spacing:0.3px;vertical-align:middle;">${escapeHtml(pm[1])}</span>`;
+                clean = clean.slice(pm[0].length);
+            }
+            // Extraire URLs (source: ...)
+            const urls = [];
+            clean = clean.replace(/\(source\s*[:=]?\s*(https?:\/\/[^\s)]+)\)/gi, (m, u) => { urls.push(u); return ''; }).trim();
+            // Extraire aussi URLs brutes dans le texte
+            clean = clean.replace(/(https?:\/\/[^\s)]+)/g, (m, u) => { urls.push(u); return ''; }).trim();
+            const escapedText = escapeHtml(clean);
+            const linksHtml = urls.map(u => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" style="color:#0072F9;text-decoration:none;margin-left:0.5rem;font-size:0.78rem;white-space:nowrap;" title="${escapeHtml(u)}">🔗 source</a>`).join('');
+            return `${prefixBadge}<span>${escapedText}</span>${linksHtml}`;
+        }
+
+        async function openIciExpressDialog(city, format, label, emoji, habillage, model, resultEl) {
+            resultEl.innerHTML = `<div style="background:rgba(255,255,255,0.1);padding:1rem;border-radius:10px;">⏳ Préparation du prompt "${emoji} ${label}"…</div>`;
+            try {
+                const resp = await fetch(`/api/${city}/ici-express/preview?format=${encodeURIComponent(format)}`);
+                const json = await resp.json();
+                if (json.status !== 'success') throw new Error(json.message || 'Erreur');
+                const promptText = json.data.promptTemplate;
+                const dataPreview = json.data.dataPreview || '';
+                const dataLen = json.data.dataPreviewLength || dataPreview.length;
+                const promptId = 'ici-prompt-' + Math.random().toString(36).slice(2, 8);
+                resultEl.innerHTML = `
+                    <div style="background:white;color:#222;padding:1.2rem;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.7rem;margin-bottom:0.9rem;padding-bottom:0.7rem;border-bottom:1px solid #e5e7eb;">
+                            <div style="font-size:1.05rem;font-weight:700;">${emoji} ${label} — ${city === 'rouen' ? 'Rouen' : 'Limoges'}</div>
+                            <span style="background:#eef2ff;color:#1e3a8a;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.72rem;font-weight:600;">Template éditable</span>
+                        </div>
+                        <div style="background:#fefce8;border:1px solid #fde68a;color:#78350f;padding:0.6rem 0.8rem;border-radius:8px;font-size:0.8rem;margin-bottom:0.8rem;">
+                            💡 <strong>{{data}}</strong> est un <strong>placeholder</strong> : au moment de la génération, il est remplacé par les <strong>données fraîches</strong> collectées en direct (trafic, météo, events…). Le template peut être édité sans risque.
+                        </div>
+                        <details open style="margin-bottom:0.8rem;">
+                            <summary style="cursor:pointer;font-weight:600;color:#555;font-size:0.85rem;margin-bottom:0.4rem;">� Template du prompt (${promptText.length} car.)</summary>
+                            <textarea id="${promptId}" style="width:100%;min-height:280px;max-height:500px;padding:0.7rem;border:1px solid #d0d0d0;border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:0.76rem;line-height:1.45;background:#fafafa;color:#222;box-sizing:border-box;">${escapeHtml(promptText)}</textarea>
+                        </details>
+                        <details style="margin-bottom:0.8rem;">
+                            <summary style="cursor:pointer;font-weight:600;color:#555;font-size:0.85rem;margin-bottom:0.4rem;">🗂️ Aperçu des données actuelles qui seront injectées (${dataLen} car., rafraîchies à la génération)</summary>
+                            <pre style="width:100%;max-height:400px;overflow:auto;padding:0.7rem;border:1px solid #d0d0d0;border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:0.72rem;line-height:1.45;background:#f8fafc;color:#222;margin:0;white-space:pre-wrap;">${escapeHtml(dataPreview)}</pre>
+                        </details>
+                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                            <button id="${promptId}-gen" style="background:#0072F9;color:white;border:none;padding:0.55rem 1.1rem;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:700;">🎙️ Générer le script avec données fraîches (${model})</button>
+                            <button id="${promptId}-reset" style="background:#f3f4f6;color:#333;border:none;padding:0.55rem 0.9rem;border-radius:6px;cursor:pointer;font-size:0.85rem;">↺ Restaurer template par défaut</button>
+                        </div>
+                        <div id="${promptId}-out" style="margin-top:1rem;"></div>
+                    </div>`;
+                const defaultPrompt = promptText;
+                document.getElementById(promptId + '-reset').addEventListener('click', () => {
+                    document.getElementById(promptId).value = defaultPrompt;
+                });
+                document.getElementById(promptId + '-gen').addEventListener('click', async () => {
+                    const customPrompt = document.getElementById(promptId).value;
+                    await runIciExpressGeneration(city, format, label, emoji, habillage, model, customPrompt, document.getElementById(promptId + '-out'));
+                });
+            } catch (err) {
+                resultEl.innerHTML = `<div style="background:#fee2e2;color:#b91c1c;padding:1rem;border-radius:10px;">❌ Erreur : ${err.message}</div>`;
+            }
+        }
+
+        async function runIciExpressGeneration(city, format, label, emoji, habillage, model, customPrompt, outEl) {
+            outEl.innerHTML = `<div style="background:#eef4ff;padding:0.8rem;border-radius:8px;color:#1e3a8a;">⏳ Génération via ${model}… (~15-30s)</div>`;
+            try {
+                const resp = await fetch(`/api/${city}/ici-express`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ format, model, customPrompt })
+                });
+                const json = await resp.json();
+                if (json.status !== 'success') throw new Error(json.message || 'Erreur');
+                const d = json.data;
+                const words = d.script.split(/\s+/).filter(Boolean).length;
+                const durationSec = Math.round(words / 2.5);
+                const habillageBadge = habillage === 'loisirs'
+                    ? '<span style="background:#f59e0b;color:#1a237e;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE LOISIRS</span>'
+                    : habillage === 'mixed'
+                    ? '<span style="background:#6366f1;color:white;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE MIXTE</span>'
+                    : '<span style="background:#10b981;color:white;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE SERVICES</span>';
+                const bullets = d.script.split(/\n+/).filter(l => l.trim()).map(l => `<li style="margin-bottom:0.55rem;display:flex;align-items:flex-start;flex-wrap:wrap;gap:0.25rem;">${renderBulletLine(l)}</li>`).join('');
+                outEl.innerHTML = `
+                    <div style="background:white;padding:1rem;border-radius:10px;border:1px solid #e5e7eb;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.7rem;padding-bottom:0.5rem;border-bottom:1px solid #eee;">
+                            <div style="font-weight:700;">📻 Script généré</div>
+                            <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+                                ${habillageBadge}
+                                <span style="background:#eef2ff;color:#1e3a8a;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.72rem;font-weight:600;">${words} mots · ~${durationSec}s</span>
+                                <span style="background:#f3f4f6;color:#555;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;">${d.model}</span>
+                            </div>
+                        </div>
+                        <ul id="ici-script-text" style="font-size:0.92rem;line-height:1.5;color:#222;margin:0;padding-left:1.2rem;list-style:disc;">${bullets}</ul>
+                        <div style="display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap;">
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('ici-script-text').innerText);this.textContent='✓ Copié';setTimeout(()=>this.textContent='📋 Copier texte',1500);" style="background:#0072F9;color:white;border:none;padding:0.4rem 0.8rem;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;">📋 Copier texte</button>
+                        </div>
+                    </div>`;
+            } catch (err) {
+                outEl.innerHTML = `<div style="background:#fee2e2;color:#b91c1c;padding:0.8rem;border-radius:8px;">❌ Erreur : ${err.message}</div>`;
+            }
+        }
+
+        // Compat : ancien nom utilisé par les boutons — on redirige vers le nouveau flow
+        function generateIciExpress(city, format, label, emoji, habillage, model, resultEl) {
+            return openIciExpressDialog(city, format, label, emoji, habillage, model, resultEl);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMeteo();
+            loadVigicrues();
+            loadEvenements();
+            loadTrafic();
+            loadTravaux();
+            loadActualites();
+            loadQualiteAir();
+            loadTrains();
+            loadBrocantes();
+            loadPharmacies();
+            loadEmploi();
+            loadFranceTravail();
+            loadSorties();
+            loadConseilMunicipal();
+            initIciExpress();
+        });
+    </script>
+</body>
+</html>

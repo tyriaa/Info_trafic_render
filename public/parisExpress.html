@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paris Express - ICI Info Trafic</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-center {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1.2rem;
+            background: #0072F9;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background: #0072F9;
+        }
+
+        .city-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .main-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0072F9;
+            margin-bottom: 2rem;
+        }
+
+        .section-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-source {
+            font-size: 0.75rem;
+            color: #999;
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            padding: 0 60px 0 60px;
+            overflow: hidden;
+        }
+
+        .carousel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .carousel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0072F9;
+        }
+
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .carousel-track {
+            display: flex;
+            gap: 2rem;
+            transition: transform 0.3s ease;
+            width: max-content;
+        }
+
+        .carousel-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .accordion-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 1rem 1.5rem;
+            background: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+            transition: background 0.2s ease;
+        }
+
+        .accordion-header:hover {
+            background: #ebebeb;
+        }
+
+        .accordion-header.active {
+            background: #0072F9;
+            color: white;
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .accordion-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .accordion-content.active {
+            max-height: 1000px;
+        }
+
+        .market-list {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .market-item {
+            padding: 0.75rem;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 3px solid #0072F9;
+        }
+
+        .market-name {
+            font-weight: 600;
+            color: #0072F9;
+            margin-bottom: 0.25rem;
+        }
+
+        .market-details {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .event-card {
+            width: 350px;
+            background: #0072F9;
+            border-radius: 12px;
+            padding: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .event-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(7, 114, 249, 0.4);
+        }
+
+        .event-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            min-height: 60px;
+        }
+
+        .event-info {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.95;
+        }
+
+        .event-info strong {
+            font-weight: 600;
+        }
+
+        .event-summary {
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .carousel-nav:hover {
+            background: #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .carousel-nav.prev {
+            left: 10px;
+        }
+
+        .carousel-nav.next {
+            right: 10px;
+        }
+
+        .carousel-nav svg {
+            width: 20px;
+            height: 20px;
+            fill: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html">
+            <img src="assets/images/express.svg" alt="ICI Info Trafic Express" class="header-logo">
+        </a>
+        <div class="header-center">
+            Dernière mise à jour : <span id="last-update-time"></span>
+        </div>
+        <div class="header-right">
+            <a href="paris.html" class="nav-link">← Info Trafic</a>
+            <div class="city-name">Paris Express</div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">Paris Express</h1>
+
+        <div class="section-container">
+            <div class="section-header">
+                <span>Les idées sorties</span>
+                <span class="section-source">Source : Que Faire à Paris ?</span>
+            </div>
+
+            <!-- Carousel Aujourd'hui -->
+            <div class="carousel-wrapper">
+                <div class="carousel-header">
+                    <div class="carousel-title">Aujourd'hui</div>
+                </div>
+                <button class="carousel-nav prev" onclick="scrollCarousel('today', -1)">
+                    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <div class="carousel-container" id="today-carousel">
+                    <div class="carousel-track" id="today-track">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </div>
+                <button class="carousel-nav next" onclick="scrollCarousel('today', 1)">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+            </div>
+
+            <!-- Carousel À venir -->
+            <div class="carousel-wrapper" style="margin-top: 3rem;">
+                <div class="carousel-header">
+                    <div class="carousel-title">À venir</div>
+                </div>
+                <button class="carousel-nav prev" onclick="scrollCarousel('upcoming', -1)">
+                    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <div class="carousel-container" id="upcoming-carousel">
+                    <div class="carousel-track" id="upcoming-track">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </div>
+                <button class="carousel-nav next" onclick="scrollCarousel('upcoming', 1)">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Brocantes -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Les brocantes</span>
+                <span class="section-source">Source : brocabrac</span>
+            </div>
+
+            <!-- Carousel Brocantes -->
+            <div class="carousel-wrapper">
+                <div class="carousel-header">
+                    <div class="carousel-title">Brocantes à venir</div>
+                </div>
+                <button class="carousel-nav prev" onclick="scrollCarousel('brocantes', -1)">
+                    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <div class="carousel-container" id="brocantes-carousel">
+                    <div class="carousel-track" id="brocantes-track">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </div>
+                <button class="carousel-nav next" onclick="scrollCarousel('brocantes', 1)">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Musées -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Les musées</span>
+                <span class="section-source">Source : Que Faire à Paris ?</span>
+            </div>
+
+            <!-- Carousel Musées -->
+            <div class="carousel-wrapper">
+                <div class="carousel-header">
+                    <div class="carousel-title">Événements dans les musées</div>
+                </div>
+                <button class="carousel-nav prev" onclick="scrollCarousel('musees', -1)">
+                    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <div class="carousel-container" id="musees-carousel">
+                    <div class="carousel-track" id="musees-track">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </div>
+                <button class="carousel-nav next" onclick="scrollCarousel('musees', 1)">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Solidarité et Vie Citoyenne -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Solidarité et Vie Citoyenne</span>
+                <span class="section-source">Source : Que Faire à Paris ?</span>
+            </div>
+
+            <!-- Carousel Solidarité -->
+            <div class="carousel-wrapper">
+                <div class="carousel-header">
+                    <div class="carousel-title">Événements solidaires</div>
+                </div>
+                <button class="carousel-nav prev" onclick="scrollCarousel('solidarite', -1)">
+                    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                </button>
+                <div class="carousel-container" id="solidarite-carousel">
+                    <div class="carousel-track" id="solidarite-track">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </div>
+                <button class="carousel-nav next" onclick="scrollCarousel('solidarite', 1)">
+                    <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Marchés Parisiens -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Les marchés parisiens du jour et J+1</span>
+                <span class="section-source">Source : paris.fr</span>
+            </div>
+
+            <!-- Accordéon Marchés -->
+            <div class="accordion-container" id="marches-accordion">
+                <div class="loading">Chargement...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mise à jour de l'heure
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('last-update-time').textContent = timeString;
+        }
+        
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Fonction pour créer une carte d'événement
+        function createEventCard(event) {
+            return `
+                <a href="${event.url}" target="_blank" class="event-card">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-info"><strong>Quand :</strong> ${event.when}</div>
+
+                </a>
+            `;
+        }
+
+        // Fonction pour créer une carte de brocante
+        function createBrocanteCard(brocante) {
+            return `
+                <a href="${brocante.url}" target="_blank" class="event-card">
+                    <div class="event-title">${brocante.title}</div>
+                    <div class="event-info"><strong>Quand :</strong> ${brocante.when || 'Date non précisée'}</div>
+                    <div class="event-info"><strong>Lieu :</strong> ${brocante.place}</div>
+                </a>
+            `;
+        }
+
+        // Fonction pour créer une carte de musée
+        function createMuseeCard(musee) {
+            return `
+                <a href="${musee.url}" target="_blank" class="event-card">
+                    <div class="event-title">${musee.title}</div>
+                    <div class="event-info"><strong>Quand :</strong> ${musee.when || 'Date non précisée'}</div>
+                    <div class="event-info"><strong>Lieu :</strong> ${musee.place}</div>
+                </a>
+            `;
+        }
+
+        // Fonction pour créer une carte de solidarité
+        function createSolidariteCard(event) {
+            return `
+                <a href="${event.url}" target="_blank" class="event-card">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-info"><strong>Quand :</strong> ${event.when || 'Date non précisée'}</div>
+                    <div class="event-info"><strong>Lieu :</strong> ${event.place}</div>
+                </a>
+            `;
+        }
+
+        // Fonction pour créer l'accordéon des marchés
+        function createMarchesAccordion(districts) {
+            return districts.map((district, index) => {
+                const marketsHtml = district.markets.map(market => `
+                    <div class="market-item">
+                        <div class="market-name">${market.name}</div>
+                        <div class="market-details">
+                            ${market.day ? `<div>📅 ${market.day}${market.hours ? ' - ' + market.hours : ''}</div>` : ''}
+                            ${market.address ? `<div>📍 ${market.address}</div>` : ''}
+                            ${market.metro ? `<div>🚇 Métro: ${market.metro}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(${index})">
+                            <span>${district.district} (${district.markets.length} marché${district.markets.length > 1 ? 's' : ''})</span>
+                            <span class="accordion-icon" id="icon-${index}">▼</span>
+                        </div>
+                        <div class="accordion-content" id="content-${index}">
+                            <div class="market-list">
+                                ${marketsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Fonction pour basculer l'accordéon
+        function toggleAccordion(index) {
+            const content = document.getElementById(`content-${index}`);
+            const icon = document.getElementById(`icon-${index}`);
+            const header = content.previousElementSibling;
+            
+            const isActive = content.classList.contains('active');
+            
+            if (isActive) {
+                content.classList.remove('active');
+                icon.classList.remove('rotated');
+                header.classList.remove('active');
+            } else {
+                content.classList.add('active');
+                icon.classList.add('rotated');
+                header.classList.add('active');
+            }
+        }
+
+        // Variables pour gérer la position du carousel
+        const carouselPositions = {
+            today: 0,
+            upcoming: 0,
+            brocantes: 0,
+            musees: 0,
+            solidarite: 0
+        };
+
+        // Fonction pour faire défiler le carousel
+        function scrollCarousel(type, direction) {
+            const track = document.getElementById(`${type}-track`);
+            const cards = track.querySelectorAll('.event-card');
+            
+            if (cards.length === 0) return;
+            
+            const cardWidth = cards[0].offsetWidth;
+            const gap = 32; // 2rem = 32px
+            const moveAmount = (cardWidth + gap) * 3; // Défiler 3 cartes à la fois
+            
+            carouselPositions[type] += direction * moveAmount;
+            
+            // Limiter le défilement
+            const maxScroll = (cards.length - 3) * (cardWidth + gap);
+            carouselPositions[type] = Math.max(0, Math.min(carouselPositions[type], maxScroll));
+            
+            track.style.transform = `translateX(-${carouselPositions[type]}px)`;
+        }
+
+        // Charger les données
+        async function loadIdeas() {
+            try {
+                const response = await fetch('/api/paris/ideas');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Afficher les événements d'aujourd'hui
+                    const todayTrack = document.getElementById('today-track');
+                    if (data.data.today && data.data.today.length > 0) {
+                        todayTrack.innerHTML = data.data.today.map(createEventCard).join('');
+                    } else {
+                        todayTrack.innerHTML = '<div class="loading">Aucun événement aujourd\'hui</div>';
+                    }
+                    
+                    // Afficher les événements à venir
+                    const upcomingTrack = document.getElementById('upcoming-track');
+                    if (data.data.upcoming && data.data.upcoming.length > 0) {
+                        upcomingTrack.innerHTML = data.data.upcoming.map(createEventCard).join('');
+                    } else {
+                        upcomingTrack.innerHTML = '<div class="loading">Aucun événement à venir</div>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('today-track').innerHTML = '<div class="error">Erreur lors du chargement des événements</div>';
+                document.getElementById('upcoming-track').innerHTML = '<div class="error">Erreur lors du chargement des événements</div>';
+            }
+        }
+
+        // Charger les brocantes
+        async function loadBrocantes() {
+            try {
+                const response = await fetch('/api/paris/brocantes');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const brocantesTrack = document.getElementById('brocantes-track');
+                    if (data.data && data.data.length > 0) {
+                        brocantesTrack.innerHTML = data.data.map(createBrocanteCard).join('');
+                    } else {
+                        brocantesTrack.innerHTML = '<div class="loading">Aucune brocante à venir</div>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('brocantes-track').innerHTML = '<div class="error">Erreur lors du chargement des brocantes</div>';
+            }
+        }
+
+        // Charger les musées
+        async function loadMusees() {
+            try {
+                const response = await fetch('/api/paris/musees');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const museesTrack = document.getElementById('musees-track');
+                    if (data.data && data.data.length > 0) {
+                        museesTrack.innerHTML = data.data.map(createMuseeCard).join('');
+                    } else {
+                        museesTrack.innerHTML = '<div class="loading">Aucun événement dans les musées</div>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('musees-track').innerHTML = '<div class="error">Erreur lors du chargement des musées</div>';
+            }
+        }
+
+        // Charger les événements solidarité
+        async function loadSolidarite() {
+            try {
+                const response = await fetch('/api/paris/solidarite');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const solidariteTrack = document.getElementById('solidarite-track');
+                    if (data.data && data.data.length > 0) {
+                        solidariteTrack.innerHTML = data.data.map(createSolidariteCard).join('');
+                    } else {
+                        solidariteTrack.innerHTML = '<div class="loading">Aucun événement solidaire</div>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('solidarite-track').innerHTML = '<div class="error">Erreur lors du chargement des événements solidaires</div>';
+            }
+        }
+
+        // Charger les marchés
+        async function loadMarches() {
+            try {
+                const response = await fetch('/api/paris/marches');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const marchesAccordion = document.getElementById('marches-accordion');
+                    if (data.data && data.data.length > 0) {
+                        marchesAccordion.innerHTML = createMarchesAccordion(data.data);
+                    } else {
+                        marchesAccordion.innerHTML = '<div class="loading">Aucun marché aujourd\'hui ou demain</div>';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur lors du chargement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('marches-accordion').innerHTML = '<div class="error">Erreur lors du chargement des marchés</div>';
+            }
+        }
+
+        // Charger les données au démarrage
+        loadIdeas();
+        loadBrocantes();
+        loadMusees();
+        loadSolidarite();
+        loadMarches();
+        
+        // Rafraîchir toutes les 5 minutes
+        setInterval(loadIdeas, 300000);
+        setInterval(loadBrocantes, 300000);
+        setInterval(loadMusees, 300000);
+        setInterval(loadSolidarite, 300000);
+        setInterval(loadMarches, 300000);
+    </script>
+</body>
+</html>
