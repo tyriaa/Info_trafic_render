@@ -15,6 +15,16 @@ const CITY_COORDINATES = {
     name: 'Paris',
     lat: 48.8566,
     lon: 2.3522
+  },
+  limoges: {
+    name: 'Limoges',
+    lat: 45.8336,
+    lon: 1.2611
+  },
+  rouen: {
+    name: 'Rouen',
+    lat: 49.4432,
+    lon: 1.0993
   }
 };
 

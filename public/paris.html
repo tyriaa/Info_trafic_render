@@ -30,6 +30,21 @@
             border-bottom: 1px solid #eee;
         }
 
+        .nav-link {
+            padding: 0.5rem 1rem;
+            background: #0066FF;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-left: 1rem;
+        }
+
+        .nav-link:hover {
+            background: #0052CC;
+        }
+
         .alert-section {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 15px;
@@ -1559,7 +1574,10 @@
             <img src="assets/images/logo.svg" alt="ICI Info Trafic" class="header-logo">
         </a>
         <div class="last-update">Dernière mise à jour : </div>
-        <div class="city-name">Paris</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="city-name">Paris</div>
+            <a href="parisExpress.html" class="nav-link">Info Express →</a>
+        </div>
     </header>
 
     <div class="flash-trafic">

@@ -17,6 +17,14 @@ const mistralService = require('./utils/mistralService');
 const weatherService = require('./utils/weatherService');
 const { formatFullFrenchDate } = require('./utils/dateUtils');
 const databaseService = require('./services/databaseService');
+const parisIdeasService = require('./services/parisIdeasService');
+const brocantesService = require('./services/brocantesService');
+const museesService = require('./services/museesService');
+const solidariteService = require('./services/solidariteService');
+const marchesService = require('./services/marchesService');
+const limogesService = require('./services/limogesService');
+const rouenService = require('./services/rouenService');
+const iciExpressService = require('./services/iciExpressService');
 
 // Configuration automatique via variables d'environnement (ANTHROPIC_API_KEY)
 // TomTom API configurée directement dans le service
@@ -1046,6 +1054,405 @@ app.get('/api/feedback/stats', async (req, res) => {
       message: 'Erreur lors de la récupération des statistiques',
       error: error.message
     });
+  }
+});
+
+// Route pour récupérer les idées sorties à Paris
+app.get('/api/paris/ideas', async (req, res) => {
+  try {
+    const ideas = await parisIdeasService.getParisIdeas();
+    res.json({
+      status: 'success',
+      data: ideas
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des idées Paris:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des idées sorties',
+      error: error.message
+    });
+  }
+});
+
+// Route pour récupérer les brocantes
+app.get('/api/paris/brocantes', async (req, res) => {
+  try {
+    const brocantes = await brocantesService.getBrocantes();
+    res.json({
+      status: 'success',
+      data: brocantes
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des brocantes:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des brocantes',
+      error: error.message
+    });
+  }
+});
+
+// Route pour récupérer les musées
+app.get('/api/paris/musees', async (req, res) => {
+  try {
+    const musees = await museesService.getMusees();
+    res.json({
+      status: 'success',
+      data: musees
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des musées:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des musées',
+      error: error.message
+    });
+  }
+});
+
+// Route pour récupérer les événements solidarité
+app.get('/api/paris/solidarite', async (req, res) => {
+  try {
+    const solidarite = await solidariteService.getSolidarite();
+    res.json({
+      status: 'success',
+      data: solidarite
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des événements solidarité:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des événements solidarité',
+      error: error.message
+    });
+  }
+});
+
+// Route pour récupérer les marchés
+app.get('/api/paris/marches', async (req, res) => {
+  try {
+    const marches = await marchesService.getMarches();
+    res.json({
+      status: 'success',
+      data: marches
+    });
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des marchés:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des marchés',
+      error: error.message
+    });
+  }
+});
+
+// ============================================================
+// Routes API Limoges
+// ============================================================
+
+// Route pour récupérer les événements OpenAgenda Limoges
+app.get('/api/limoges/evenements', async (req, res) => {
+  try {
+    const events = await limogesService.getOpenAgendaEvents();
+    res.json({ status: 'success', data: events });
+  } catch (error) {
+    console.error('❌ Erreur événements Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer la météo de Limoges
+app.get('/api/limoges/meteo', async (req, res) => {
+  try {
+    const meteo = await weatherService.getWeatherData('limoges');
+    res.json({ status: 'success', data: meteo });
+  } catch (error) {
+    console.error('❌ Erreur météo Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer le trafic TomTom pour Limoges
+app.get('/api/limoges/trafic', async (req, res) => {
+  try {
+    const trafic = await tomTomService.getTrafficIncidents('limoges', 'fr-FR');
+    res.json({ status: 'success', data: trafic });
+  } catch (error) {
+    console.error('❌ Erreur trafic Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer la vigilance crues (Vigicrues)
+app.get('/api/limoges/vigicrues', async (req, res) => {
+  try {
+    const vigicrues = await limogesService.getVigicruesData();
+    res.json({ status: 'success', data: vigicrues });
+  } catch (error) {
+    console.error('❌ Erreur Vigicrues Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les travaux en cours à Limoges
+app.get('/api/limoges/travaux', async (req, res) => {
+  try {
+    const travaux = await limogesService.getTravauxLimoges();
+    res.json({ status: 'success', data: travaux });
+  } catch (error) {
+    console.error('❌ Erreur travaux Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les actualités de Limoges
+app.get('/api/limoges/actualites', async (req, res) => {
+  try {
+    const actualites = await limogesService.getActualitesLimoges();
+    res.json({ status: 'success', data: actualites });
+  } catch (error) {
+    console.error('❌ Erreur actualités Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer la qualité de l'air à Limoges
+app.get('/api/limoges/qualite-air', async (req, res) => {
+  try {
+    const airData = await limogesService.getQualiteAir();
+    res.json({ status: 'success', data: airData });
+  } catch (error) {
+    console.error('❌ Erreur qualité air Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les trains SNCF à Limoges-Bénédictins
+app.get('/api/limoges/trains', async (req, res) => {
+  try {
+    const trains = await limogesService.getTrainsLimoges();
+    res.json({ status: 'success', data: trains });
+  } catch (error) {
+    console.error('❌ Erreur trains Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les brocantes/vide-greniers en Haute-Vienne
+app.get('/api/limoges/brocantes', async (req, res) => {
+  try {
+    const brocantes = await limogesService.getBrocantesLimoges();
+    res.json({ status: 'success', data: brocantes });
+  } catch (error) {
+    console.error('❌ Erreur brocantes Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les pharmacies de garde à Limoges
+app.get('/api/limoges/pharmacies', async (req, res) => {
+  try {
+    const pharmacies = await limogesService.getPharmaciesGarde();
+    res.json({ status: 'success', data: pharmacies });
+  } catch (error) {
+    console.error('❌ Erreur pharmacies Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// Route pour récupérer les offres d'emploi de la Mairie de Limoges
+app.get('/api/limoges/emploi', async (req, res) => {
+  try {
+    const emploi = await limogesService.getEmploiLimoges();
+    res.json({ status: 'success', data: emploi });
+  } catch (error) {
+    console.error('❌ Erreur emploi Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/limoges/conseil-municipal', async (req, res) => {
+  try {
+    const data = await limogesService.getConseilMunicipalLimoges();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// ============================================================
+// ROUTES ICI EXPRESS (génération IA)
+// ============================================================
+
+app.get('/api/ici-express/formats', (req, res) => {
+  const list = Object.entries(iciExpressService.FORMATS).map(([key, f]) => ({
+    key,
+    category: f.category,
+    formatLetter: f.formatLetter || '',
+    label: f.label,
+    emoji: f.emoji,
+    description: f.description,
+    habillage: f.habillage
+  }));
+  res.json({ status: 'success', data: list });
+});
+
+app.get('/api/:city/ici-express/preview', async (req, res) => {
+  try {
+    const { city } = req.params;
+    const { format } = req.query;
+    if (!format) return res.status(400).json({ status: 'error', message: 'format requis' });
+    const result = await iciExpressService.prepareIciExpress({ city, format });
+    res.json({ status: 'success', data: result });
+  } catch (error) {
+    console.error('❌ Erreur ici-express preview:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.post('/api/:city/ici-express', async (req, res) => {
+  try {
+    const { city } = req.params;
+    const { format, model, customPrompt } = req.body || {};
+    if (!format) return res.status(400).json({ status: 'error', message: 'format requis' });
+    const result = await iciExpressService.generateIciExpress({
+      city, format, model: model || 'claude', customPrompt: customPrompt || null
+    });
+    res.json({ status: 'success', data: result });
+  } catch (error) {
+    console.error('❌ Erreur ici-express:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// ============================================================
+// ROUTES API ROUEN
+// ============================================================
+
+app.get('/api/rouen/meteo', async (req, res) => {
+  try {
+    const meteo = await weatherService.getWeatherData('rouen');
+    res.json({ status: 'success', data: meteo });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/trafic', async (req, res) => {
+  try {
+    const trafic = await tomTomService.getTrafficIncidents('rouen', 'fr-FR');
+    res.json({ status: 'success', data: trafic });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/evenements', async (req, res) => {
+  try {
+    const events = await rouenService.getOpenAgendaEvents();
+    res.json({ status: 'success', data: events });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/vigicrues', async (req, res) => {
+  try {
+    const data = await rouenService.getVigicruesData();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/travaux', async (req, res) => {
+  try {
+    const data = await rouenService.getTravauxRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/actualites', async (req, res) => {
+  try {
+    const actus = await rouenService.getActualitesRouen();
+    res.json({ status: 'success', data: actus });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/qualite-air', async (req, res) => {
+  try {
+    const data = await rouenService.getQualiteAir();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/trains', async (req, res) => {
+  try {
+    const data = await rouenService.getTrainsRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/brocantes', async (req, res) => {
+  try {
+    const data = await rouenService.getBrocantesRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/pharmacies', async (req, res) => {
+  try {
+    const data = await rouenService.getPharmaciesGarde();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/emploi', async (req, res) => {
+  try {
+    const data = await rouenService.getEmploiRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/conseil-municipal', async (req, res) => {
+  try {
+    const data = await rouenService.getConseilMunicipalRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/sorties', async (req, res) => {
+  try {
+    const data = await rouenService.getSortiesSeinoscope();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/france-travail', async (req, res) => {
+  try {
+    const data = await rouenService.getFranceTravailRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
   }
 });
 

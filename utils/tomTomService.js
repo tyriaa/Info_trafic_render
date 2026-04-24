@@ -28,6 +28,14 @@ const CITY_BOUNDING_BOXES = {
   normandie: {
     name: 'Normandie',
     bbox: '-1.2,48.8,1.8,50.1' // Bounding box pour la région Normandie
+  },
+  limoges: {
+    name: 'Limoges',
+    bbox: '1.1,45.7,1.4,45.95' // Bounding box pour la métropole de Limoges
+  },
+  rouen: {
+    name: 'Rouen',
+    bbox: '0.95,49.35,1.25,49.55' // Bounding box pour la métropole de Rouen
   }
 };
 
