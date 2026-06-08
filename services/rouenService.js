@@ -4,9 +4,12 @@
  * RSS actualités Normandie, OpenWeatherMap (air), vide-greniers.org, Ordre pharmaciens
  */
 
+const path = require('path');
+const https = require('https');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const xml2js = require('xml2js');
+const { searchOffres } = require('../utils/franceTravailApi');
 
 // ============================================================
 // 1. OpenAgenda - Événements de Rouen
@@ -167,10 +170,22 @@ async function getTravauxRouen() {
 // 4. Actualités - France Bleu Normandie + France 3 Normandie RSS
 // ============================================================
 
+// Mots-clés géographiques à exclure pour rester centré sur Rouen / Seine-Maritime
+const HORS_ROUEN_KEYWORDS = [
+  'calvados', 'caen', 'bayeux', 'lisieux', 'honfleur', 'deauville', 'trouville',
+  'manche', 'cherbourg', 'granville', 'saint-lô', 'avranches', 'coutances',
+  'orne', 'alençon', 'argentan', 'flers', 'mortagne'
+];
+
+function isArticleRouen(article) {
+  const text = (article.title + ' ' + article.summary).toLowerCase();
+  return !HORS_ROUEN_KEYWORDS.some(kw => text.includes(kw));
+}
+
 async function getActualitesRouen() {
   const actualites = [];
 
-  // ICI / France Bleu Normandie (Rouen)
+  // ICI / France Bleu Normandie (Rouen) — source principale, déjà ciblée
   try {
     const rssUrl = 'https://www.francebleu.fr/rss/normandie-rouen';
     const response = await axios.get(rssUrl, {
@@ -185,7 +200,21 @@ async function getActualitesRouen() {
     console.error('❌ Erreur RSS ICI Normandie:', error.message);
   }
 
-  // Fallback: France 3 Normandie
+  // Fallback: France 3 Seine-Maritime (plus ciblé que l'édition Normandie générale)
+  if (actualites.length < 5) {
+    try {
+      const rssUrl = 'https://france3-regions.francetvinfo.fr/normandie/seine-maritime/rss';
+      const response = await axios.get(rssUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        timeout: 15000
+      });
+      await parseRSS(response.data, actualites, 'France 3 Seine-Maritime');
+    } catch (error) {
+      console.error('❌ Erreur RSS France 3 Seine-Maritime:', error.message);
+    }
+  }
+
+  // Second fallback: France 3 Normandie avec filtre géographique
   if (actualites.length < 5) {
     try {
       const rssUrl = 'https://france3-regions.francetvinfo.fr/normandie/rss';
@@ -199,14 +228,16 @@ async function getActualitesRouen() {
     }
   }
 
-  // Dédupliquer par titre
+  // Dédupliquer par titre puis filtrer les articles hors-Rouen
   const seen = new Set();
-  const unique = actualites.filter(a => {
-    const key = a.title.toLowerCase().trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const unique = actualites
+    .filter(a => {
+      const key = a.title.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .filter(isArticleRouen);
 
   return unique.slice(0, 15);
 }
@@ -342,10 +373,16 @@ async function getTrainsRouen() {
       ? arrResp.value.data.arrivals.map(formatSchedule('arrival'))
       : [];
 
+    // Retards en tête, puis tri chronologique
+    const sortByDelay = (a, b) => {
+      if (b.delayed !== a.delayed) return b.delayed ? 1 : -1;
+      return a.time.localeCompare(b.time);
+    };
+
     return {
       station: 'Rouen-Rive-Droite',
-      departures: departures,
-      arrivals: arrivals,
+      departures: departures.sort(sortByDelay),
+      arrivals: arrivals.sort(sortByDelay),
       timestamp: new Date().toISOString(),
       source: 'SNCF'
     };
@@ -355,15 +392,35 @@ async function getTrainsRouen() {
   }
 }
 
+function parseSNCFTime(str) {
+  if (!str || str.length < 13) return null;
+  return new Date(
+    `${str.substring(0, 4)}-${str.substring(4, 6)}-${str.substring(6, 8)}T${str.substring(9, 11)}:${str.substring(11, 13)}:${str.substring(13, 15)}`
+  );
+}
+
 function formatSchedule(type) {
   return (s) => {
     const field = type === 'departure' ? 'departure_date_time' : 'arrival_date_time';
+    const baseField = type === 'departure' ? 'base_departure_date_time' : 'base_arrival_date_time';
     const t = s.stop_date_time[field] || '';
+    const b = s.stop_date_time[baseField] || '';
     const info = s.display_informations || {};
     const time = t.length >= 13 ? t.substring(9, 11) + ':' + t.substring(11, 13) : '';
+    const scheduledTime = b.length >= 13 ? b.substring(9, 11) + ':' + b.substring(11, 13) : '';
+
+    let delayMinutes = 0;
+    if (b && t && b !== t) {
+      const real = parseSNCFTime(t);
+      const base = parseSNCFTime(b);
+      if (real && base) delayMinutes = Math.round((real - base) / 60000);
+    }
 
     return {
       time: time,
+      scheduledTime: scheduledTime || time,
+      delayed: delayMinutes > 0,
+      delayMinutes: delayMinutes > 0 ? delayMinutes : 0,
       direction: info.direction || '',
       line: info.code || '',
       type: info.commercial_mode || 'Train',
@@ -378,8 +435,8 @@ function formatSchedule(type) {
 // ============================================================
 
 async function getBrocantesRouen() {
+  const url = 'https://vide-greniers.org/evenements/Rouen-76?distance=0';
   try {
-    const url = 'https://vide-greniers.org/76-Seine-Maritime';
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -390,29 +447,36 @@ async function getBrocantesRouen() {
     });
 
     const $ = cheerio.load(response.data);
-    const brocantes = [];
+    const events = [];
 
-    $('article, .vg-card, .list-group-item, tr, .event-item, [class*="brocante"], [class*="vide"]').each((i, el) => {
-      const title = $(el).find('h2, h3, h4, a[class*="title"], strong, .title').first().text().trim();
-      const dateText = $(el).find('[class*="date"], time, .badge, small').first().text().trim();
-      const location = $(el).find('[class*="lieu"], [class*="city"], [class*="location"], .text-muted').first().text().trim();
-      const link = $(el).find('a').first().attr('href') || '';
+    // Lire les blocs JSON-LD : structure fiable exposée par vide-greniers.org
+    $('script[type="application/ld+json"]').each((i, el) => {
+      try {
+        const data = JSON.parse($(el).html());
+        if (data['@type'] !== 'Event' || !data.name) return;
 
-      if (title && title.length > 3 && title.length < 200) {
-        brocantes.push({
-          title: title,
-          date: dateText || '',
-          location: location || '',
-          link: link.startsWith('http') ? link : `https://vide-greniers.org${link}`,
+        // Nettoyer la description (retire le préfixe "Type - Région - Ville - Horaires")
+        const cleanDesc = (data.description || '')
+          .replace(/^[^-]+-[^-]+-[^-]+-\s*[^\n]*\n?/, '')
+          .substring(0, 200)
+          .trim();
+
+        events.push({
+          title: data.name,
+          date: data.startDate || '',
+          dateEnd: data.endDate || '',
+          location: data.location && data.location.name ? data.location.name : 'Rouen',
+          description: cleanDesc,
+          link: data.url || url,
           source: 'vide-greniers.org'
         });
-      }
+      } catch (e) { /* JSON malformé, on ignore */ }
     });
 
-    // Dédupliquer
+    // Dédupliquer : un événement multi-jours a la même URL de base (retirer la date finale /YYYYMMDD)
     const seen = new Set();
-    const unique = brocantes.filter(b => {
-      const key = b.title.toLowerCase().trim();
+    const unique = events.filter(e => {
+      const key = e.link.replace(/\/\d{8}$/, '');
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -430,15 +494,21 @@ async function getBrocantesRouen() {
 // ============================================================
 
 async function getPharmaciesGarde() {
+  let pharmacies = [];
+  try {
+    pharmacies = require(path.join(__dirname, '../data/pharmacies_rouen.json'));
+  } catch (e) {
+    console.error('❌ Impossible de charger pharmacies_rouen.json:', e.message);
+  }
   return {
-    pharmacies: [],
+    pharmacies: pharmacies,
     info: 'Appelez le 3237 (0,35€/min) pour connaître la pharmacie de garde à Rouen',
     liens: [
       { label: 'Annuaire des pharmaciens', url: 'https://www.ordre.pharmacien.fr/je-suis/patient-grand-public/l-annuaire-des-pharmaciens-etablissements?firstname=ANNE&lastname=ARRESTIER#vue-liste' },
       { label: 'Numéro national : 3237', url: 'tel:3237' }
     ],
     timestamp: new Date().toISOString(),
-    source: 'Ordre des pharmaciens / 3237'
+    source: 'FINESS / Ordre des pharmaciens'
   };
 }
 
@@ -477,7 +547,7 @@ async function getEmploiRouen() {
           location: 'Métropole Rouen Normandie',
           date: '',
           contract: '',
-          link: link,
+          link: link || lienDirect,
           source: 'Métropole Rouen Normandie'
         });
       }
@@ -663,6 +733,48 @@ async function getConseilMunicipalRouen() {
 // 11. Seinoscope - Agenda sorties Seine-Maritime
 // ============================================================
 
+// Mois français → index (0-11)
+const MOIS_FR = { janvier:0, février:1, fevrier:1, mars:2, avril:3, mai:4, juin:5,
+  juillet:6, août:7, aout:7, septembre:8, octobre:9, novembre:10, décembre:11, decembre:11 };
+
+// Parse un texte de date français et retourne { debut: Date, fin: Date }
+// Gère : "19 mai", "23 et 24 mai", "Du 30 mai au 21 juin", "du 30 mai au 21 juin"
+function parseDateFr(text) {
+  if (!text) return null;
+  const t = text.toLowerCase().trim();
+  const year = new Date().getFullYear();
+
+  // "du DD mois au DD mois" ou "Du DD mois au DD mois"
+  const rangeTwo = t.match(/du\s+(\d{1,2})\s+(\w+)\s+au\s+(\d{1,2})\s+(\w+)/);
+  if (rangeTwo) {
+    const [, d1, m1, d2, m2] = rangeTwo;
+    const debut = new Date(year, MOIS_FR[m1], parseInt(d1));
+    const fin   = new Date(year, MOIS_FR[m2] !== undefined ? MOIS_FR[m2] : MOIS_FR[m1], parseInt(d2));
+    if (!isNaN(debut) && !isNaN(fin)) return { debut, fin };
+  }
+
+  // "DD et DD mois"
+  const twodays = t.match(/(\d{1,2})\s+et\s+(\d{1,2})\s+(\w+)/);
+  if (twodays) {
+    const [, d1, d2, m] = twodays;
+    const debut = new Date(year, MOIS_FR[m], parseInt(d1));
+    const fin   = new Date(year, MOIS_FR[m], parseInt(d2));
+    if (!isNaN(debut) && !isNaN(fin)) return { debut, fin };
+  }
+
+  // "DD mois"
+  const single = t.match(/(\d{1,2})\s+(\w+)/);
+  if (single) {
+    const [, d, m] = single;
+    if (MOIS_FR[m] !== undefined) {
+      const debut = new Date(year, MOIS_FR[m], parseInt(d));
+      if (!isNaN(debut)) return { debut, fin: debut };
+    }
+  }
+
+  return null;
+}
+
 async function getSortiesSeinoscope() {
   const lienDirect = 'https://www.seinoscope.fr/';
   try {
@@ -672,32 +784,43 @@ async function getSortiesSeinoscope() {
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'fr-FR,fr;q=0.9'
       },
-      timeout: 15000
+      timeout: 15000,
+      responseType: 'arraybuffer',
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
     });
 
-    const $ = cheerio.load(response.data);
+    // Le site est en ISO-8859-1 — décoder correctement pour préserver les accents
+    const html = Buffer.from(response.data).toString('latin1');
+    const $ = cheerio.load(html);
     const sorties = [];
 
-    $('article, .event, .sortie, [class*="event"], [class*="sortie"], .card, .teaser').each((i, el) => {
-      const title = $(el).find('h2, h3, h4, a[class*="title"], .title').first().text().trim();
-      const dateText = $(el).find('time, [class*="date"]').first().text().trim();
-      const location = $(el).find('[class*="lieu"], [class*="place"], [class*="location"], [class*="city"]').first().text().trim();
-      const category = $(el).find('[class*="categorie"], [class*="type"], .tag, .badge').first().text().trim();
-      let link = $(el).find('a').first().attr('href') || '';
-      if (link && !link.startsWith('http')) {
-        link = `https://www.seinoscope.fr${link.startsWith('/') ? '' : '/'}${link}`;
+    // Fenêtre J+0 à J+2 (début de journée)
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const limitePlus2 = new Date(today); limitePlus2.setDate(today.getDate() + 2);
+
+    // Structure réelle : .blocscroll > ul > li(.ladate) + li.link(h3 + .infos)
+    $('.blocscroll ul').each((i, ul) => {
+      const dateText = $(ul).find('.ladate').first().text().trim();
+      const titleEl  = $(ul).find('li.link h3 a').first();
+      const title    = titleEl.text().trim();
+      const link     = titleEl.attr('href') || $(ul).find('a.thumb').first().attr('href') || '';
+      const location = $(ul).find('li.link .infos span').first().text().trim();
+
+      if (!title || title.length <= 3) return;
+
+      // Filtrer par fenêtre J+0 → J+2 si la date est parsable
+      const parsed = parseDateFr(dateText);
+      if (parsed) {
+        if (parsed.debut > limitePlus2 || parsed.fin < today) return;
       }
 
-      if (title && title.length > 3 && title.length < 300) {
-        sorties.push({
-          title: title,
-          date: dateText || '',
-          location: location || 'Seine-Maritime',
-          category: category || '',
-          link: link,
-          source: 'Seinoscope'
-        });
-      }
+      sorties.push({
+        title: title,
+        date: dateText || '',
+        location: location || 'Seine-Maritime',
+        link: link.startsWith('http') ? link : `https://www.seinoscope.fr${link}`,
+        source: 'Seinoscope'
+      });
     });
 
     // Dédupliquer
@@ -733,53 +856,9 @@ async function getSortiesSeinoscope() {
 async function getFranceTravailRouen() {
   const lienDirect = 'https://candidat.francetravail.fr/offres/emploi/rouen/v36';
   try {
-    const response = await axios.get(lienDirect, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'fr-FR,fr;q=0.9'
-      },
-      timeout: 15000
-    });
-
-    const $ = cheerio.load(response.data);
-    const offres = [];
-
-    $('li.result, article.result, .media-body, [class*="offre"], [class*="result"]').each((i, el) => {
-      const title = $(el).find('h2, h3, h4, a[class*="title"], .title').first().text().trim();
-      const company = $(el).find('[class*="entreprise"], [class*="company"], [class*="subtitle"]').first().text().trim();
-      const location = $(el).find('[class*="lieu"], [class*="location"]').first().text().trim();
-      const contract = $(el).find('[class*="contrat"], [class*="contract"], [class*="type"]').first().text().trim();
-      const dateText = $(el).find('[class*="date"], time').first().text().trim();
-      let link = $(el).find('a').first().attr('href') || '';
-      if (link && !link.startsWith('http')) {
-        link = `https://candidat.francetravail.fr${link.startsWith('/') ? '' : '/'}${link}`;
-      }
-
-      if (title && title.length > 3 && title.length < 300) {
-        offres.push({
-          title: title,
-          company: company || '',
-          location: location || 'Rouen',
-          contract: contract || '',
-          date: dateText || '',
-          link: link || lienDirect,
-          source: 'France Travail'
-        });
-      }
-    });
-
-    // Dédupliquer
-    const seen = new Set();
-    const unique = offres.filter(o => {
-      const key = o.title.toLowerCase().trim();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
+    const offres = await searchOffres('76540', 10, 25);
     return {
-      offres: unique.slice(0, 25),
+      offres: offres,
       lienDirect: lienDirect,
       timestamp: new Date().toISOString(),
       source: 'France Travail'
@@ -795,6 +874,58 @@ async function getFranceTravailRouen() {
   }
 }
 
+// ============================================================
+// 13. Emploi agrégé - Métropole Rouen + France Travail fusionnés
+// ============================================================
+
+async function getEmploiRouenAggregated() {
+  const [metro, ft] = await Promise.allSettled([
+    getEmploiRouen(),
+    getFranceTravailRouen()
+  ]);
+
+  const offresMetro = metro.status === 'fulfilled' ? metro.value.offres || [] : [];
+  const offresft   = ft.status === 'fulfilled'    ? ft.value.offres    || [] : [];
+
+  const all = [...offresMetro, ...offresft];
+
+  // Tenter de parser les dates textuelles en timestamp
+  const withTs = all.map(o => {
+    let ts = 0;
+    if (o.date) {
+      const parsed = Date.parse(o.date);
+      if (!isNaN(parsed)) ts = parsed;
+    }
+    return { ...o, _ts: ts };
+  });
+
+  // Tri : offres avec date connue (récentes en tête), puis sans date
+  withTs.sort((a, b) => {
+    if (a._ts && b._ts) return b._ts - a._ts;
+    if (a._ts) return -1;
+    if (b._ts) return 1;
+    return 0;
+  });
+
+  // Supprimer le champ interne de tri
+  withTs.forEach(o => { delete o._ts; });
+
+  // Dédupliquer par titre (toutes sources confondues)
+  const seen = new Set();
+  const unique = withTs.filter(o => {
+    const key = o.title.toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return {
+    offres: unique.slice(0, 40),
+    sources: ['Métropole Rouen Normandie', 'France Travail'],
+    timestamp: new Date().toISOString()
+  };
+}
+
 module.exports = {
   getOpenAgendaEvents,
   getVigicruesData,
@@ -805,6 +936,7 @@ module.exports = {
   getBrocantesRouen,
   getPharmaciesGarde,
   getEmploiRouen,
+  getEmploiRouenAggregated,
   getConseilMunicipalRouen,
   getSortiesSeinoscope,
   getFranceTravailRouen

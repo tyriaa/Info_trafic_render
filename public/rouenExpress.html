@@ -623,10 +623,22 @@
                 html += `<div style="background:#e3f2fd;border-radius:8px;padding:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.8rem;">
                     <span style="font-size:1.5rem;">💊</span>
                     <div>
-                        <div style="font-weight:600;">Pharmacie de garde</div>
-                        <div style="font-size:0.85rem;color:#555;">${data.info}</div>
+                        <div style="font-weight:600;">Pharmacies de Rouen</div>
+                        <div style="font-size:0.85rem;color:#555;">${data.info || 'Appelez le 3237 pour la pharmacie de garde'}</div>
                     </div>
                 </div>`;
+                if (data.pharmacies && data.pharmacies.length > 0) {
+                    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0.8rem;margin-bottom:1rem;">';
+                    data.pharmacies.forEach(p => {
+                        const adresseComplete = [p.adresse, p.cp_ville].filter(Boolean).join(', ');
+                        html += `<div style="background:#f8f9fa;border-radius:8px;padding:0.8rem;">
+                            <div style="font-weight:600;font-size:0.9rem;">${p.nom || ''}</div>
+                            ${adresseComplete ? `<div style="font-size:0.8rem;color:#666;margin-top:0.3rem;">📍 ${adresseComplete}</div>` : ''}
+                            ${p.tel ? `<a href="tel:${p.tel}" style="font-size:0.8rem;color:#4361ee;margin-top:0.2rem;display:block;text-decoration:none;">📞 ${p.tel}</a>` : ''}
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
                 if (data.liens?.length > 0) {
                     html += '<div style="display:flex;gap:0.8rem;flex-wrap:wrap;">';
                     data.liens.forEach(l => {
@@ -668,6 +680,7 @@
                                 ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
                                 ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
                                 ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
                             </div>`;
                     });
                     html += createCarouselHTML('emploi', cards);
@@ -712,6 +725,7 @@
                                 ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
                                 ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
                                 ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
                             </div>`;
                     });
                     html += createCarouselHTML('ft', cards);

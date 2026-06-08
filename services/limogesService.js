@@ -3,8 +3,10 @@
  * Sources : OpenAgenda (événements via scraping public), Vigicrues v1.1 (crues), Actualités RSS
  */
 
+const path = require('path');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { searchOffres } = require('../utils/franceTravailApi');
 
 // ============================================================
 // 1. OpenAgenda - Événements de Limoges (scraping page publique)
@@ -570,10 +572,16 @@ async function getTrainsLimoges() {
       ? arrResponse.value.data.arrivals.map(formatSNCFSchedule('arrival'))
       : [];
 
+    // Retards en tête, puis tri chronologique
+    const sortByDelay = (a, b) => {
+      if (b.delayed !== a.delayed) return b.delayed ? 1 : -1;
+      return a.time.localeCompare(b.time);
+    };
+
     return {
       station: 'Limoges-Bénédictins',
-      departures: departures,
-      arrivals: arrivals,
+      departures: departures.sort(sortByDelay),
+      arrivals: arrivals.sort(sortByDelay),
       timestamp: new Date().toISOString(),
       source: 'SNCF'
     };
@@ -583,10 +591,19 @@ async function getTrainsLimoges() {
   }
 }
 
+function parseSNCFTime(str) {
+  if (!str || str.length < 13) return null;
+  return new Date(
+    `${str.substring(0, 4)}-${str.substring(4, 6)}-${str.substring(6, 8)}T${str.substring(9, 11)}:${str.substring(11, 13)}:${str.substring(13, 15)}`
+  );
+}
+
 function formatSNCFSchedule(type) {
   return (schedule) => {
     const timeField = type === 'departure' ? 'departure_date_time' : 'arrival_date_time';
+    const baseField = type === 'departure' ? 'base_departure_date_time' : 'base_arrival_date_time';
     const scheduleTime = schedule.stop_date_time[timeField] || '';
+    const baseTime = schedule.stop_date_time[baseField] || '';
     const info = schedule.display_informations || {};
 
     // Convertir "YYYYMMDDTHHmmss" en "HH:mm"
@@ -594,8 +611,23 @@ function formatSNCFSchedule(type) {
       ? scheduleTime.substring(9, 11) + ':' + scheduleTime.substring(11, 13)
       : '';
 
+    const scheduledTime = baseTime.length >= 13
+      ? baseTime.substring(9, 11) + ':' + baseTime.substring(11, 13)
+      : '';
+
+    // Calcul du retard en minutes
+    let delayMinutes = 0;
+    if (baseTime && scheduleTime && baseTime !== scheduleTime) {
+      const real = parseSNCFTime(scheduleTime);
+      const base = parseSNCFTime(baseTime);
+      if (real && base) delayMinutes = Math.round((real - base) / 60000);
+    }
+
     return {
       time: time,
+      scheduledTime: scheduledTime || time,
+      delayed: delayMinutes > 0,
+      delayMinutes: delayMinutes > 0 ? delayMinutes : 0,
       direction: info.direction || '',
       line: info.code || '',
       type: info.commercial_mode || 'Train',
@@ -614,8 +646,8 @@ function formatSNCFSchedule(type) {
  * @returns {Promise<Array>} - Liste des brocantes
  */
 async function getBrocantesLimoges() {
+  const url = 'https://vide-greniers.org/evenements/Limoges-87?distance=0';
   try {
-    const url = 'https://vide-greniers.org/87-Haute-Vienne';
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -626,31 +658,47 @@ async function getBrocantesLimoges() {
     });
 
     const $ = cheerio.load(response.data);
-    const brocantes = [];
+    const events = [];
 
-    $('article, .vg-card, .list-group-item, tr, .event-item, [class*="brocante"], [class*="vide"]').each((i, el) => {
-      const title = $(el).find('h2, h3, h4, a[class*="title"], strong, .title').first().text().trim();
-      const dateText = $(el).find('[class*="date"], time, .badge, small').first().text().trim();
-      const location = $(el).find('[class*="lieu"], [class*="city"], [class*="location"], .text-muted').first().text().trim();
-      const link = $(el).find('a').first().attr('href') || '';
+    // Lire les blocs JSON-LD : structure fiable exposée par vide-greniers.org
+    $('script[type="application/ld+json"]').each((i, el) => {
+      try {
+        const data = JSON.parse($(el).html());
+        if (data['@type'] !== 'Event' || !data.name) return;
 
-      if (title && title.length > 3 && title.length < 200) {
-        brocantes.push({
-          title: title,
-          date: dateText || '',
-          location: location || '',
-          link: link.startsWith('http') ? link : `https://vide-greniers.org${link}`,
+        // Nettoyer la description (retire le préfixe "Type - Région - Ville - Horaires")
+        const cleanDesc = (data.description || '')
+          .replace(/^[^-]+-[^-]+-[^-]+-\s*[^\n]*\n?/, '')
+          .substring(0, 200)
+          .trim();
+
+        events.push({
+          title: data.name,
+          date: data.startDate || '',
+          dateEnd: data.endDate || '',
+          location: data.location && data.location.name ? data.location.name : 'Limoges',
+          description: cleanDesc,
+          link: data.url || url,
           source: 'vide-greniers.org'
         });
-      }
+      } catch (e) { /* JSON malformé, on ignore */ }
     });
 
-    // Fallback: essayer brocabrac.fr
-    if (brocantes.length === 0) {
+    // Dédupliquer : un événement multi-jours a la même URL de base (retirer la date finale /YYYYMMDD)
+    const seen = new Set();
+    const unique = events.filter(e => {
+      const key = e.link.replace(/\/\d{8}$/, '');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Fallback si aucun événement trouvé
+    if (unique.length === 0) {
       return await getBrocabracLimoges();
     }
 
-    return brocantes.slice(0, 20);
+    return unique.slice(0, 20);
   } catch (error) {
     console.error('❌ Erreur brocantes Limoges:', error.message);
     try {
@@ -707,53 +755,22 @@ async function getBrocabracLimoges() {
  * @returns {Promise<Object>} - Infos pharmacies de garde
  */
 async function getPharmaciesGarde() {
+  let pharmacies = [];
   try {
-    // Tenter de scraper la page pharmacie de garde du département 87
-    const url = 'https://www.ars.sante.fr/pharmacies-de-garde';
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html'
-      },
-      timeout: 10000
-    });
-
-    const $ = cheerio.load(response.data);
-    const pharmacies = [];
-
-    $('[class*="pharma"], [class*="result"], .card, article').each((i, el) => {
-      const name = $(el).find('h2, h3, h4, strong, [class*="name"]').first().text().trim();
-      const address = $(el).find('[class*="address"], [class*="adresse"], p').first().text().trim();
-      const phone = $(el).find('a[href^="tel"]').first().text().trim();
-
-      if (name && name.length > 3 && name.length < 150) {
-        pharmacies.push({ name, address: address || '', phone: phone || '' });
-      }
-    });
-
-    return {
-      pharmacies: pharmacies.slice(0, 10),
-      info: 'Appelez le 3237 (0,35€/min) pour connaître la pharmacie de garde à Limoges',
-      liens: [
-        { label: 'Annuaire des pharmaciens', url: 'https://www.ordre.pharmacien.fr/je-suis/patient-grand-public/l-annuaire-des-pharmaciens-etablissements?firstname=ANNE&lastname=ARRESTIER#vue-liste' },
-        { label: 'Numéro national : 3237', url: 'tel:3237' }
-      ],
-      timestamp: new Date().toISOString(),
-      source: 'Ordre des pharmaciens / 3237'
-    };
-  } catch (error) {
-    // En cas d'erreur, retourner les infos statiques utiles
-    return {
-      pharmacies: [],
-      info: 'Appelez le 3237 (0,35€/min) pour connaître la pharmacie de garde à Limoges',
-      liens: [
-        { label: 'Annuaire des pharmaciens', url: 'https://www.ordre.pharmacien.fr/je-suis/patient-grand-public/l-annuaire-des-pharmaciens-etablissements?firstname=ANNE&lastname=ARRESTIER#vue-liste' },
-        { label: 'Numéro national : 3237', url: 'tel:3237' }
-      ],
-      timestamp: new Date().toISOString(),
-      source: 'Ordre des pharmaciens / 3237'
-    };
+    pharmacies = require(path.join(__dirname, '../data/pharmacies_limoges.json'));
+  } catch (e) {
+    console.error('❌ Impossible de charger pharmacies_limoges.json:', e.message);
   }
+  return {
+    pharmacies: pharmacies,
+    info: 'Appelez le 3237 (0,35€/min) pour connaître la pharmacie de garde à Limoges',
+    liens: [
+      { label: 'Annuaire des pharmaciens', url: 'https://www.ordre.pharmacien.fr/je-suis/patient-grand-public/l-annuaire-des-pharmaciens-etablissements?firstname=ANNE&lastname=ARRESTIER#vue-liste' },
+      { label: 'Numéro national : 3237', url: 'tel:3237' }
+    ],
+    timestamp: new Date().toISOString(),
+    source: 'FINESS / Ordre des pharmaciens'
+  };
 }
 
 // ============================================================
@@ -795,7 +812,7 @@ async function getEmploiLimoges() {
           location: location || 'Limoges',
           date: dateText || '',
           contract: contract || '',
-          link: link.startsWith('http') ? link : `https://mairie-limoges.gestmax.fr${link}`,
+          link: (link && link.startsWith('http')) ? link : (link ? `https://mairie-limoges.gestmax.fr${link}` : 'https://mairie-limoges.gestmax.fr/search'),
           source: 'Mairie de Limoges'
         });
       }
@@ -959,6 +976,69 @@ async function getConseilMunicipalLimoges() {
   }
 }
 
+// ============================================================
+// 11. France Travail - Offres d'emploi Limoges
+// ============================================================
+
+async function getFranceTravailLimoges() {
+  const lienDirect = 'https://candidat.francetravail.fr/offres/emploi/limoges/v87085';
+  try {
+    const offres = await searchOffres('87085', 10, 25);
+    return {
+      offres: offres,
+      lienDirect: lienDirect,
+      timestamp: new Date().toISOString(),
+      source: 'France Travail'
+    };
+  } catch (error) {
+    console.error('❌ Erreur France Travail Limoges:', error.message);
+    return {
+      offres: [],
+      lienDirect: lienDirect,
+      source: 'France Travail',
+      error: error.message
+    };
+  }
+}
+
+// ============================================================
+// 12. Emploi agrégé - Mairie Limoges + France Travail fusionnés
+// ============================================================
+
+async function getEmploiLimogesAggregated() {
+  const [mairie, ft] = await Promise.allSettled([
+    getEmploiLimoges(),
+    getFranceTravailLimoges()
+  ]);
+
+  const offresMairie = mairie.status === 'fulfilled' ? mairie.value.offres || [] : [];
+  const offresFT    = ft.status === 'fulfilled'    ? ft.value.offres    || [] : [];
+
+  const toTimestamp = d => {
+    if (!d) return 0;
+    const t = new Date(d).getTime();
+    return isNaN(t) ? 0 : t;
+  };
+
+  const all = [...offresMairie, ...offresFT]
+    .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
+
+  // Déduplication par titre
+  const seen = new Set();
+  const unique = all.filter(o => {
+    const key = (o.title || '').toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return {
+    offres: unique.slice(0, 40),
+    sources: ['Mairie de Limoges', 'France Travail'],
+    timestamp: new Date().toISOString()
+  };
+}
+
 module.exports = {
   getOpenAgendaEvents,
   getVigicruesData,
@@ -969,5 +1049,7 @@ module.exports = {
   getBrocantesLimoges,
   getPharmaciesGarde,
   getEmploiLimoges,
+  getFranceTravailLimoges,
+  getEmploiLimogesAggregated,
   getConseilMunicipalLimoges
 };

@@ -653,6 +653,20 @@
             </div>
         </div>
 
+        <!-- Section France Travail -->
+        <div class="section-container">
+            <div class="section-header">
+                <span>Emploi - France Travail <span id="ft-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">Source : francetravail.fr</span>
+            </div>
+            <div id="ft-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>Chargement des offres France Travail...</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Section Conseil Municipal -->
         <div class="section-container">
             <div class="section-header">
@@ -1088,10 +1102,11 @@
                 if (data.pharmacies && data.pharmacies.length > 0) {
                     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0.8rem;margin-bottom:1rem;">';
                     data.pharmacies.forEach(p => {
+                        const adresseComplete = [p.adresse, p.cp_ville].filter(Boolean).join(', ');
                         html += `<div style="background:#f8f9fa;border-radius:8px;padding:0.8rem;">
-                            <div style="font-weight:600;font-size:0.9rem;">${p.name}</div>
-                            ${p.address ? `<div style="font-size:0.8rem;color:#666;margin-top:0.3rem;">📍 ${p.address}</div>` : ''}
-                            ${p.phone ? `<div style="font-size:0.8rem;color:#4361ee;margin-top:0.2rem;">📞 ${p.phone}</div>` : ''}
+                            <div style="font-weight:600;font-size:0.9rem;">${p.nom || p.name || ''}</div>
+                            ${adresseComplete ? `<div style="font-size:0.8rem;color:#666;margin-top:0.3rem;">📍 ${adresseComplete}</div>` : ''}
+                            ${p.tel ? `<a href="tel:${p.tel}" style="font-size:0.8rem;color:#4361ee;margin-top:0.2rem;display:block;text-decoration:none;">📞 ${p.tel}</a>` : ''}
                         </div>`;
                     });
                     html += '</div>';
@@ -1153,6 +1168,7 @@
                                 ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
                                 ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
                                 ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
                             </div>`;
                     });
 
@@ -1174,6 +1190,52 @@
         }
 
         // ============================================================
+        // France Travail Limoges
+        // ============================================================
+        async function loadFranceTravail() {
+            const container = document.getElementById('ft-container');
+            try {
+                const response = await fetch('/api/limoges/france-travail');
+                const result = await response.json();
+                const data = result.data;
+                let html = '<div style="padding:1rem;">';
+                html += `<div style="margin-bottom:1rem;">
+                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        🔎 Voir toutes les offres sur France Travail
+                    </a>
+                </div>`;
+                if (data.offres?.length > 0) {
+                    document.getElementById('ft-count').textContent = data.offres.length;
+                    document.getElementById('ft-count').style.display = 'inline';
+                    const cards = data.offres.map(o => {
+                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
+                        return `
+                            <div class="event-card" ${linkAttr}>
+                                <div class="event-title">💼 ${o.title}</div>
+                                ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
+                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
+                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
+                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
+                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
+                            </div>`;
+                    });
+                    html += createCarouselHTML('ft', cards);
+                } else {
+                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez France Travail pour voir les offres</div></div>`;
+                }
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Erreur France Travail:', err);
+                container.innerHTML = `<div style="padding:1rem;">
+                    <a href="https://candidat.francetravail.fr/offres/emploi/limoges/v87085" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
+                        🔎 Voir les offres France Travail
+                    </a>
+                </div>`;
+            }
+        }
+
+        // ============================================================
         // Lancement au chargement
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
@@ -1187,6 +1249,7 @@
             loadBrocantes();
             loadPharmacies();
             loadEmploi();
+            loadFranceTravail();
             loadConseilMunicipal();
             initIciExpress();
         });

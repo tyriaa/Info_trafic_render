@@ -1272,6 +1272,26 @@ app.get('/api/limoges/emploi', async (req, res) => {
   }
 });
 
+app.get('/api/limoges/france-travail', async (req, res) => {
+  try {
+    const data = await limogesService.getFranceTravailLimoges();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    console.error('❌ Erreur France Travail Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/limoges/emploi-agregated', async (req, res) => {
+  try {
+    const data = await limogesService.getEmploiLimogesAggregated();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    console.error('❌ Erreur emploi agrégé Limoges:', error);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
 app.get('/api/limoges/conseil-municipal', async (req, res) => {
   try {
     const data = await limogesService.getConseilMunicipalLimoges();
@@ -1423,6 +1443,15 @@ app.get('/api/rouen/pharmacies', async (req, res) => {
 app.get('/api/rouen/emploi', async (req, res) => {
   try {
     const data = await rouenService.getEmploiRouen();
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/emploi/agregee', async (req, res) => {
+  try {
+    const data = await rouenService.getEmploiRouenAggregated();
     res.json({ status: 'success', data });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
