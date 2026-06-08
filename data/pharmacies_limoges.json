@@ -1,0 +1,290 @@
+[
+  {
+    "nom": "LA PHARMACIE CENTRALE DE LIMOGES",
+    "adresse": "4 PL WILSON",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555346536"
+  },
+  {
+    "nom": "LA PHARMACIE DE LA PLACE",
+    "adresse": "10 PL SADI CARNOT",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555775674"
+  },
+  {
+    "nom": "NOUVELLE PHARMACIE DES CARMES",
+    "adresse": "37 PL DES CARMES",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555344568"
+  },
+  {
+    "nom": "PHARMACIE  BERNARDAUD",
+    "adresse": "1 PL FOURNIER",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE  DARON",
+    "adresse": "ZUP DE L AURENCE",
+    "cp_ville": "87100 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE  DE BEAUBLANC",
+    "adresse": "101 AV MONTJOVIS",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555775726"
+  },
+  {
+    "nom": "PHARMACIE  DE LA GARE DES BENEDICTINS",
+    "adresse": "5 R ARISTIDE BRIAND",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555772686"
+  },
+  {
+    "nom": "PHARMACIE  DU DOCTEUR JOUY",
+    "adresse": "25 BD LOUIS BLANC",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555341679"
+  },
+  {
+    "nom": "PHARMACIE  SAINT  LAZARE",
+    "adresse": "227 R DE TOULOUSE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555302187"
+  },
+  {
+    "nom": "PHARMACIE ARISTIDE BRIAND",
+    "adresse": "141 R ARISTIDE BRIAND",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555773794"
+  },
+  {
+    "nom": "PHARMACIE BEAUDROUET",
+    "adresse": "R BRAQUE",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555372389"
+  },
+  {
+    "nom": "PHARMACIE BELLEVUE",
+    "adresse": "77 R Charles LEGENDRE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE BOULIN",
+    "adresse": "1 BD DE FLEURUS",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE COIFFE",
+    "adresse": "56 BD GAMBETTA",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555346126"
+  },
+  {
+    "nom": "PHARMACIE DE LA MAUVENDIERE",
+    "adresse": "19 R DE LA MAUVENDIERE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555772154"
+  },
+  {
+    "nom": "PHARMACIE DENIS DUSSOUBS",
+    "adresse": "30 R ADRIEN DUBOUCHE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555774494"
+  },
+  {
+    "nom": "PHARMACIE DES BANCS",
+    "adresse": "1 PL DES BANCS",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555341992"
+  },
+  {
+    "nom": "PHARMACIE DES CHARENTES",
+    "adresse": "8 R DU MAS LOUBIER",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555776740"
+  },
+  {
+    "nom": "PHARMACIE DES PORTES FERREES",
+    "adresse": "52 R DOMNOLET LAFARGE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE DU MIDI",
+    "adresse": "12 AV BAUDIN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE DU MONTEVERT",
+    "adresse": "95 R ABBE PIERRE",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555345187"
+  },
+  {
+    "nom": "PHARMACIE DU PUY LAS RODAS",
+    "adresse": "102 R DE LA VIALOUBE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555013085"
+  },
+  {
+    "nom": "PHARMACIE DU ROUSSILLON",
+    "adresse": "70 AV DU ROUSSILLON",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555490162"
+  },
+  {
+    "nom": "PHARMACIE DU SABLARD",
+    "adresse": "171 AV MARECHAL DE LATTRE DE TASSI",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE DU TILLEUL",
+    "adresse": "321 R FRANÃOIS PERRIN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE DU VIGENAL",
+    "adresse": "2 BD DU VIGENAL",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555373288"
+  },
+  {
+    "nom": "PHARMACIE FRANCOIS PERRIN",
+    "adresse": "211 R FRANCOIS PERRIN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE GAY LUSSAC",
+    "adresse": "5 BD GEORGES PERRIN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555341390"
+  },
+  {
+    "nom": "PHARMACIE GUICHARD",
+    "adresse": "10 R Suzanne Valadon",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555334864"
+  },
+  {
+    "nom": "PHARMACIE JOFFRE",
+    "adresse": "22 BD DES LILAS",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555377686"
+  },
+  {
+    "nom": "PHARMACIE JOURDAN",
+    "adresse": "12 PL JOURDAN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555776764"
+  },
+  {
+    "nom": "PHARMACIE KHIYATI-DUCAILLOUX",
+    "adresse": "43 AV GEORGES DUMAS",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE LAFAYETTE CORGNAC",
+    "adresse": "PL DU COMMERCE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555015294"
+  },
+  {
+    "nom": "PHARMACIE LAUNAY",
+    "adresse": "1 R J-BAPTISTE CHASTAING",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555773489"
+  },
+  {
+    "nom": "PHARMACIE LIGNON REYT",
+    "adresse": "45 R DE LA CONQUE",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555016510"
+  },
+  {
+    "nom": "PHARMACIE MARCEAU",
+    "adresse": "1 PL MARCEAU",
+    "cp_ville": "87100 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE MAZAUD",
+    "adresse": "88 AV DE LATTRE DE TASSIGNY",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555305768"
+  },
+  {
+    "nom": "PHARMACIE MERY",
+    "adresse": "74 AV DU GENERAL LECLERC",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555384343"
+  },
+  {
+    "nom": "PHARMACIE MONTMAILLER",
+    "adresse": "47 R MONTMAILLER B",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE REBEIX-DEMONPION",
+    "adresse": "126 R FRANCOIS PERRIN",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555015838"
+  },
+  {
+    "nom": "PHARMACIE RENAISSANCE",
+    "adresse": "17 AV DE LA LIBERATION",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE STEPHANE  LAMOURAUX",
+    "adresse": "48 R Emile MontÃ©gut",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555345966"
+  },
+  {
+    "nom": "PHARMACIE TRIOREAU",
+    "adresse": "30 AV des Casseaux",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555331409"
+  },
+  {
+    "nom": "PHARMACIE VAL DE L'AURENCE",
+    "adresse": "R DU MARECHAL JOFFRE",
+    "cp_ville": "87100 LIMOGES",
+    "tel": "0555013304"
+  },
+  {
+    "nom": "S.E.L.A.R.L. PHARMACIE SAINT MARTIAL",
+    "adresse": "15 R SAINT MARTIAL",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555342399"
+  },
+  {
+    "nom": "SELARL CLUZEL-MARTINOT",
+    "adresse": "1 PL D AINE B",
+    "cp_ville": "87000 LIMOGES",
+    "tel": ""
+  },
+  {
+    "nom": "SELARL PHARMACIE VECCHI",
+    "adresse": "17 R JEAN JAURES",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555342820"
+  },
+  {
+    "nom": "SELAS PHARMACIE DE L'EUROPE",
+    "adresse": "2 BD BEL AIR",
+    "cp_ville": "87000 LIMOGES",
+    "tel": "0555341156"
+  }
+]

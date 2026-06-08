@@ -1,0 +1,206 @@
+[
+  {
+    "nom": "GRANDE PHARMACIE DU CENTRE",
+    "adresse": "29 PL DE LA CATHEDRALE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713317"
+  },
+  {
+    "nom": "LA GRANDE PHARMACIE",
+    "adresse": "CCAL SAINT SEVER",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235635820"
+  },
+  {
+    "nom": "PHARMACIE CAUCHOISE",
+    "adresse": "7 PL Cauchoise",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713020"
+  },
+  {
+    "nom": "PHARMACIE DE GRIEU",
+    "adresse": "80 R GRIEU",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235703287"
+  },
+  {
+    "nom": "PHARMACIE DE L'EUROPE",
+    "adresse": "17 R DE SOTTEVILLE",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235728337"
+  },
+  {
+    "nom": "PHARMACIE DE L'YSER",
+    "adresse": "123 PL BEAUVOISINE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713406"
+  },
+  {
+    "nom": "PHARMACIE DE LA GARE",
+    "adresse": "21 R Verte",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235715726"
+  },
+  {
+    "nom": "PHARMACIE DE LA GARE ET DU DONJON",
+    "adresse": "99 R JEANNE D ARC",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713289"
+  },
+  {
+    "nom": "PHARMACIE DE LA GRAND MARE",
+    "adresse": "19 R CESAR FRANCK",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235600014"
+  },
+  {
+    "nom": "PHARMACIE DE LA LOMBARDIE",
+    "adresse": "CCAL LOMBARDIE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235600309"
+  },
+  {
+    "nom": "PHARMACIE DE LA PREFECTURE",
+    "adresse": "23 AV PASTEUR",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235712151"
+  },
+  {
+    "nom": "PHARMACIE DE LA REPUBLIQUE",
+    "adresse": "21 R DE LA REPUBLIQUE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235706111"
+  },
+  {
+    "nom": "PHARMACIE DES EMMURÃES",
+    "adresse": "76 R SAINT SEVER",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235728185"
+  },
+  {
+    "nom": "PHARMACIE DES FAIENCIERS",
+    "adresse": "50 AV DE CAEN",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235728283"
+  },
+  {
+    "nom": "PHARMACIE DES HALLETTES",
+    "adresse": "2 PL DU VIEUX MARCHE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713262"
+  },
+  {
+    "nom": "PHARMACIE DES QUAIS DE SEINE",
+    "adresse": "20 AV JACQUES CARTIER",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235730306"
+  },
+  {
+    "nom": "PHARMACIE DU CLOS SAINT MARC",
+    "adresse": "38 R ARMAND CARREL",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235712078"
+  },
+  {
+    "nom": "PHARMACIE DU DRUGSTORE",
+    "adresse": "44 R de l'HÃ´pital",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235887521"
+  },
+  {
+    "nom": "PHARMACIE DU THEATRE DES  ARTS",
+    "adresse": "91 R DU GENERAL LECLERC",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235981291"
+  },
+  {
+    "nom": "PHARMACIE DU VAL GRIEU",
+    "adresse": "145 R ALBERT DUPUIS",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235605052"
+  },
+  {
+    "nom": "PHARMACIE DU VIEUX MARCHE",
+    "adresse": "53 PL DU VIEUX MARCHE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235712852"
+  },
+  {
+    "nom": "PHARMACIE FLAUBERT",
+    "adresse": "32 R ALBERT DUPUIS",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235600781"
+  },
+  {
+    "nom": "PHARMACIE GIMONET",
+    "adresse": "12 R ST VIVIEN",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235714306"
+  },
+  {
+    "nom": "PHARMACIE GRENOT",
+    "adresse": "90 R de Niki de Saint-Phalle",
+    "cp_ville": "76000 ROUEN",
+    "tel": ""
+  },
+  {
+    "nom": "PHARMACIE GUIAKORA BINGUI",
+    "adresse": "2 PL ALFRED DE MUSSET",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235599455"
+  },
+  {
+    "nom": "PHARMACIE JOUVENET",
+    "adresse": "26 R DE BIHOREL",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235073597"
+  },
+  {
+    "nom": "PHARMACIE MERIDIENNE",
+    "adresse": "72 R D ELBEUF",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235720455"
+  },
+  {
+    "nom": "PHARMACIE POPOT",
+    "adresse": "186 R DE CONSTANTINE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713340"
+  },
+  {
+    "nom": "PHARMACIE SAINT HILAIRE",
+    "adresse": "1 R ST HILAIRE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713351"
+  },
+  {
+    "nom": "PHARMACIE SAINT JULIEN",
+    "adresse": "176 R ST JULIEN",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235727587"
+  },
+  {
+    "nom": "PHARMACIE SAINT MARC",
+    "adresse": "1 R ALSACE LORRAINE",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235712976"
+  },
+  {
+    "nom": "PHARMACIE SAINT-SEVER",
+    "adresse": "154 R Saint Sever",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235722089"
+  },
+  {
+    "nom": "PHILEOGAT",
+    "adresse": "63 R JEANNE D ARC",
+    "cp_ville": "76000 ROUEN",
+    "tel": "0235713269"
+  },
+  {
+    "nom": "SELARL PHARMACIE PIETON",
+    "adresse": "87 R LAFAYETTE",
+    "cp_ville": "76100 ROUEN",
+    "tel": "0235722096"
+  }
+]

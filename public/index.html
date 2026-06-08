@@ -223,9 +223,11 @@
             doubleClickZoom: false
         });
 
-        // Ajout du fond de carte gris clair
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: ''
+        // Fond de carte — MapTiler "basic-v2-light" avec labels en français
+        L.tileLayer('https://api.maptiler.com/maps/basic-v2-light/{z}/{x}/{y}.png?key=UQ8uGcha4SOYhxSS9LOC&lang=fr', {
+            attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 20,
+            crossOrigin: true
         }).addTo(map);
 
         // Définition des emplacements

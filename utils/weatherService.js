@@ -337,7 +337,7 @@ async function getWeatherSummary(city = 'paris') {
     const desc = weather.conditions.description;
     const icon = weather.conditions.displayIcon;
     
-    return `${icon} ${temp}°C, ${desc}`;
+    return `${icon} ${weather.cityName} : ${temp}°C, ${desc}`;
   } catch (error) {
     return `Météo indisponible`;
   }
