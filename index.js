@@ -25,6 +25,7 @@ const marchesService = require('./services/marchesService');
 const limogesService = require('./services/limogesService');
 const rouenService = require('./services/rouenService');
 const iciExpressService = require('./services/iciExpressService');
+const spaService = require('./utils/spaService');
 
 // Configuration automatique via variables d'environnement (ANTHROPIC_API_KEY)
 // TomTom API configurée directement dans le service
@@ -1481,6 +1482,26 @@ app.get('/api/rouen/france-travail', async (req, res) => {
     const data = await rouenService.getFranceTravailRouen();
     res.json({ status: 'success', data });
   } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/limoges/spa', async (req, res) => {
+  try {
+    const data = await spaService.getAnimauxProches('Limoges');
+    res.json({ status: 'success', data });
+  } catch (error) {
+    console.error('❌ Erreur SPA Limoges:', error.message);
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/rouen/spa', async (req, res) => {
+  try {
+    const data = await spaService.getAnimauxProches('Rouen');
+    res.json({ status: 'success', data });
+  } catch (error) {
+    console.error('❌ Erreur SPA Rouen:', error.message);
     res.status(500).json({ status: 'error', message: error.message });
   }
 });
