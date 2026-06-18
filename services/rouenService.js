@@ -167,27 +167,14 @@ async function getTravauxRouen() {
 }
 
 // ============================================================
-// 4. Actualités - France Bleu Normandie + France 3 Normandie RSS
+// 4. Actualités - ICI Normandie (Rouen) RSS
 // ============================================================
-
-// Mots-clés géographiques à exclure pour rester centré sur Rouen / Seine-Maritime
-const HORS_ROUEN_KEYWORDS = [
-  'calvados', 'caen', 'bayeux', 'lisieux', 'honfleur', 'deauville', 'trouville',
-  'manche', 'cherbourg', 'granville', 'saint-lô', 'avranches', 'coutances',
-  'orne', 'alençon', 'argentan', 'flers', 'mortagne'
-];
-
-function isArticleRouen(article) {
-  const text = (article.title + ' ' + article.summary).toLowerCase();
-  return !HORS_ROUEN_KEYWORDS.some(kw => text.includes(kw));
-}
 
 async function getActualitesRouen() {
   const actualites = [];
 
-  // ICI / France Bleu Normandie (Rouen) — source principale, déjà ciblée
   try {
-    const rssUrl = 'https://www.francebleu.fr/rss/normandie-rouen';
+    const rssUrl = 'https://www.ici.fr/rss/normandie-rouen/a-la-une.xml';
     const response = await axios.get(rssUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
@@ -195,51 +182,12 @@ async function getActualitesRouen() {
       },
       timeout: 15000
     });
-    await parseRSS(response.data, actualites, 'ICI Normandie (Rouen)');
+    await parseRSS(response.data, actualites, 'ICI Normandie');
   } catch (error) {
     console.error('❌ Erreur RSS ICI Normandie:', error.message);
   }
 
-  // Fallback: France 3 Seine-Maritime (plus ciblé que l'édition Normandie générale)
-  if (actualites.length < 5) {
-    try {
-      const rssUrl = 'https://france3-regions.francetvinfo.fr/normandie/seine-maritime/rss';
-      const response = await axios.get(rssUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 15000
-      });
-      await parseRSS(response.data, actualites, 'France 3 Seine-Maritime');
-    } catch (error) {
-      console.error('❌ Erreur RSS France 3 Seine-Maritime:', error.message);
-    }
-  }
-
-  // Second fallback: France 3 Normandie avec filtre géographique
-  if (actualites.length < 5) {
-    try {
-      const rssUrl = 'https://france3-regions.francetvinfo.fr/normandie/rss';
-      const response = await axios.get(rssUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        timeout: 15000
-      });
-      await parseRSS(response.data, actualites, 'France 3 Normandie');
-    } catch (error) {
-      console.error('❌ Erreur RSS France 3 Normandie:', error.message);
-    }
-  }
-
-  // Dédupliquer par titre puis filtrer les articles hors-Rouen
-  const seen = new Set();
-  const unique = actualites
-    .filter(a => {
-      const key = a.title.toLowerCase().trim();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .filter(isArticleRouen);
-
-  return unique.slice(0, 15);
+  return actualites.slice(0, 15);
 }
 
 async function parseRSS(xmlData, actualites, sourceName) {

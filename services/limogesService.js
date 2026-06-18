@@ -350,18 +350,18 @@ async function getTravauxLimoges() {
 }
 
 // ============================================================
-// 4. Actualités Limoges via RSS France Bleu Limousin
+// 4. Actualités Limoges via RSS ICI Haute-Vienne (Franceinfo)
 // ============================================================
 
 /**
- * Récupère les actualités locales via le RSS de France Bleu Limousin
- * (limoges.fr bloque le scraping avec 403, on utilise un flux RSS public)
+ * Récupère les actualités locales via le RSS ICI / Franceinfo Haute-Vienne
+ * (francebleu.fr/rss/limousin a migré vers ici.fr puis supprimé, on utilise franceinfo)
  * @returns {Promise<Array>} - Liste des actualités
  */
 async function getActualitesLimoges() {
   try {
-    // France Bleu Limousin RSS
-    const url = 'https://www.francebleu.fr/rss/limousin/infos.xml';
+    // ICI Limousin RSS officiel
+    const url = 'https://www.ici.fr/rss/limousin/a-la-une.xml';
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -399,73 +399,16 @@ async function getActualitesLimoges() {
           summary: cleanDesc ? cleanDesc.substring(0, 300) : '',
           date: dateFormatted,
           link: link || '',
-          source: 'France Bleu Limousin'
+          source: 'ICI Limousin'
         });
       }
     });
 
-    // Si France Bleu échoue, essayer France 3 Nouvelle-Aquitaine
-    if (actualites.length === 0) {
-      return await getActualitesFrance3();
-    }
-
     return actualites.slice(0, 15);
   } catch (error) {
-    console.error('❌ Erreur RSS France Bleu Limousin:', error.message);
-    // Fallback France 3
-    try {
-      return await getActualitesFrance3();
-    } catch (e) {
-      console.error('❌ Erreur fallback France 3:', e.message);
-      return [];
-    }
+    console.error('❌ Erreur RSS ICI Haute-Vienne:', error.message);
+    return [];
   }
-}
-
-/**
- * Fallback: actualités via France 3 Nouvelle-Aquitaine RSS
- */
-async function getActualitesFrance3() {
-  const url = 'https://france3-regions.francetvinfo.fr/nouvelle-aquitaine/haute-vienne/limoges/rss';
-  const response = await axios.get(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      'Accept': 'application/rss+xml, application/xml, text/xml, */*'
-    },
-    timeout: 15000
-  });
-
-  const $ = cheerio.load(response.data, { xmlMode: true });
-  const actualites = [];
-
-  $('item').each((i, el) => {
-    const title = $(el).find('title').first().text().trim();
-    const description = $(el).find('description').first().text().trim();
-    const link = $(el).find('link').first().text().trim();
-    const pubDate = $(el).find('pubDate').first().text().trim();
-
-    if (title) {
-      const cleanDesc = description.replace(/<[^>]*>/g, '').trim();
-      let dateFormatted = '';
-      if (pubDate) {
-        try {
-          dateFormatted = new Date(pubDate).toLocaleDateString('fr-FR', {
-            weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
-          });
-        } catch (e) { dateFormatted = pubDate; }
-      }
-
-      actualites.push({
-        title: title.substring(0, 200),
-        summary: cleanDesc ? cleanDesc.substring(0, 300) : '',
-        date: dateFormatted,
-        link: link || '',
-        source: 'France 3 Nouvelle-Aquitaine'
-      });
-    }
-  });
-
-  return actualites.slice(0, 15);
 }
 
 // ============================================================
