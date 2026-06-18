@@ -12,6 +12,7 @@ const limogesService = require('./limogesService');
 const rouenService = require('./rouenService');
 const weatherService = require('../utils/weatherService');
 const tomTomService = require('../utils/tomTomService');
+const spaService = require('../utils/spaService');
 
 // ============================================================
 // Catalogue des formats ICI Express
@@ -32,7 +33,7 @@ const FORMATS = {
     emoji: '🎭',
     description: 'Idées sorties · Transports · Emploi · Vie de quartier + météo',
     habillage: 'mixed',
-    needs: ['events', 'brocantes', 'trains', 'travaux', 'actus', 'emploi', 'pharmacies', 'meteo', 'air']
+    needs: ['events', 'brocantes', 'trains', 'travaux', 'actus', 'emploi', 'franceTravail', 'pharmacies', 'meteo', 'air']
   },
   'format-c': {
     category: 'Ici Express', formatLetter: 'C',
@@ -48,7 +49,7 @@ const FORMATS = {
     emoji: '⭐',
     description: 'Immanquables · Adoption SPA + météo',
     habillage: 'mixed',
-    needs: ['events', 'actus', 'meteo', 'air']
+    needs: ['events', 'actus', 'spa', 'meteo', 'air']
   }
 };
 
@@ -78,7 +79,8 @@ async function collectCityData(city, needs) {
         air: 'getQualiteAir',
         vigicrues: 'getVigicruesData',
         pharmacies: 'getPharmaciesGarde',
-        emploi: 'getEmploiLimoges'
+        emploi: 'getEmploiLimoges',
+        franceTravail: 'getFranceTravailLimoges'
       }
     : {
         events: 'getOpenAgendaEvents',
@@ -89,8 +91,14 @@ async function collectCityData(city, needs) {
         air: 'getQualiteAir',
         vigicrues: 'getVigicruesData',
         pharmacies: 'getPharmaciesGarde',
-        emploi: 'getEmploiRouen'
+        emploi: 'getEmploiRouen',
+        franceTravail: 'getFranceTravailRouen'
       };
+
+  if (needs.includes('spa')) {
+    const villeNom = city === 'limoges' ? 'Limoges' : 'Rouen';
+    tasks.push(spaService.getAnimauxProches(villeNom).then(d => { data.spa = d; }).catch(() => {}));
+  }
 
   for (const [key, method] of Object.entries(methodsMap)) {
     if (needs.includes(key) && typeof svc[method] === 'function') {
@@ -154,7 +162,7 @@ Structure obligatoire du rendu (préfixe [CATÉGORIE] au début de CHAQUE bullet
 
 1. [IDÉES SORTIES] — 2 à 3 bullets : sorties variées (culture, plein air, famille), AU MOINS UNE gratuite (ajouter "(gratuit)"). Titre + lieu + date/heure + tarif.
 2. [TRANSPORTS] — 1 à 2 bullets : prochains départs trains importants + perturbations bus/tram. Destination, quai, heure, motif.
-3. [EMPLOI] — 1 à 2 bullets : offres d'emploi précises (intitulé + employeur + lieu + contrat) ou salon/forum emploi.
+3. [EMPLOI] — 2 à 3 bullets : croise les données offres_emploi (portail Métropole) ET offres_france_travail (France Travail) pour varier les offres. Inclure : intitulé du poste + nom de l'employeur + lieu + type de contrat. Préciser la source entre parenthèses si utile.
 4. [VIE DE QUARTIER] — 1 à 2 bullets : travaux en cours (rue, dates, horaires), coupures, fermetures. Adresse obligatoire.
 5. [MÉTÉO] — 1 bullet de synthèse.
 
@@ -174,7 +182,7 @@ Total : 6 à 9 bullets.`,
 Structure obligatoire du rendu (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
 
 1. [IMMANQUABLES] — 3 à 5 bullets : événements ponctuels à ne pas rater (ouvertures de billetterie, venue de personnalités, inaugurations, concerts phares). Les plus marquants d'abord. Titre + lieu + date + billetterie si connue.
-2. [ADOPTION] — 1 bullet : si actus ou events évoquent un animal à l'adoption / portrait SPA / journée adoption, reprends-le. Sinon : "Contactez la SPA locale pour rencontrer les animaux à l'adoption".
+2. [ADOPTION] — 1 à 2 bullets : utilise les données animaux_adoption_spa pour citer 1 ou 2 animaux concrets disponibles à l'adoption dans un refuge proche. Format : "Nom (espèce, race, âge, sexe) — refuge — distance km — lien fiche". Si aucune donnée SPA disponible : "Contactez la SPA locale pour rencontrer les animaux à l'adoption".
 3. [MÉTÉO] — 1 bullet de synthèse.
 
 Total : 5 à 7 bullets.`
@@ -228,6 +236,20 @@ function buildDataSection(data) {
   if (data.vigicrues) blocks.vigicrues = data.vigicrues?.vigilance || data.vigicrues?.stations || data.vigicrues;
   if (data.pharmacies) blocks.pharmacies_garde = data.pharmacies;
   if (data.emploi) blocks.offres_emploi = { offres: data.emploi.offres || [], portail: data.emploi.lienDirect };
+  if (data.franceTravail) blocks.offres_france_travail = {
+    offres: (data.franceTravail.offres || []).slice(0, 15).map(o => ({
+      titre: o.title, entreprise: o.company, lieu: o.location, contrat: o.contract, date: o.date, url: o.link
+    })),
+    lien: data.franceTravail.lienDirect
+  };
+  if (data.spa) blocks.animaux_adoption_spa = {
+    animaux: (data.spa.animaux || []).slice(0, 8).map(a => ({
+      nom: a.nom, espece: a.espece, race: a.race, sexe: a.sexe, age: a.age,
+      refuge: a.refuge, distance_km: a.distance, url: a.url
+    })),
+    total: data.spa.total,
+    refuges_proches: data.spa.refuges
+  };
 
   return Object.entries(blocks)
     .map(([k, v]) => `### ${k.toUpperCase()} ###\n${JSON.stringify(v, null, 2)}`)

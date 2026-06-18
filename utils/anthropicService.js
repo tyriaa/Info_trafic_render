@@ -18,7 +18,7 @@ const anthropic = new Anthropic({
 });
 
 // Modèle Claude par défaut 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-5";
 
 // Fonctions supprimées car non utilisées :
 // - generateResponse()
@@ -40,7 +40,6 @@ const generateFlashTraffic = async (prompt, options = {}) => {
     const {
       apiKey = API_KEY,
       temperature = 0.7,
-      top_p = 0.9,
       max_tokens = 400
     } = options;
 
@@ -55,7 +54,6 @@ const generateFlashTraffic = async (prompt, options = {}) => {
       model: DEFAULT_MODEL,
       max_tokens: max_tokens,
       temperature: temperature,
-      top_p: top_p,
       messages: [
         { role: "user", content: prompt }
       ]
