@@ -232,10 +232,9 @@ Total : 5 à 7 bullets.`,
     'module-vie-pratique': `MODULE VIE PRATIQUE / DÉMARCHES — Brief éditorial.
 Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
 
-1. [PHARMACIE DE GARDE] — 1 à 2 bullets : nom + adresse complète + téléphone + horaires de garde.
-2. [TRAVAUX] — 1 à 2 bullets : travaux impactant la vie quotidienne. Rue + nature + dates + déviation si connue.
-3. [INFOS PRATIQUES] — 1 à 2 bullets : fermetures de services, permanences, démarches utiles (extraits des actus).
-4. [NUMÉROS UTILES] — 1 bullet de clôture : 15 (SAMU), 17 (Police), 18 (Pompiers), 3237 (SOS Médecins).
+1. [TRAVAUX] — 1 à 2 bullets : travaux impactant la vie quotidienne. Rue + nature + dates + déviation si connue.
+2. [INFOS PRATIQUES] — 1 à 2 bullets : fermetures de services, permanences, démarches utiles (extraits des actus).
+3. [NUMÉROS UTILES] — 1 bullet de clôture : 15 (SAMU), 17 (Police), 18 (Pompiers), 3237 (SOS Médecins).
 
 Total : 5 à 7 bullets.`,
 
