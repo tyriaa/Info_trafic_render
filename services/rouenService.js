@@ -927,6 +927,255 @@ async function getEmploiRouenAggregated() {
   };
 }
 
+// ============================================================
+// Agenda officiel Ville de Rouen — rouen.fr/fr/agenda
+// ============================================================
+
+async function getAgendaRouenOfficiel() {
+  const today = new Date();
+  const todayDay = today.getDate();
+  const todayMonth = today.toLocaleDateString('fr-FR', { month: 'long' });
+  const todayStr = `${todayDay} ${todayMonth}`; // ex: "7 juillet"
+
+  try {
+    const response = await axios.get('https://rouen.fr/fr/agenda', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9'
+      },
+      timeout: 12000
+    });
+
+    const $ = cheerio.load(response.data);
+    const rawEvents = [];
+    const seen = new Set();
+
+    // Trouver tous les liens vers des événements (/fr/agenda/XXXXX_slug)
+    $('a[href*="/fr/agenda/"]').each((i, el) => {
+      const $el = $(el);
+      const href = $el.attr('href') || '';
+      // Ignorer le lien vers la page agenda elle-même
+      if (!href || href === '/fr/agenda' || href.startsWith('/fr/agenda?')) return;
+      const title = $el.text().trim();
+      if (!title || title.length < 3 || seen.has(title)) return;
+      seen.add(title);
+
+      // Chercher date et lieu dans le texte du conteneur parent
+      const parentText = $el.closest('li, article, div').text() || $el.parent().text();
+      const dateMatch = parentText.match(/Date\s*:\s*([^\n\r(]+)/);
+      const lieuMatch = parentText.match(/Lieu\s*:\s*([^\n\r]+)/);
+
+      // Aussi chercher une balise <time> dans le parent si pas de "Date :"
+      const $time = $el.closest('li, article, div').find('time').first();
+      const timeText = $time.text().trim();
+
+      const dateText = dateMatch ? dateMatch[1].trim() : timeText;
+      const location = lieuMatch ? lieuMatch[1].trim() : '';
+      const cleanLink = `https://rouen.fr${href.split('?')[0]}`;
+
+      rawEvents.push({ title, link: cleanLink, dateText, location });
+    });
+
+    // Filtrer les événements d'aujourd'hui
+    const todayEvents = rawEvents.filter(e => e.dateText.includes(todayStr));
+    // Si peu de résultats pour aujourd'hui, prendre tous les événements à venir (triés par heure)
+    const result = (todayEvents.length >= 3 ? todayEvents : rawEvents).slice(0, 20);
+
+    return result.map(e => ({
+      title: e.title,
+      description: '',
+      location: e.location.replace(/^Lieu\s*:\s*/i, '').trim(),
+      address: '',
+      city: 'Rouen',
+      dateStart: e.dateText.replace(/^Date\s*:\s*/i, '').replace(/\(autres dates.*\)$/i, '').trim(),
+      timeStart: '',
+      image: null,
+      tags: [],
+      categories: categorizeRouenEvent(e.title, '', []),
+      link: e.link,
+      source: 'Agenda Ville de Rouen'
+    }));
+  } catch (error) {
+    console.error('❌ Erreur agenda Ville de Rouen:', error.message);
+    return [];
+  }
+}
+
+// ============================================================
+// Agenda Rouen Tourisme — visiterouen.com/agenda
+// ============================================================
+
+const VISITE_MONTHS = {
+  'janv': 1, 'jan': 1, 'janvier': 1,
+  'févr': 2, 'fev': 2, 'fév': 2, 'février': 2,
+  'mars': 3,
+  'avr': 4, 'avril': 4,
+  'mai': 5,
+  'juin': 6,
+  'juil': 7, 'juillet': 7,
+  'août': 8, 'aout': 8,
+  'sept': 9, 'septembre': 9,
+  'oct': 10, 'octobre': 10,
+  'nov': 11, 'novembre': 11,
+  'déc': 12, 'dec': 12, 'décembre': 12
+};
+
+const VISITE_CATEGORIES = [
+  'FAMILLE', 'ENFANT', 'FESTIVAL', 'CONCERT', 'MUSIQUE CLASSIQUE', 'SPECTACLE',
+  'EXPOSITION', 'SPORT', 'PATRIMOINE', 'PHOTOGRAPHIE', 'THÉÂTRE', 'CINEMA',
+  'DANSE', 'HUMOUR', 'NATURE', 'VIN-OENOLOGIE', 'OENOLOGIE', 'ADULTE',
+  'BALLADE', 'VISITE GUIDÉE', 'ATELIER', 'CONFÉRENCE', 'GRATUIT'
+];
+
+function parseVisiteDate(text) {
+  const norm = text.toLowerCase().replace(/\./g, '').trim();
+  const monthKeys = Object.keys(VISITE_MONTHS).sort((a, b) => b.length - a.length).join('|');
+
+  // "Du X Mois au Y Mois" ou "du X mois au Y mois"
+  const rangeRe = new RegExp(`du\\s+(\\d{1,2})\\s+(${monthKeys})\\s+au\\s+(\\d{1,2})\\s+(${monthKeys})`, 'i');
+  const rangeMatch = norm.match(rangeRe);
+  if (rangeMatch) {
+    return {
+      type: 'range',
+      startDay: parseInt(rangeMatch[1]),
+      startMonth: VISITE_MONTHS[rangeMatch[2].toLowerCase()],
+      endDay: parseInt(rangeMatch[3]),
+      endMonth: VISITE_MONTHS[rangeMatch[4].toLowerCase()],
+      label: text.trim()
+    };
+  }
+
+  // "Le Lundi 7 Juil." — récupérer tous les jours mentionnés
+  const dayRe = new RegExp(`\\b(\\d{1,2})\\s+(${monthKeys})`, 'gi');
+  const days = [];
+  let m;
+  while ((m = dayRe.exec(norm)) !== null) {
+    days.push({ day: parseInt(m[1]), month: VISITE_MONTHS[m[2].toLowerCase()] });
+  }
+  if (days.length > 0) return { type: 'specific', days, label: text.trim() };
+
+  return null;
+}
+
+function isVisiteDateToday(parsed) {
+  if (!parsed) return false;
+  const t = new Date();
+  const tDay = t.getDate();
+  const tMonth = t.getMonth() + 1;
+  if (parsed.type === 'range') {
+    const start = new Date(t.getFullYear(), parsed.startMonth - 1, parsed.startDay);
+    const end = new Date(t.getFullYear(), parsed.endMonth - 1, parsed.endDay);
+    return t >= start && t <= end;
+  }
+  if (parsed.type === 'specific') {
+    return parsed.days.some(d => d.day === tDay && d.month === tMonth);
+  }
+  return false;
+}
+
+async function getVisiteRouenEvents() {
+  try {
+    const response = await axios.get('https://www.visiterouen.com/actualites/au-rythme-des-temps-forts/agenda/', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9'
+      },
+      timeout: 12000
+    });
+
+    const $ = cheerio.load(response.data);
+    const rawEvents = [];
+    const seen = new Set();
+
+    // Structure : article.item_sheet contient a[href*="/offres/"] + .card-title
+    $('article.item_sheet').each((i, el) => {
+      const $art = $(el);
+
+      // Lien de l'événement
+      const $link = $art.find('a[href*="/offres/"]').first();
+      const href = $link.attr('href') || '';
+      if (!href || seen.has(href)) return;
+      seen.add(href);
+
+      // Titre depuis .card-title (le plus fiable)
+      const title = $art.find('.card-title').first().text().trim()
+        || $art.find('[class*="title"]').first().text().trim();
+      if (!title || title.length < 3) return;
+
+      // Texte complet de l'article sans images/scripts pour dates et catégories
+      $art.find('noscript, script, style, img, button, svg').remove();
+      const fullText = $art.text().replace(/\s+/g, ' ').trim();
+
+      // Catégorie
+      const catMatch = VISITE_CATEGORIES.find(c => fullText.toUpperCase().includes(c));
+      const category = catMatch || '';
+
+      // Dates
+      const parsed = parseVisiteDate(fullText);
+
+      const link = href.startsWith('http') ? href : `https://www.visiterouen.com${href}`;
+      const cats = categorizeRouenEvent(title, '', category ? [category] : []);
+      if (/^(famille|enfant)$/i.test(category)) cats.push('famille');
+      if (/^gratuit$/i.test(category)) cats.push('gratuit');
+
+      rawEvents.push({ title, link, parsed, dateLabel: parsed ? parsed.label : '', category, categories: [...new Set(cats)] });
+    });
+
+    // Priorité aux événements d'aujourd'hui, sinon tous les événements à venir
+    const todayEvents = rawEvents.filter(e => isVisiteDateToday(e.parsed));
+    const result = (todayEvents.length >= 3 ? todayEvents : rawEvents).slice(0, 20);
+
+    return result.map(e => ({
+      title: e.title,
+      description: '',
+      location: 'Rouen',
+      address: '',
+      city: 'Rouen',
+      dateStart: e.dateLabel || '',
+      timeStart: '',
+      image: null,
+      tags: e.category ? [e.category] : [],
+      categories: e.categories,
+      link: e.link,
+      source: 'Rouen Tourisme'
+    }));
+  } catch (error) {
+    console.error('❌ Erreur agenda Rouen Tourisme:', error.message);
+    return [];
+  }
+}
+
+async function getAllEventsRouen() {
+  const [metropole, ville, tourisme] = await Promise.all([
+    getOpenAgendaEvents().catch(() => []),
+    getAgendaRouenOfficiel().catch(() => []),
+    getVisiteRouenEvents().catch(() => [])
+  ]);
+
+  // Round-robin : 1 rouen.fr → 1 visiterouen → 1 opendata → recommence
+  const sources = [ville, tourisme, metropole];
+  const seen = new Set();
+  const result = [];
+  const maxLen = Math.max(ville.length, tourisme.length, metropole.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    for (const src of sources) {
+      if (i < src.length) {
+        const e = src[i];
+        const key = e.title.toLowerCase().replace(/\s+/g, ' ').trim();
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(e);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 module.exports = {
   getOpenAgendaEvents,
   getVigicruesData,
@@ -940,5 +1189,8 @@ module.exports = {
   getEmploiRouenAggregated,
   getConseilMunicipalRouen,
   getSortiesSeinoscope,
-  getFranceTravailRouen
+  getFranceTravailRouen,
+  getAgendaRouenOfficiel,
+  getVisiteRouenEvents,
+  getAllEventsRouen
 };

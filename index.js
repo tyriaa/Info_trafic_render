@@ -1399,7 +1399,7 @@ app.get('/api/rouen/trafic', async (req, res) => {
 
 app.get('/api/rouen/evenements', async (req, res) => {
   try {
-    const events = await rouenService.getOpenAgendaEvents();
+    const events = await rouenService.getAllEventsRouen();
     res.json({ status: 'success', data: events });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });

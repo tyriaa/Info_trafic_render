@@ -135,7 +135,7 @@ async function collectCityData(city, needs) {
         franceTravail: 'getFranceTravailLimoges'
       }
     : {
-        events: 'getOpenAgendaEvents',
+        events: 'getAllEventsRouen',
         brocantes: 'getBrocantesRouen',
         travaux: 'getTravauxRouen',
         actus: 'getActualitesRouen',

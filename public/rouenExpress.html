@@ -50,6 +50,16 @@
         .carousel-wrapper { position: relative; padding: 0 60px; overflow: hidden; }
         .carousel-container { position: relative; overflow: hidden; width: 100%; }
         .carousel-track { display: flex; gap: 2rem; transition: transform 0.3s ease; width: max-content; }
+        .events-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0 0.25rem; }
+        .filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+        .filter-group-label { font-size: 0.75rem; color: #666; font-weight: 600; white-space: nowrap; }
+        .filter-btn { padding: 0.3rem 0.75rem; border-radius: 20px; border: 1.5px solid #ddd; background: white; font-size: 0.78rem; cursor: pointer; color: #555; transition: all 0.15s ease; white-space: nowrap; }
+        .filter-btn:hover { border-color: #0072F9; color: #0072F9; }
+        .filter-btn.active { background: #0072F9; border-color: #0072F9; color: white; font-weight: 600; }
+        .filter-btn.active.tourisme { background: #e67e22; border-color: #e67e22; }
+        .filter-btn.active.metropole { background: #27ae60; border-color: #27ae60; }
+        .filter-btn.active.today { background: #8e44ad; border-color: #8e44ad; }
+        .filter-divider { width: 1px; height: 20px; background: #e0e0e0; margin: 0 0.2rem; align-self: center; }
         .event-card { width: 350px; background: #0072F9; border-radius: 12px; padding: 1.5rem; color: white; cursor: pointer; transition: transform 0.2s ease; text-decoration: none; display: flex; flex-direction: column; flex-shrink: 0; }
         .event-card.minor { background: #95a5a6; }
         .event-card.trafic-card { background: #e74c3c; }
@@ -150,7 +160,22 @@
         <div class="section-container">
             <div class="section-header">
                 <span>Événements <span id="events-count" class="count-badge" style="display:none;"></span></span>
-                <span class="section-source">Source : OpenAgenda</span>
+                <span class="section-source">3 sources · Rouen</span>
+            </div>
+            <div class="events-filters" id="events-filters" style="display:none;">
+                <div class="filter-group">
+                    <span class="filter-group-label">Source :</span>
+                    <button class="filter-btn active" data-source="all" onclick="filterEvents('source','all')">Toutes</button>
+                    <button class="filter-btn" data-source="Agenda Ville de Rouen" onclick="filterEvents('source','Agenda Ville de Rouen')">🏛️ Ville</button>
+                    <button class="filter-btn tourisme" data-source="Rouen Tourisme" onclick="filterEvents('source','Rouen Tourisme')">🗺️ Tourisme</button>
+                    <button class="filter-btn metropole" data-source="Métropole Rouen / OpenAgenda" onclick="filterEvents('source','Métropole Rouen / OpenAgenda')">🌐 Métropole</button>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-group-label">Date :</span>
+                    <button class="filter-btn active" data-date="all" onclick="filterEvents('date','all')">Toutes</button>
+                    <button class="filter-btn today" data-date="today" onclick="filterEvents('date','today')">📅 Aujourd'hui</button>
+                </div>
             </div>
             <div id="events-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
         </div>
@@ -218,22 +243,21 @@
             <div id="pharmacies-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
         </div>
 
-        <!-- Emploi Métropole -->
+        <!-- Emploi fusionné -->
         <div class="section-container">
             <div class="section-header">
-                <span>Emploi - Métropole Rouen <span id="emploi-count" class="count-badge" style="display:none;"></span></span>
-                <span class="section-source">Source : recrutement.metropole-rouen-normandie.fr</span>
+                <span>Emploi & Offres <span id="emploi-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">2 sources · Rouen</span>
+            </div>
+            <div class="events-filters" id="emploi-filters" style="display:none;">
+                <div class="filter-group">
+                    <span class="filter-group-label">Source :</span>
+                    <button class="filter-btn active" data-emploi="all" onclick="filterOffres('all')">Toutes</button>
+                    <button class="filter-btn" data-emploi="Métropole Rouen" onclick="filterOffres('Métropole Rouen')">🏛️ Métropole</button>
+                    <button class="filter-btn metropole" data-emploi="France Travail" onclick="filterOffres('France Travail')">🔎 France Travail</button>
+                </div>
             </div>
             <div id="emploi-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
-        </div>
-
-        <!-- France Travail -->
-        <div class="section-container">
-            <div class="section-header">
-                <span>Offres France Travail <span id="ft-count" class="count-badge" style="display:none;"></span></span>
-                <span class="section-source">Source : candidat.francetravail.fr</span>
-            </div>
-            <div id="ft-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
         </div>
 
         <!-- SPA - Animaux à adopter -->
@@ -391,28 +415,86 @@
         // ============================================================
         // 3. Événements
         // ============================================================
+        let _allEvents = [];
+        let _activeSource = 'all';
+        let _activeDate = 'all';
+
+        function renderEvents() {
+            const container = document.getElementById('events-container');
+            const today = new Date();
+            const todayDay = today.getDate();
+            const todayMonth = today.toLocaleDateString('fr-FR', { month: 'long' });
+            const todayStr = `${todayDay} ${todayMonth}`;
+            const todayShort = `${todayDay} juil`; // pour "7 Juil."
+
+            let filtered = _allEvents;
+            if (_activeSource !== 'all') {
+                filtered = filtered.filter(e => e.source === _activeSource);
+            }
+            if (_activeDate === 'today') {
+                filtered = filtered.filter(e => {
+                    const d = (e.dateStart || '').toLowerCase();
+                    return d.includes(todayStr.toLowerCase()) || d.includes(todayShort.toLowerCase());
+                });
+            }
+
+            document.getElementById('events-count').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Aucun événement pour ce filtre</div></div>`;
+                return;
+            }
+
+            const SOURCE_COLORS = {
+                'Agenda Ville de Rouen': '#0072F9',
+                'Rouen Tourisme': '#e67e22',
+                'Métropole Rouen / OpenAgenda': '#27ae60'
+            };
+
+            const cards = filtered.map(e => {
+                const linkAttr = e.link ? `onclick="window.open('${e.link}', '_blank')"` : '';
+                const color = SOURCE_COLORS[e.source] || '#0072F9';
+                const sourceBadge = e.source ? `<div style="margin-top:auto;padding-top:0.6rem;font-size:0.72rem;opacity:0.75;border-top:1px solid rgba(255,255,255,0.25);">📡 ${e.source}</div>` : '';
+                return `
+                    <div class="event-card" ${linkAttr} style="background:${color};">
+                        <div class="event-title">${e.title}</div>
+                        <div class="event-info"><strong>📅</strong> ${e.dateStart || 'Date à venir'}${e.timeStart ? ' à ' + e.timeStart : ''}</div>
+                        ${e.location ? `<div class="event-info"><strong>📍</strong> ${e.location}</div>` : ''}
+                        ${sourceBadge}
+                    </div>`;
+            });
+            container.innerHTML = createCarouselHTML('events', cards);
+        }
+
+        function filterEvents(type, value) {
+            if (type === 'source') {
+                _activeSource = value;
+                document.querySelectorAll('[data-source]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.source === value);
+                });
+            } else if (type === 'date') {
+                _activeDate = value;
+                document.querySelectorAll('[data-date]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.date === value);
+                });
+            }
+            renderEvents();
+        }
+
         async function loadEvenements() {
             const container = document.getElementById('events-container');
             try {
                 const response = await fetch('/api/rouen/evenements');
                 const result = await response.json();
-                const events = result.data;
-                if (!events || events.length === 0) {
+                _allEvents = result.data || [];
+                if (_allEvents.length === 0) {
                     container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">Aucun événement à venir</div></div>`;
                     return;
                 }
-                document.getElementById('events-count').textContent = events.length;
+                document.getElementById('events-count').textContent = _allEvents.length;
                 document.getElementById('events-count').style.display = 'inline';
-                const cards = events.map(e => {
-                    const linkAttr = e.link ? `onclick="window.open('${e.link}', '_blank')"` : '';
-                    return `
-                        <div class="event-card" ${linkAttr}>
-                            <div class="event-title">${e.title}</div>
-                            <div class="event-info"><strong>📅</strong> ${e.dateStart || 'Date à venir'}${e.timeStart ? ' à ' + e.timeStart : ''}</div>
-                            ${e.location ? `<div class="event-info"><strong>📍</strong> ${e.location}</div>` : ''}
-                        </div>`;
-                });
-                container.innerHTML = createCarouselHTML('events', cards);
+                document.getElementById('events-filters').style.display = 'flex';
+                renderEvents();
             } catch (err) {
                 container.innerHTML = `<div class="error-msg">Erreur chargement événements</div>`;
             }
@@ -677,92 +759,90 @@
         }
 
         // ============================================================
-        // 11. Emploi
+        // 11. Emploi fusionné (Métropole + France Travail)
         // ============================================================
-        async function loadEmploi() {
+        let _allOffres = [];
+        let _activeEmploiSource = 'all';
+        let _emploiLinks = {};
+
+        function renderOffres() {
             const container = document.getElementById('emploi-container');
-            try {
-                const response = await fetch('/api/rouen/emploi');
-                const result = await response.json();
-                const data = result.data;
-                let html = '<div style="padding:1rem;">';
-                html += `<div style="margin-bottom:1rem;">
-                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-size:0.9rem;font-weight:600;">
-                        💼 Voir toutes les offres sur metropole-rouen-normandie.fr
-                    </a>
-                </div>`;
-                if (data.offres?.length > 0) {
-                    document.getElementById('emploi-count').textContent = data.offres.length;
-                    document.getElementById('emploi-count').style.display = 'inline';
-                    const cards = data.offres.map(o => {
-                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
-                        return `
-                            <div class="event-card" ${linkAttr}>
-                                <div class="event-title">💼 ${o.title}</div>
-                                ${o.category ? `<div class="event-info"><strong>📂</strong> ${o.category}</div>` : ''}
-                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
-                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
-                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
-                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
-                            </div>`;
-                    });
-                    html += createCarouselHTML('emploi', cards);
-                } else {
-                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez le site pour voir les offres</div></div>`;
-                }
-                html += '</div>';
-                container.innerHTML = html;
-            } catch (err) {
-                container.innerHTML = `<div style="padding:1rem;">
-                    <a href="https://www.metropole-rouen-normandie.fr/offres-demploi" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
-                        💼 Voir les offres d'emploi
-                    </a>
-                </div>`;
+            const OFFRE_COLORS = { 'Métropole Rouen': '#4361ee', 'France Travail': '#1666c0' };
+
+            let filtered = _activeEmploiSource === 'all' ? _allOffres
+                : _allOffres.filter(o => o._sourceLabel === _activeEmploiSource);
+
+            document.getElementById('emploi-count').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Aucune offre pour ce filtre</div></div>`;
+                return;
             }
+
+            const linksHTML = Object.entries(_emploiLinks).map(([label, url]) =>
+                `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:${OFFRE_COLORS[label]||'#4361ee'};color:white;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">
+                    💼 ${label}
+                </a>`
+            ).join('');
+
+            const cards = filtered.map(o => {
+                const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
+                const color = OFFRE_COLORS[o._sourceLabel] || '#4361ee';
+                const sourceBadge = `<div style="margin-top:auto;padding-top:0.5rem;font-size:0.72rem;opacity:0.75;border-top:1px solid rgba(255,255,255,0.25);">📡 ${o._sourceLabel}</div>`;
+                return `
+                    <div class="event-card" ${linkAttr} style="background:${color};">
+                        <div class="event-title">💼 ${o.title}</div>
+                        ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
+                        ${o.category ? `<div class="event-info"><strong>�</strong> ${o.category}</div>` : ''}
+                        ${o.contract ? `<div class="event-info"><strong>�</strong> ${o.contract}</div>` : ''}
+                        ${o.location ? `<div class="event-info"><strong>�</strong> ${o.location}</div>` : ''}
+                        ${sourceBadge}
+                    </div>`;
+            });
+
+            container.innerHTML = `<div style="display:flex;gap:0.6rem;flex-wrap:wrap;padding:0 0 1rem;">${linksHTML}</div>` + createCarouselHTML('emploi', cards);
         }
 
-        // ============================================================
-        // 12. France Travail
-        // ============================================================
-        async function loadFranceTravail() {
-            const container = document.getElementById('ft-container');
+        function filterOffres(value) {
+            _activeEmploiSource = value;
+            document.querySelectorAll('[data-emploi]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.emploi === value);
+            });
+            renderOffres();
+        }
+
+        async function loadEmploiMerge() {
+            const container = document.getElementById('emploi-container');
             try {
-                const response = await fetch('/api/rouen/france-travail');
-                const result = await response.json();
-                const data = result.data;
-                let html = '<div style="padding:1rem;">';
-                html += `<div style="margin-bottom:1rem;">
-                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
-                        🔎 Voir toutes les offres sur France Travail
-                    </a>
-                </div>`;
-                if (data.offres?.length > 0) {
-                    document.getElementById('ft-count').textContent = data.offres.length;
-                    document.getElementById('ft-count').style.display = 'inline';
-                    const cards = data.offres.map(o => {
-                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
-                        return `
-                            <div class="event-card" ${linkAttr}>
-                                <div class="event-title">💼 ${o.title}</div>
-                                ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
-                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
-                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
-                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
-                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
-                            </div>`;
-                    });
-                    html += createCarouselHTML('ft', cards);
-                } else {
-                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez France Travail pour voir les offres</div></div>`;
+                const [r1, r2] = await Promise.all([
+                    fetch('/api/rouen/emploi').then(r => r.json()).catch(() => ({ data: { offres: [] } })),
+                    fetch('/api/rouen/france-travail').then(r => r.json()).catch(() => ({ data: { offres: [] } }))
+                ]);
+                const metro = (r1.data?.offres || []).map(o => ({ ...o, _sourceLabel: 'Métropole Rouen' }));
+                const ft   = (r2.data?.offres || []).map(o => ({ ...o, _sourceLabel: 'France Travail' }));
+
+                // Round-robin : 1 Métropole → 1 France Travail → recommence
+                const all = [];
+                const maxLen = Math.max(metro.length, ft.length);
+                for (let i = 0; i < maxLen; i++) {
+                    if (i < metro.length) all.push(metro[i]);
+                    if (i < ft.length)    all.push(ft[i]);
                 }
-                html += '</div>';
-                container.innerHTML = html;
+                _allOffres = all;
+                _emploiLinks = {};
+                if (r1.data?.lienDirect) _emploiLinks['Métropole Rouen'] = r1.data.lienDirect;
+                if (r2.data?.lienDirect) _emploiLinks['France Travail'] = r2.data.lienDirect;
+
+                if (_allOffres.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Aucune offre disponible</div></div>`;
+                    return;
+                }
+                document.getElementById('emploi-count').textContent = _allOffres.length;
+                document.getElementById('emploi-count').style.display = 'inline';
+                document.getElementById('emploi-filters').style.display = 'flex';
+                renderOffres();
             } catch (err) {
-                container.innerHTML = `<div style="padding:1rem;">
-                    <a href="https://candidat.francetravail.fr/offres/emploi/rouen/v36" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
-                        🔎 Voir les offres France Travail
-                    </a>
-                </div>`;
+                container.innerHTML = `<div style="padding:1rem;color:#e74c3c;">Erreur chargement offres d'emploi</div>`;
             }
         }
 
@@ -1042,8 +1122,7 @@
             loadTrains();
             loadBrocantes();
             loadPharmacies();
-            loadEmploi();
-            loadFranceTravail();
+            loadEmploiMerge();
             loadSorties();
             loadConseilMunicipal();
             loadSpa();
