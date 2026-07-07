@@ -254,13 +254,13 @@
             <div id="sorties-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
         </div>
 
-        <!-- Conseil Municipal -->
-        <div class="section-container">
+        <!-- Conseil Municipal : données disponibles via /api/rouen/conseil-municipal, affichage masqué -->
+        <div class="section-container" style="display:none;" aria-hidden="true">
             <div class="section-header">
                 <span>Conseil Municipal <span id="conseil-count" class="count-badge" style="display:none;"></span></span>
                 <span class="section-source">Source : Ville de Rouen</span>
             </div>
-            <div id="conseil-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
+            <div id="conseil-container"></div>
         </div>
     </div>
 
@@ -313,18 +313,32 @@
         // ============================================================
         async function loadMeteo() {
             try {
-                const response = await fetch('/api/rouen/meteo');
-                const result = await response.json();
+                const [meteoResp, alertsResp] = await Promise.all([
+                    fetch('/api/rouen/meteo'),
+                    fetch('/api/weather/rouen/alerts')
+                ]);
+                const result = await meteoResp.json();
                 const data = result.data;
                 if (data.error) {
                     document.getElementById('meteo-widget').innerHTML = `<div class="meteo-header"><span class="meteo-city">Rouen</span></div><div style="text-align:center;padding:2rem;">Météo indisponible</div>`;
                     return;
                 }
+
+                const alertsData = alertsResp.ok ? await alertsResp.json() : null;
+                const alertBanner = (alertsData && alertsData.alerts && alertsData.alerts.length > 0)
+                    ? alertsData.alerts.map(a => `
+                    <div style="background:${a.color};color:white;padding:0.4rem 1rem;border-radius:8px;margin-bottom:0.4rem;font-weight:600;font-size:0.85rem;display:flex;align-items:center;gap:0.5rem;">
+                        <span>${a.emoji}</span>
+                        <span>⚠️ Vigilance ${a.label} — ${a.message}</span>
+                    </div>`).join('')
+                    : '';
+
                 document.getElementById('meteo-widget').innerHTML = `
                     <div class="meteo-header">
                         <span class="meteo-city">Météo Rouen</span>
                         <span class="meteo-source">OpenWeatherMap</span>
                     </div>
+                    ${alertBanner}
                     <div class="meteo-main">
                         <div class="meteo-icon">${data.conditions.displayIcon}</div>
                         <div>
@@ -986,8 +1000,12 @@
                     ? '<span style="background:#f59e0b;color:#1a237e;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE LOISIRS</span>'
                     : habillage === 'mixed'
                     ? '<span style="background:#6366f1;color:white;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE MIXTE</span>'
+                    : habillage === 'flash'
+                    ? '<span style="background:#0ea5e9;color:white;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">🎙️ FLASH RADIO</span>'
                     : '<span style="background:#10b981;color:white;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;font-weight:700;">HABILLAGE SERVICES</span>';
-                const bullets = d.script.split(/\n+/).filter(l => l.trim()).map(l => `<li style="margin-bottom:0.55rem;display:flex;align-items:flex-start;flex-wrap:wrap;gap:0.25rem;">${renderBulletLine(l)}</li>`).join('');
+                const scriptContent = habillage === 'flash'
+                    ? `<p id="ici-script-text" style="font-size:0.97rem;line-height:1.7;color:#1e293b;margin:0;font-style:italic;background:#f0f9ff;padding:0.9rem 1rem;border-radius:8px;border-left:3px solid #0ea5e9;">${d.script.replace(/\n/g, '<br>')}</p>`
+                    : `<ul id="ici-script-text" style="font-size:0.92rem;line-height:1.5;color:#222;margin:0;padding-left:1.2rem;list-style:disc;">${d.script.split(/\n+/).filter(l => l.trim()).map(l => `<li style="margin-bottom:0.55rem;display:flex;align-items:flex-start;flex-wrap:wrap;gap:0.25rem;">${renderBulletLine(l)}</li>`).join('')}</ul>`;
                 outEl.innerHTML = `
                     <div style="background:white;padding:1rem;border-radius:10px;border:1px solid #e5e7eb;">
                         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.7rem;padding-bottom:0.5rem;border-bottom:1px solid #eee;">
@@ -998,7 +1016,7 @@
                                 <span style="background:#f3f4f6;color:#555;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.7rem;">${d.model}</span>
                             </div>
                         </div>
-                        <ul id="ici-script-text" style="font-size:0.92rem;line-height:1.5;color:#222;margin:0;padding-left:1.2rem;list-style:disc;">${bullets}</ul>
+                        ${scriptContent}
                         <div style="display:flex;gap:0.5rem;margin-top:0.8rem;flex-wrap:wrap;">
                             <button onclick="navigator.clipboard.writeText(document.getElementById('ici-script-text').innerText);this.textContent='✓ Copié';setTimeout(()=>this.textContent='📋 Copier texte',1500);" style="background:#0072F9;color:white;border:none;padding:0.4rem 0.8rem;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;">📋 Copier texte</button>
                         </div>

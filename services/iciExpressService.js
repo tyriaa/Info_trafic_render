@@ -50,6 +50,58 @@ const FORMATS = {
     description: 'Immanquables · Adoption SPA + météo',
     habillage: 'mixed',
     needs: ['events', 'actus', 'spa', 'meteo', 'air']
+  },
+
+  // ============================================================
+  // Modules thématiques — scripts radio flash (30-45s)
+  // ============================================================
+  'module-mobilite': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Mobilité / Trafic / Météo',
+    emoji: '🚗',
+    description: 'Brief trafic · incidents routiers · transports · vigilances météo',
+    habillage: 'mixed',
+    needs: ['trafic', 'meteo', 'vigicrues', 'travaux', 'trains']
+  },
+  'module-emploi': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Emploi',
+    emoji: '💼',
+    description: 'Brief emploi — offres et marché du travail local',
+    habillage: 'mixed',
+    needs: ['emploi', 'franceTravail']
+  },
+  'module-famille': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Famille / Enfants / Nature',
+    emoji: '🌿',
+    description: 'Brief sorties famille · activités enfants · plein air et nature',
+    habillage: 'mixed',
+    needs: ['events']
+  },
+  'module-bons-plans': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Bons Plans Gratuits',
+    emoji: '🎁',
+    description: 'Brief bons plans — événements et activités gratuits à saisir',
+    habillage: 'mixed',
+    needs: ['events', 'brocantes']
+  },
+  'module-vie-pratique': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Vie Pratique / Démarches',
+    emoji: '📋',
+    description: 'Brief pratique — travaux, fermetures, pharmacies de garde',
+    habillage: 'mixed',
+    needs: ['travaux', 'pharmacies', 'actus']
+  },
+  'module-solidaire': {
+    category: 'Modules Thématiques', formatLetter: null,
+    label: 'Événements Solidaires',
+    emoji: '🤝',
+    description: 'Brief solidarité — collectes, bénévolat, initiatives citoyennes',
+    habillage: 'mixed',
+    needs: ['events', 'actus']
   }
 };
 
@@ -113,6 +165,93 @@ async function collectCityData(city, needs) {
 // ============================================================
 // Construction des prompts par format
 // ============================================================
+
+// Prompts modules thématiques — même format bullet points [CATÉGORIE] que les formats A/B/C/D
+function buildModulePromptTemplate(format, cityName, today) {
+  const baseInstructions = `Tu es un assistant éditorial pour "ici ${cityName}". Tu dois produire une FICHE DE BRIEF factuelle pour le module thématique correspondant.
+
+Date : ${today}
+Zone : ${cityName}
+
+RÈGLES STRICTES DE SORTIE :
+- Format : UNIQUEMENT une liste de bullet points (un tiret "-" par ligne)
+- Aucune phrase d'accroche, aucune introduction, aucune conclusion
+- Aucune phrase de liaison, aucun commentaire, aucune narration
+- Chaque bullet = 1 info précise et concrète, dense en données factuelles
+- Inclure TOUS les détails disponibles : date exacte, heure, lieu précis, adresse, tarif, nom, numéro de téléphone si présent
+- Format bullet : "- [CATÉGORIE] Nom/titre — lieu — date/heure — prix/détail — info complémentaire"
+- Le préfixe [CATÉGORIE] (entre crochets, en MAJUSCULES) est OBLIGATOIRE et correspond à la section éditoriale
+- N'invente RIEN : n'utilise QUE les données fournies ci-dessous
+- Si un champ manque, omets-le plutôt que de combler
+- Ordre : du plus important/imminent au moins urgent
+- Pas de Markdown (pas de **, pas de #, pas de liste numérotée)
+- Pas d'emoji sauf si présent dans la donnée source
+- Maximum 10 bullets, minimum 4
+- Si une URL est disponible, l'ajouter entre parenthèses en fin de bullet : "(source: https://...)"  `;
+
+  const specs = {
+    'module-mobilite': `MODULE MOBILITÉ / TRAFIC / MÉTÉO — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [MÉTÉO] — 1 bullet si vigilance active (canicule, vent, crues) : niveau + message d'alerte. Si aucune alerte : 1 bullet synthèse météo (temp, conditions, vent).
+2. [VIGICRUES] — 1 bullet si vigilance crue active : cours d'eau + niveau de vigilance + secteurs concernés.
+3. [TRAFIC] — 2 à 4 bullets : incidents routiers majeurs (accidents, bouchons > 10 min). Axe précis, nature, retard estimé, sens de circulation.
+4. [TRAVAUX] — 1 à 2 bullets : travaux impactant la circulation. Rue/axe, nature, dates, déviation si connue.
+5. [TRAINS] — 1 bullet si perturbation identifiée : ligne, destination, motif, horaires affectés.
+
+Total : 5 à 8 bullets.`,
+
+    'module-emploi': `MODULE EMPLOI — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [EMPLOI LOCAL] — 2 à 3 bullets depuis le portail Métropole : intitulé du poste + employeur + lieu + type de contrat. Préciser "(source: portail local)" en fin de bullet.
+2. [FRANCE TRAVAIL] — 2 à 3 bullets depuis France Travail : intitulé + entreprise + lieu + contrat. Préciser "(source: France Travail)" en fin de bullet.
+3. [MARCHÉ DE L'EMPLOI] — 1 bullet si donnée disponible : secteur qui recrute activement ou chiffre marquant.
+
+Privilégie la variété des secteurs. Total : 5 à 7 bullets.`,
+
+    'module-famille': `MODULE FAMILLE / ENFANTS / NATURE — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [FAMILLE] — 2 à 3 bullets : spectacles jeune public, ateliers enfants, animations famille. Titre + lieu + date/heure + tarif. Ajouter "(gratuit)" si applicable.
+2. [NATURE] — 1 à 2 bullets : balades guidées, sorties nature, parcs, jardins ouverts. Lieu + date + accès + tarif.
+3. [JEUNESSE] — 1 bullet si disponible : ludothèque, centre aéré, service étudiant, CROUS.
+
+Si peu d'événements famille identifiés, inclure les événements avec mots-clés proches (conte, cirque, atelier, marionnettes, etc.).
+Total : 4 à 7 bullets.`,
+
+    'module-bons-plans': `MODULE BONS PLANS GRATUITS — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [BON PLAN] — 3 à 5 bullets : UNIQUEMENT événements/activités gratuits ou à tarif réduit. Titre + lieu + date/horaires + "(gratuit)" ou "(X €)" OBLIGATOIRE.
+2. [BROCANTE] — 1 à 2 bullets : vide-greniers, brocantes. Lieu + date + horaires + accès.
+
+Ajouter systématiquement "(gratuit)" ou "(entrée libre)" pour chaque bullet gratuit.
+Total : 5 à 7 bullets.`,
+
+    'module-vie-pratique': `MODULE VIE PRATIQUE / DÉMARCHES — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [PHARMACIE DE GARDE] — 1 à 2 bullets : nom + adresse complète + téléphone + horaires de garde.
+2. [TRAVAUX] — 1 à 2 bullets : travaux impactant la vie quotidienne. Rue + nature + dates + déviation si connue.
+3. [INFOS PRATIQUES] — 1 à 2 bullets : fermetures de services, permanences, démarches utiles (extraits des actus).
+4. [NUMÉROS UTILES] — 1 bullet de clôture : 15 (SAMU), 17 (Police), 18 (Pompiers), 3237 (SOS Médecins).
+
+Total : 5 à 7 bullets.`,
+
+    'module-solidaire': `MODULE ÉVÉNEMENTS SOLIDAIRES — Brief éditorial.
+Structure obligatoire (préfixe [CATÉGORIE] au début de CHAQUE bullet) :
+
+1. [SOLIDARITÉ] — 2 à 4 bullets : collectes, dons du sang, bénévolat, associations. Titre + lieu + date/heure + contact ou lien si disponible.
+2. [CITOYENNETÉ] — 1 à 2 bullets : réunions publiques, initiatives citoyennes, appels à contribution (extraits des actus).
+
+Si peu d'événements solidaires dans les données, l'indiquer honnêtement avec un bullet explicite.
+Total : 4 à 6 bullets.`
+  };
+
+  const spec = specs[format] || 'Croise toutes les sources fournies pour un brief complet.';
+  return `${baseInstructions}\n\nCONSIGNE SPÉCIFIQUE AU MODULE :\n${spec}\n\nSOURCES DE DONNÉES À CROISER (n'utilise QUE ce qui suit, ne rien inventer) :\n{{data}}\n\nProduis UNIQUEMENT la liste de bullets (lignes commençant par "- "). Aucun autre texte.`;
+}
 
 function buildPromptTemplate(format, cityName) {
   const fmt = FORMATS[format];
@@ -190,6 +329,11 @@ Total : 5 à 7 bullets.`
 
   const specifics = specsMap[format] || `Croise toutes les sources fournies pour un brief complet.`;
 
+  // Dispatch vers les modules thématiques (scripts radio flash)
+  if (format.startsWith('module-')) {
+    return buildModulePromptTemplate(format, cityName, today);
+  }
+
   // Le prompt template contient un PLACEHOLDER {{data}} — la data réelle sera injectée
   // au moment du call LLM (fresh) et non figée dans le template.
   return `${baseInstructions}\n\nCONSIGNE SPÉCIFIQUE AU FORMAT :\n${specifics}\n\nSOURCES DE DONNÉES À CROISER (n'utilise QUE ce qui suit, ne rien inventer) :\n{{data}}\n\nProduis UNIQUEMENT la liste de bullets (lignes commençant par "- "). Croise les sources pour enrichir chaque bullet. Aucun autre texte.`;
@@ -197,9 +341,21 @@ Total : 5 à 7 bullets.`
 
 // Construit la section data (JSON) à partir des données fraîches, à injecter dans {{data}}
 // Aucune limite arbitraire : on laisse toutes les données passer au LLM.
-function buildDataSection(data) {
+// Le paramètre format optionnel permet de filtrer les événements par catégorie thématique.
+function buildDataSection(data, format) {
   const blocks = {};
-  if (data.events) blocks.events = data.events;
+  if (data.events) {
+    let events = Array.isArray(data.events) ? data.events : (data.events.events || data.events);
+    // Filtre par catégorie pour les modules thématiques
+    if (format === 'module-famille') {
+      events = (events || []).filter(e => (e.categories || []).some(c => ['famille', 'nature'].includes(c)));
+    } else if (format === 'module-bons-plans') {
+      events = (events || []).filter(e => (e.categories || []).includes('gratuit'));
+    } else if (format === 'module-solidaire') {
+      events = (events || []).filter(e => (e.categories || []).includes('solidaire'));
+    }
+    blocks.events = events;
+  }
   if (data.brocantes) blocks.brocantes = data.brocantes;
   if (data.actus) blocks.actus = data.actus?.actualites || data.actus;
   if (data.travaux) blocks.travaux = data.travaux?.travaux || data.travaux?.results || data.travaux;
@@ -276,7 +432,7 @@ async function prepareIciExpress({ city, format }) {
   // Mais on collecte quand même un APERÇU pour que l'utilisateur puisse voir
   // ce qui sera injecté (à titre indicatif uniquement).
   const data = await collectCityData(city, fmt.needs);
-  const dataPreview = buildDataSection(data);
+  const dataPreview = buildDataSection(data, format);
 
   return {
     city: cityName,
@@ -302,7 +458,7 @@ async function generateIciExpress({ city, format, model = 'claude', customPrompt
 
   // On collecte TOUJOURS les données fraîches au moment du call — jamais de snapshot
   const freshData = await collectCityData(city, fmt.needs);
-  const freshDataSection = buildDataSection(freshData);
+  const freshDataSection = buildDataSection(freshData, format);
 
   // Le template (custom ou défaut) doit contenir {{data}} pour l'injection
   let template;

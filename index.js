@@ -15,6 +15,7 @@ const anthropicService = require('./utils/anthropicService');
 const openaiService = require('./utils/openaiService');
 const mistralService = require('./utils/mistralService');
 const weatherService = require('./utils/weatherService');
+const promptsService = require('./utils/promptsService');
 const { formatFullFrenchDate } = require('./utils/dateUtils');
 const databaseService = require('./services/databaseService');
 const parisIdeasService = require('./services/parisIdeasService');
@@ -383,6 +384,18 @@ app.get('/api/weather/:city', async (req, res) => {
   }
 });
 
+// Route pour récupérer les alertes météo (canicule, vent, froid) avec code couleur
+app.get('/api/weather/:city/alerts', async (req, res) => {
+  const { city } = req.params;
+  try {
+    const alerts = await weatherService.getWeatherAlerts(city);
+    res.json(alerts);
+  } catch (error) {
+    console.error(`Erreur alertes météo pour ${city}:`, error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des alertes météo' });
+  }
+});
+
 // Route pour récupérer un résumé météo court
 app.get('/api/weather/:city/summary', async (req, res) => {
   const { city } = req.params;
@@ -406,6 +419,21 @@ app.get('/api/weather/:city/forecast', async (req, res) => {
   } catch (error) {
     console.error(`Erreur lors de la récupération des prévisions pour ${city}:`, error);
     res.status(500).json({ error: 'Erreur lors de la récupération des prévisions météo' });
+  }
+});
+
+// Routes pour les modules de prompts thématiques
+app.get('/api/prompts/modules', (req, res) => {
+  res.json({ status: 'success', data: promptsService.getAvailableModules() });
+});
+
+app.post('/api/prompts/build', (req, res) => {
+  try {
+    const { moduleId, ville, date, data } = req.body;
+    const prompt = promptsService.buildPrompt(moduleId, { ville, date, data });
+    res.json({ status: 'success', prompt, moduleId });
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message });
   }
 });
 

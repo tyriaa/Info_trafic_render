@@ -57,6 +57,33 @@ async function getWeatherData(city = 'paris') {
 }
 
 /**
+ * Calcule une alerte thermique selon les seuils Météo France
+ * Canicule : Tmax ≥ 35°C et Tmin ≥ 20°C (seuils officiels simplifiés)
+ * Forte chaleur : Tmax ≥ 33°C ou ressentie ≥ 38°C
+ * Chaleur : Tmax ≥ 30°C
+ * Grand froid : Tmin ≤ -10°C
+ * Gel : Tmin ≤ 0°C
+ */
+function getHeatAlert(tempMax, tempMin, feelsLike) {
+  if (tempMax >= 35 && tempMin >= 20) {
+    return { level: 'rouge', label: 'Canicule', emoji: '🔴', color: '#c0392b', message: `Canicule — max ${tempMax}°C, nuit ${tempMin}°C` };
+  }
+  if (tempMax >= 33 || feelsLike >= 38) {
+    return { level: 'orange', label: 'Forte chaleur', emoji: '🟠', color: '#e67e22', message: `Forte chaleur — max ${tempMax}°C, ressenti ${feelsLike}°C` };
+  }
+  if (tempMax >= 30) {
+    return { level: 'jaune', label: 'Chaleur', emoji: '🟡', color: '#f39c12', message: `Chaleur — max ${tempMax}°C` };
+  }
+  if (tempMin <= -10) {
+    return { level: 'rouge', label: 'Grand froid', emoji: '🔴', color: '#2980b9', message: `Grand froid — min ${tempMin}°C` };
+  }
+  if (tempMin <= 0) {
+    return { level: 'jaune', label: 'Gel', emoji: '🔵', color: '#3498db', message: `Risque de gel — min ${tempMin}°C` };
+  }
+  return null;
+}
+
+/**
  * Formate les données météo pour l'affichage
  * @param {Object} rawData - Données brutes de l'API
  * @param {string} cityName - Nom de la ville
@@ -77,14 +104,20 @@ function formatWeatherData(rawData, cityName) {
   // Déterminer l'icône et la couleur selon les conditions
   const weatherInfo = getWeatherDisplayInfo(weather, main.temp);
 
+  const tempMax = Math.round(main.temp_max);
+  const tempMin = Math.round(main.temp_min);
+  const feelsLike = Math.round(main.feels_like);
+  const heatAlert = getHeatAlert(tempMax, tempMin, feelsLike);
+
   return {
     cityName,
     temperature: {
       current: Math.round(main.temp),
-      feelsLike: Math.round(main.feels_like),
-      min: Math.round(main.temp_min),
-      max: Math.round(main.temp_max)
+      feelsLike,
+      min: tempMin,
+      max: tempMax
     },
+    heatAlert,
     conditions: {
       main: weather.main,
       description: weather.description,
@@ -321,6 +354,102 @@ function getDayName(dateString) {
 }
 
 /**
+ * Niveaux d'alerte dans l'ordre croissant
+ */
+const ALERT_LEVELS = ['vert', 'jaune', 'orange', 'rouge'];
+
+function getMaxLevel(alerts) {
+  return alerts.reduce((max, alert) => {
+    return ALERT_LEVELS.indexOf(alert.level) > ALERT_LEVELS.indexOf(max) ? alert.level : max;
+  }, 'vert');
+}
+
+/**
+ * Alerte vent selon les seuils Météo France
+ * Jaune : rafales > 60 km/h, Orange : > 80 km/h, Rouge : > 100 km/h
+ */
+function getWindAlert(speedKmh, gustKmh) {
+  const max = Math.max(speedKmh || 0, gustKmh || 0);
+  if (max >= 100) {
+    return { level: 'rouge', label: 'Vent violent', emoji: '🔴', color: '#c0392b', message: `Vent violent — rafales jusqu'à ${max} km/h`, type: 'vent' };
+  }
+  if (max >= 80) {
+    return { level: 'orange', label: 'Vent fort', emoji: '🟠', color: '#e67e22', message: `Vent fort — rafales jusqu'à ${max} km/h`, type: 'vent' };
+  }
+  if (max >= 60) {
+    return { level: 'jaune', label: 'Vent', emoji: '🟡', color: '#f39c12', message: `Vent soutenu — jusqu'à ${max} km/h`, type: 'vent' };
+  }
+  return null;
+}
+
+/**
+ * Récupère les alertes météo en utilisant les prévisions pour un min/max journalier fiable
+ * @param {string} city - Code de la ville
+ * @returns {Promise<Object>} - Alertes météo avec code couleur
+ */
+async function getWeatherAlerts(city = 'paris') {
+  try {
+    const cityData = CITY_COORDINATES[city.toLowerCase()];
+    if (!cityData) throw new Error(`Ville non supportée: ${city}`);
+
+    const [currentResp, forecastResp] = await Promise.all([
+      axios.get(`${BASE_URL}?lat=${cityData.lat}&lon=${cityData.lon}&appid=${API_KEY}&units=metric&lang=fr`),
+      axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${cityData.lat}&lon=${cityData.lon}&appid=${API_KEY}&units=metric&lang=fr`)
+    ]);
+
+    const current = currentResp.data;
+    const forecast = forecastResp.data;
+    const alerts = [];
+
+    // Min/max du jour calculés depuis les créneaux 3h de la prévision
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayForecasts = forecast.list.filter(f => {
+      const d = new Date(f.dt * 1000);
+      return d >= today && d < tomorrow;
+    });
+
+    if (todayForecasts.length > 0) {
+      const temps = todayForecasts.map(f => f.main.temp);
+      const feelsLikes = todayForecasts.map(f => f.main.feels_like);
+      const tempMax = Math.round(Math.max(...temps));
+      const tempMin = Math.round(Math.min(...temps));
+      const feelsLikeMax = Math.round(Math.max(...feelsLikes));
+
+      const heatAlert = getHeatAlert(tempMax, tempMin, feelsLikeMax);
+      if (heatAlert) alerts.push({ ...heatAlert, type: 'temperature' });
+    }
+
+    // Alerte vent (données temps réel fiables)
+    const windSpeed = current.wind?.speed ? Math.round(current.wind.speed * 3.6) : 0;
+    const windGust = current.wind?.gust ? Math.round(current.wind.gust * 3.6) : 0;
+    const windAlert = getWindAlert(windSpeed, windGust);
+    if (windAlert) alerts.push(windAlert);
+
+    return {
+      cityName: cityData.name,
+      alerts,
+      hasAlerts: alerts.length > 0,
+      maxLevel: alerts.length > 0 ? getMaxLevel(alerts) : 'vert',
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error(`Erreur alertes météo pour ${city}:`, error.message);
+    return {
+      cityName: CITY_COORDINATES[city.toLowerCase()]?.name || city,
+      alerts: [],
+      hasAlerts: false,
+      maxLevel: 'vert',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
  * Obtient un résumé météo court pour l'affichage
  * @param {string} city - Code de la ville
  * @returns {Promise<string>} - Résumé météo
@@ -347,6 +476,7 @@ module.exports = {
   getWeatherData,
   getWeatherForecast,
   getWeatherSummary,
+  getWeatherAlerts,
   formatWeatherData,
   formatForecastData
 };

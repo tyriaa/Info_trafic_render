@@ -12,6 +12,47 @@ const xml2js = require('xml2js');
 const { searchOffres } = require('../utils/franceTravailApi');
 
 // ============================================================
+// Catégorisation thématique des événements
+// ============================================================
+
+const FAMILY_KEYWORDS_ROUEN = [
+  'famille', 'familial', 'familiales', 'familles', 'enfant', 'enfants',
+  'bébé', 'bebe', 'nourrisson', 'jeune public', 'tout-petit', 'tout petits',
+  'kids', 'junior', 'ados', 'adolescent', 'adolescents', 'jeunesse',
+  'parent', 'maternelle', 'primaire', 'scolaire',
+  'conte', 'contes', 'marionnette', 'marionnettes', 'cirque',
+  'spectacle enfant', 'spectacle famille', 'atelier enfant', 'atelier famille',
+  'animation enfant', 'animation famille', 'jeu pour',
+  '3 ans', '4 ans', '5 ans', '6 ans', '7 ans', '8 ans', '10 ans', '12 ans'
+];
+
+const NATURE_KEYWORDS_ROUEN = [
+  'nature', 'jardin', 'parc', 'forêt', 'plein air', 'plein-air',
+  'randonnée', 'balade', 'promenade', 'environnement', 'écologie',
+  'biodiversité', 'plantes', 'fleurs', 'arbres', 'botanique',
+  'faune', 'flore', 'animaux', 'oiseaux', 'pique-nique', 'sortie nature'
+];
+
+function categorizeRouenEvent(title, description, tags) {
+  const categories = [];
+  const text = `${title} ${description} ${(tags || []).join(' ')}`.toLowerCase();
+
+  if (FAMILY_KEYWORDS_ROUEN.some(kw => text.includes(kw))) {
+    categories.push('famille');
+  }
+  if (NATURE_KEYWORDS_ROUEN.some(kw => text.includes(kw))) {
+    categories.push('nature');
+  }
+  if (/gratuit|entrée libre|accès libre|sans inscription/i.test(text)) {
+    categories.push('gratuit');
+  }
+  if (/solidar|associat|bénévol|aide alimentaire|collecte|entraide/i.test(text)) {
+    categories.push('solidaire');
+  }
+  return categories;
+}
+
+// ============================================================
 // 1. OpenAgenda - Événements de Rouen
 // ============================================================
 
@@ -33,16 +74,21 @@ async function getOpenAgendaEvents() {
     const records = response.data?.results || [];
     const events = records.map(r => {
       const startDate = r.firstdate_begin ? new Date(r.firstdate_begin) : null;
+      const rawTags = r.keywords_fr || r.keywords || r.tags_fr || r.tags || [];
+      const tags = Array.isArray(rawTags) ? rawTags : (typeof rawTags === 'string' ? rawTags.split(',').map(t => t.trim()) : []);
+      const title = r.title_fr || 'Événement';
+      const description = r.description_fr || '';
       return {
-        title: r.title_fr || 'Événement',
-        description: r.description_fr || '',
+        title,
+        description,
         location: r.location_name || '',
         address: r.location_address || '',
         city: r.location_city || 'Rouen',
         dateStart: startDate ? startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : (r.daterange_fr || ''),
         timeStart: startDate ? startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '',
         image: r.thumbnail || r.image || null,
-        tags: [],
+        tags,
+        categories: categorizeRouenEvent(title, description, tags),
         link: r.canonicalurl || '',
         source: 'Métropole Rouen / OpenAgenda'
       };

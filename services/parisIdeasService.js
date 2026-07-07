@@ -24,6 +24,47 @@ function firstUsefulDateLine(dateDescription) {
     return lines[0] || "Date non précisée";
 }
 
+const FAMILY_KEYWORDS = [
+    'famille', 'familial', 'familiales', 'familles', 'enfant', 'enfants',
+    'bébé', 'bebe', 'nourrisson', 'jeune public', 'tout-petit', 'tout petits',
+    'kids', 'junior', 'ados', 'adolescent', 'adolescents', 'jeunesse',
+    'parent', 'maternelle', 'primaire', 'scolaire',
+    'conte', 'contes', 'marionnette', 'marionnettes', 'cirque',
+    'spectacle enfant', 'spectacle famille', 'atelier enfant', 'atelier famille',
+    'jeux en famille', 'jeu pour', 'ludothèque', 'luditheque',
+    'vacances', 'animation enfant', 'animation famille',
+    '0-', '3 ans', '4 ans', '5 ans', '6 ans', '7 ans', '8 ans', '9 ans', '10 ans', '12 ans'
+];
+
+const NATURE_KEYWORDS = [
+    'nature', 'jardin', 'parc', 'forêt', 'foret', 'plein air', 'plein-air',
+    'randonnée', 'balade', 'promenade', 'environnement', 'écologie', 'ecologie',
+    'biodiversité', 'biodiversite', 'plantes', 'fleurs', 'arbres', 'botanique',
+    'faune', 'flore', 'animaux', 'insectes', 'oiseaux', 'pique-nique', 'pique nique',
+    'sortie nature', 'découverte nature', 'outdoor'
+];
+
+function categorizeEvent(item) {
+    const categories = [];
+    const rawTags = Array.isArray(item.tags) ? item.tags : [];
+    const tagsText = rawTags.join(' ').toLowerCase();
+    const text = `${item.title || ''} ${item.lead_text || ''} ${item.description || ''} ${tagsText}`.toLowerCase();
+
+    if (FAMILY_KEYWORDS.some(kw => text.includes(kw))) {
+        categories.push('famille');
+    }
+    if (NATURE_KEYWORDS.some(kw => text.includes(kw))) {
+        categories.push('nature');
+    }
+    if ((item.price_type || '').toLowerCase().includes('gratuit') || text.includes('entrée libre') || text.includes('entree libre') || text.includes('accès libre')) {
+        categories.push('gratuit');
+    }
+    if (/solidar|associat|bénévol|benevol|aide alimentaire|don |collecte|entraide/i.test(text)) {
+        categories.push('solidaire');
+    }
+    return categories;
+}
+
 function isEditorialOrTooGeneric(item) {
     const title = (item.title || "").toLowerCase();
     const lead = (item.lead_text || "").toLowerCase();
@@ -164,7 +205,9 @@ function formatItem(item) {
         when: firstUsefulDateLine(item.date_description),
         place: item.address_name || item.address_city || "Lieu non précisé",
         price: item.price_type || "Tarif non précisé",
-        summary: compactText(item.lead_text || item.description)
+        summary: compactText(item.lead_text || item.description),
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        categories: categorizeEvent(item)
     };
 }
 
@@ -188,12 +231,29 @@ async function getParisIdeas() {
             timeout: 20000
         });
 
+        const familleResponse = await axios.get(BASE_URL, {
+            params: {
+                limit: "50",
+                where: `date_start >= now(hour=0) AND date_start <= now(days=30) AND (tags like "%famille%" OR tags like "%enfant%" OR tags like "%jeune public%" OR title like "%enfant%" OR title like "%famille%" OR title like "%conte%")`,
+                order_by: "date_start ASC"
+            },
+            timeout: 20000
+        });
+
         const todayItems = cleanItems(todayResponse.data.results || []).slice(0, 10).map(formatItem);
         const upcomingItems = cleanItems(upcomingResponse.data.results || [], true).slice(0, 5).map(formatItem);
+        const familleItems = cleanItems(familleResponse.data.results || [], false)
+            .filter(item => {
+                const cats = categorizeEvent(item);
+                return cats.includes('famille');
+            })
+            .slice(0, 8)
+            .map(formatItem);
 
         return {
             today: todayItems,
-            upcoming: upcomingItems
+            upcoming: upcomingItems,
+            famille: familleItems
         };
     } catch (error) {
         console.error('Erreur lors de la récupération des idées Paris:', error.message);
