@@ -72,7 +72,7 @@ async function searchOffres(codeInsee, distance = 10, maxOffres = 20) {
     location: (o.lieuTravail && o.lieuTravail.libelle) || '',
     contract: o.typeContratLibelle || '',
     date:     (o.dateCreation || '').substring(0, 10),
-    link:     o.id ? `https://candidat.francetravail.fr/rechercheoffre/emploi/detail/${o.id}` : '',
+    link:     o.id ? `https://candidat.francetravail.fr/offres/recherche/detail/${o.id}` : '',
     source:   'France Travail'
   }));
 }
