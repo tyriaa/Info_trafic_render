@@ -472,6 +472,13 @@
                 grid-template-columns: 1fr !important;
             }
         }
+        .events-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0 0.25rem; }
+        .filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+        .filter-group-label { font-size: 0.75rem; color: #666; font-weight: 600; white-space: nowrap; }
+        .filter-btn { padding: 0.3rem 0.75rem; border-radius: 20px; border: 1.5px solid #ddd; background: white; font-size: 0.78rem; cursor: pointer; color: #555; transition: all 0.15s ease; white-space: nowrap; }
+        .filter-btn:hover { border-color: #0072F9; color: #0072F9; }
+        .filter-btn.active { background: #0072F9; border-color: #0072F9; color: white; font-weight: 600; }
+        .filter-btn.active.ft { background: #1666c0; border-color: #1666c0; }
     </style>
 </head>
 <body>
@@ -639,32 +646,21 @@
             </div>
         </div>
 
-        <!-- Section Emploi -->
+        <!-- Section Emploi fusionné -->
         <div class="section-container">
             <div class="section-header">
-                <span>Emploi - Mairie de Limoges <span id="emploi-count" class="count-badge" style="display:none;"></span></span>
-                <span class="section-source">Source : mairie-limoges.gestmax.fr</span>
+                <span>Emploi &amp; Offres <span id="emploi-count" class="count-badge" style="display:none;"></span></span>
+                <span class="section-source">2 sources · Limoges</span>
             </div>
-            <div id="emploi-container">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <div>Chargement des offres d'emploi...</div>
+            <div class="events-filters" id="emploi-filters" style="display:none;">
+                <div class="filter-group">
+                    <span class="filter-group-label">Source :</span>
+                    <button class="filter-btn active" data-emploi="all" onclick="filterOffres('all')">Toutes</button>
+                    <button class="filter-btn" data-emploi="Mairie de Limoges" onclick="filterOffres('Mairie de Limoges')">🏛️ Mairie</button>
+                    <button class="filter-btn ft" data-emploi="France Travail" onclick="filterOffres('France Travail')">🔎 France Travail</button>
                 </div>
             </div>
-        </div>
-
-        <!-- Section France Travail -->
-        <div class="section-container">
-            <div class="section-header">
-                <span>Emploi - France Travail <span id="ft-count" class="count-badge" style="display:none;"></span></span>
-                <span class="section-source">Source : francetravail.fr</span>
-            </div>
-            <div id="ft-container">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <div>Chargement des offres France Travail...</div>
-                </div>
-            </div>
+            <div id="emploi-container"><div class="loading"><div class="loading-spinner"></div><div>Chargement...</div></div></div>
         </div>
 
         <!-- SPA - Animaux à adopter -->
@@ -1156,101 +1152,81 @@
         }
 
         // ============================================================
-        // 10. Charger les offres d'emploi
+        // 10. Emploi fusionné (Mairie + France Travail)
         // ============================================================
-        async function loadEmploi() {
+        let _allOffres = [];
+        let _activeEmploiSource = 'all';
+        let _emploiLinks = {};
+
+        function renderOffres() {
             const container = document.getElementById('emploi-container');
-            try {
-                const response = await fetch('/api/limoges/emploi');
-                const result = await response.json();
-                const data = result.data;
-
-                let html = '<div style="padding:1rem;">';
-
-                // Bouton vers le site
-                html += `<div style="margin-bottom:1rem;">
-                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-size:0.9rem;font-weight:600;">
-                        💼 Voir toutes les offres sur gestmax.fr
-                    </a>
-                </div>`;
-
-                if (data.offres && data.offres.length > 0) {
-                    document.getElementById('emploi-count').textContent = data.offres.length;
-                    document.getElementById('emploi-count').style.display = 'inline';
-
-                    const cards = data.offres.map(o => {
-                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
-                        return `
-                            <div class="event-card" ${linkAttr}>
-                                <div class="event-title">💼 ${o.title}</div>
-                                ${o.category ? `<div class="event-info"><strong>📂</strong> ${o.category}</div>` : ''}
-                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
-                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
-                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
-                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
-                            </div>`;
-                    });
-
-                    html += createCarouselHTML('emploi', cards);
-                } else {
-                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Aucune offre d'emploi disponible — consultez directement le site</div></div>`;
-                }
-
-                html += '</div>';
-                container.innerHTML = html;
-            } catch (err) {
-                console.error('Erreur emploi:', err);
-                container.innerHTML = `<div style="padding:1rem;">
-                    <a href="https://mairie-limoges.gestmax.fr/search" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#4361ee;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-size:0.9rem;font-weight:600;">
-                        💼 Voir les offres d'emploi de la Mairie de Limoges
-                    </a>
-                </div>`;
+            const OFFRE_COLORS = { 'Mairie de Limoges': '#4361ee', 'France Travail': '#1666c0' };
+            const filtered = _activeEmploiSource === 'all' ? _allOffres
+                : _allOffres.filter(o => o._sourceLabel === _activeEmploiSource);
+            document.getElementById('emploi-count').textContent = filtered.length;
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Aucune offre pour ce filtre</div></div>`;
+                return;
             }
+            const linksHTML = Object.entries(_emploiLinks).map(([label, url]) =>
+                `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:${OFFRE_COLORS[label]||'#4361ee'};color:white;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">
+                    💼 ${label}
+                </a>`
+            ).join('');
+            const cards = filtered.map(o => {
+                const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
+                const color = OFFRE_COLORS[o._sourceLabel] || '#4361ee';
+                const sourceBadge = `<div style="margin-top:auto;padding-top:0.5rem;font-size:0.72rem;opacity:0.75;border-top:1px solid rgba(255,255,255,0.25);">📡 ${o._sourceLabel}</div>`;
+                return `
+                    <div class="event-card" ${linkAttr} style="background:${color};">
+                        <div class="event-title">💼 ${o.title}</div>
+                        ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
+                        ${o.category ? `<div class="event-info"><strong>�</strong> ${o.category}</div>` : ''}
+                        ${o.contract ? `<div class="event-info"><strong>�</strong> ${o.contract}</div>` : ''}
+                        ${o.location ? `<div class="event-info"><strong>�</strong> ${o.location}</div>` : ''}
+                        ${sourceBadge}
+                    </div>`;
+            });
+            container.innerHTML = `<div style="display:flex;gap:0.6rem;flex-wrap:wrap;padding:0 0 1rem;">${linksHTML}</div>` + createCarouselHTML('emploi', cards);
         }
 
-        // ============================================================
-        // France Travail Limoges
-        // ============================================================
-        async function loadFranceTravail() {
-            const container = document.getElementById('ft-container');
+        function filterOffres(value) {
+            _activeEmploiSource = value;
+            document.querySelectorAll('[data-emploi]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.emploi === value);
+            });
+            renderOffres();
+        }
+
+        async function loadEmploiMerge() {
+            const container = document.getElementById('emploi-container');
             try {
-                const response = await fetch('/api/limoges/france-travail');
-                const result = await response.json();
-                const data = result.data;
-                let html = '<div style="padding:1rem;">';
-                html += `<div style="margin-bottom:1rem;">
-                    <a href="${data.lienDirect}" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
-                        🔎 Voir toutes les offres sur France Travail
-                    </a>
-                </div>`;
-                if (data.offres?.length > 0) {
-                    document.getElementById('ft-count').textContent = data.offres.length;
-                    document.getElementById('ft-count').style.display = 'inline';
-                    const cards = data.offres.map(o => {
-                        const linkAttr = o.link ? `onclick="window.open('${o.link}', '_blank')" style="cursor:pointer;"` : '';
-                        return `
-                            <div class="event-card" ${linkAttr}>
-                                <div class="event-title">💼 ${o.title}</div>
-                                ${o.company ? `<div class="event-info"><strong>🏢</strong> ${o.company}</div>` : ''}
-                                ${o.location ? `<div class="event-info"><strong>📍</strong> ${o.location}</div>` : ''}
-                                ${o.contract ? `<div class="event-info"><strong>📋</strong> ${o.contract}</div>` : ''}
-                                ${o.date ? `<div class="event-info"><strong>📅</strong> ${o.date}</div>` : ''}
-                                ${o.source ? `<div class="event-info" style="color:#888;font-size:0.75rem;">🔗 ${o.source}</div>` : ''}
-                            </div>`;
-                    });
-                    html += createCarouselHTML('ft', cards);
-                } else {
-                    html += `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Consultez France Travail pour voir les offres</div></div>`;
+                const [r1, r2] = await Promise.all([
+                    fetch('/api/limoges/emploi').then(r => r.json()).catch(() => ({ data: { offres: [] } })),
+                    fetch('/api/limoges/france-travail').then(r => r.json()).catch(() => ({ data: { offres: [] } }))
+                ]);
+                const mairie = (r1.data?.offres || []).map(o => ({ ...o, _sourceLabel: 'Mairie de Limoges' }));
+                const ft    = (r2.data?.offres || []).map(o => ({ ...o, _sourceLabel: 'France Travail' }));
+                const all = [];
+                const maxLen = Math.max(mairie.length, ft.length);
+                for (let i = 0; i < maxLen; i++) {
+                    if (i < mairie.length) all.push(mairie[i]);
+                    if (i < ft.length)    all.push(ft[i]);
                 }
-                html += '</div>';
-                container.innerHTML = html;
+                _allOffres = all;
+                _emploiLinks = {};
+                if (r1.data?.lienDirect) _emploiLinks['Mairie de Limoges'] = r1.data.lienDirect;
+                if (r2.data?.lienDirect) _emploiLinks['France Travail'] = r2.data.lienDirect;
+                if (_allOffres.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💼</div><div class="empty-state-text">Aucune offre disponible</div></div>`;
+                    return;
+                }
+                document.getElementById('emploi-count').textContent = _allOffres.length;
+                document.getElementById('emploi-count').style.display = 'inline';
+                document.getElementById('emploi-filters').style.display = 'flex';
+                renderOffres();
             } catch (err) {
-                console.error('Erreur France Travail:', err);
-                container.innerHTML = `<div style="padding:1rem;">
-                    <a href="https://candidat.francetravail.fr/offres/emploi/limoges/v87085" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0072F9;color:white;padding:0.6rem 1.2rem;border-radius:8px;text-decoration:none;font-weight:600;">
-                        🔎 Voir les offres France Travail
-                    </a>
-                </div>`;
+                container.innerHTML = `<div style="padding:1rem;color:#e74c3c;">Erreur chargement offres d'emploi</div>`;
             }
         }
 
@@ -1340,8 +1316,7 @@
             loadTrains();
             loadBrocantes();
             loadPharmacies();
-            loadEmploi();
-            loadFranceTravail();
+            loadEmploiMerge();
             loadSpa();
             loadConseilMunicipal();
             initIciExpress();
