@@ -1257,67 +1257,75 @@
         // ============================================================
         // SPA - Animaux à adopter
         // ============================================================
+        let _allAnimauxLimoges = [];
+        let _spaEspecesLimoges = [];
+        let _spaInfoLimoges = '';
+
+        function renderSpa(espece) {
+            const container = document.getElementById('spa-container');
+            const filtered = espece ? _allAnimauxLimoges.filter(a => a.espece === espece) : _allAnimauxLimoges;
+            document.getElementById('spa-count').textContent = filtered.length;
+
+            let html = '<div style="padding:1rem;">';
+            if (_spaEspecesLimoges.length > 1) {
+                html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">';
+                html += `<button onclick="filtrerSpa(null)" class="spa-filtre" style="background:${!espece ? '#4361ee' : '#f0f4ff'};color:${!espece ? 'white' : '#333'};border:${!espece ? 'none' : '1px solid #ddd'};padding:0.4rem 0.8rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">Tous</button>`;
+                _spaEspecesLimoges.forEach(e => {
+                    const active = espece === e;
+                    const emoji = e === 'Chien' ? '🐶' : e === 'Chat' ? '🐱' : '🐾';
+                    html += `<button onclick="filtrerSpa('${e}')" class="spa-filtre" style="background:${active ? '#4361ee' : '#f0f4ff'};color:${active ? 'white' : '#333'};border:${active ? 'none' : '1px solid #ddd'};padding:0.4rem 0.8rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">${emoji} ${e}</button>`;
+                });
+                html += '</div>';
+            }
+            html += `<div style="font-size:0.8rem;color:#666;margin-bottom:0.8rem;">${_spaInfoLimoges}</div>`;
+            if (filtered.length > 0) {
+                const cards = filtered.map(a => {
+                    const emoji = a.espece === 'Chien' ? '🐶' : a.espece === 'Chat' ? '🐱' : '🐾';
+                    return `<div class="event-card" onclick="window.open('${a.url}', '_blank')" style="cursor:pointer;padding:0;overflow:hidden;background:#3b4f7a;">
+                        ${a.photo ? `<img src="${a.photo}" alt="${a.nom}" style="width:100%;height:140px;object-fit:cover;border-radius:8px 8px 0 0;" onerror="this.style.display='none'">` : ''}
+                        <div style="padding:0.6rem;">
+                            <div class="event-title" style="font-size:0.9rem;">${emoji} ${a.nom}</div>
+                            <div class="event-info">🏷️ ${a.espece}${a.race ? ' — ' + a.race : ''}</div>
+                            <div class="event-info">${a.sexe}${a.age ? ' • ' + a.age : ''}</div>
+                            <div class="event-info">🏠 ${a.refuge}</div>
+                            ${a.distance ? `<div class="event-info" style="color:rgba(255,255,255,0.6);font-size:0.75rem;">📍 ${a.distance} km</div>` : ''}
+                        </div>
+                    </div>`;
+                });
+                html += createCarouselHTML('spa', cards);
+            } else {
+                html += '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">Aucun animal pour ce filtre</div></div>';
+            }
+            html += `<div style="margin-top:0.8rem;"><a href="https://www.la-spa.fr/adopter-un-animal/" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#e74c3c;color:white;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">❤️ Adopter sur la-spa.fr</a></div>`;
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function filtrerSpa(espece) {
+            renderSpa(espece || null);
+        }
+
         async function loadSpa() {
             const container = document.getElementById('spa-container');
             try {
                 const response = await fetch('/api/limoges/spa');
                 const result = await response.json();
                 const data = result.data;
-                let html = '<div style="padding:1rem;">';
-
-                const especes = [...new Set((data.animaux || []).map(a => a.espece).filter(Boolean))];
-                if (especes.length > 1) {
-                    html += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;" id="spa-filtres">';
-                    html += '<button onclick="filtrerSpa(null, this)" class="spa-filtre spa-filtre-actif" style="background:#4361ee;color:white;border:none;padding:0.4rem 0.8rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">Tous</button>';
-                    especes.forEach(e => {
-                        const emoji = e === 'Chien' ? '🐶' : e === 'Chat' ? '🐱' : '🐾';
-                        html += `<button onclick="filtrerSpa('${e}', this)" class="spa-filtre" style="background:#f0f4ff;color:#333;border:1px solid #ddd;padding:0.4rem 0.8rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">${emoji} ${e}</button>`;
-                    });
-                    html += '</div>';
+                _allAnimauxLimoges = data.animaux || [];
+                _spaEspecesLimoges = [...new Set(_allAnimauxLimoges.map(a => a.espece).filter(Boolean))];
+                _spaInfoLimoges = `🏠 ${data.refuges || 0} refuge(s) dans un rayon de 100 km — ${data.total || 0} animal/animaux`;
+                if (_allAnimauxLimoges.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">Aucun animal trouvé dans les refuges proches</div></div>';
+                    return;
                 }
-
-                html += `<div style="font-size:0.8rem;color:#666;margin-bottom:0.8rem;">🏠 ${data.refuges || 0} refuge(s) dans un rayon de 100 km — ${data.total || 0} animal/animaux</div>`;
-
-                if (data.animaux && data.animaux.length > 0) {
-                    document.getElementById('spa-count').textContent = data.animaux.length;
-                    document.getElementById('spa-count').style.display = 'inline';
-
-                    const cards = data.animaux.map(a => {
-                        const emoji = a.espece === 'Chien' ? '🐶' : a.espece === 'Chat' ? '🐱' : '🐾';
-                        return `<div class="event-card spa-card" data-espece="${a.espece}" onclick="window.open('${a.url}', '_blank')" style="cursor:pointer;padding:0;overflow:hidden;">
-                            ${a.photo ? `<img src="${a.photo}" alt="${a.nom}" style="width:100%;height:140px;object-fit:cover;border-radius:8px 8px 0 0;" onerror="this.style.display='none'">` : ''}
-                            <div style="padding:0.6rem;">
-                                <div class="event-title" style="font-size:0.9rem;">${emoji} ${a.nom}</div>
-                                <div class="event-info">🏷️ ${a.espece}${a.race ? ' — ' + a.race : ''}</div>
-                                <div class="event-info">${a.sexe}${a.age ? ' • ' + a.age : ''}</div>
-                                <div class="event-info">🏠 ${a.refuge}</div>
-                                ${a.distance ? `<div class="event-info" style="color:#888;font-size:0.75rem;">📍 ${a.distance} km</div>` : ''}
-                            </div>
-                        </div>`;
-                    });
-                    html += createCarouselHTML('spa', cards);
-                } else {
-                    html += '<div class="empty-state"><div class="empty-state-icon">🐾</div><div class="empty-state-text">Aucun animal trouvé dans les refuges proches</div></div>';
-                }
-
-                html += `<div style="margin-top:0.8rem;"><a href="https://www.la-spa.fr/adopter-un-animal/" target="_blank" style="display:inline-flex;align-items:center;gap:0.5rem;background:#e74c3c;color:white;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">❤️ Adopter sur la-spa.fr</a></div>`;
-                html += '</div>';
-                container.innerHTML = html;
+                document.getElementById('spa-count').textContent = _allAnimauxLimoges.length;
+                document.getElementById('spa-count').style.display = 'inline';
+                renderSpa(null);
             } catch (err) {
                 container.innerHTML = '<div style="padding:1rem;"><a href="https://www.la-spa.fr/adopter-un-animal/" target="_blank" style="background:#e74c3c;color:white;padding:0.6rem 1rem;border-radius:8px;text-decoration:none;font-weight:600;">❤️ La SPA - Adopter un animal</a></div>';
             }
         }
 
-        function filtrerSpa(espece, btn) {
-            document.querySelectorAll('.spa-filtre').forEach(b => {
-                b.style.background = '#f0f4ff'; b.style.color = '#333'; b.style.border = '1px solid #ddd';
-            });
-            btn.style.background = '#4361ee'; btn.style.color = 'white'; btn.style.border = 'none';
-            document.querySelectorAll('.spa-card').forEach(card => {
-                card.closest('.carousel-slide') && (card.closest('.carousel-slide').style.display =
-                    (!espece || card.dataset.espece === espece) ? '' : 'none');
-            });
-        }
 
         // ============================================================
         // Lancement au chargement
